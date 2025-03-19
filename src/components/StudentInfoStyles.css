@@ -1,0 +1,46 @@
+/* StudentInfoStyles.css */
+
+/* Logo background using a custom class */
+.icanconnect-background {
+position: relative;
+}
+
+.icanconnect-background::before {
+content: "";
+position: fixed;
+top: 0;
+left: 0;
+width: 100%;
+height: 100%;
+background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48cGF0aCBkPSJNOTUsMzIuMWMwLDEzLjktMjIuMywxNy4yLTQ1LDE3LjJTNSw0Niw1LDMyLjFTMjcuMywxNSw1MCwxNSw5NSwxOC4yLDk1LDMyLjFaTTUwLDY1YzExLjMsMCwyNS41LTYuMiwzOC40LTE1LjNMOTUsNjQuM2MwLDEzLjktMjIuMywxNy4yLTQ1LDE3LjJTNSw3OC4yLDUsNjQuM0wxMS42LDQ5LjdDMjQuNSw1OC44LDM4LjcsNjUsNTAsNjVaIiBmaWxsPSIjMDA1MDlGIi8+PC9zdmc+');
+background-size: 250px;
+background-repeat: repeat;
+background-position: center;
+opacity: 0.03;
+z-index: -1;
+transform: rotate(15deg);
+pointer-events: none;
+}
+
+/* Additional styling for the form container */
+.form-container {
+position: relative;
+z-index: 1;
+}
+
+/* Card title styling */
+.card-title {
+color: #00509f;
+font-size: 16px;
+font-weight: 600;
+border-bottom: 2px solid #00509f;
+padding-bottom: 8px;
+display: inline-block;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+.icanconnect-background::before {
+    background-size: 150px;
+}
+}
