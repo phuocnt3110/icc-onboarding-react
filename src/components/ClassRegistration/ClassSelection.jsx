@@ -107,12 +107,14 @@ const ClassSelection = ({
     if (!schedules || schedules.length === 0) return <Text type="secondary">Không có lịch</Text>;
     
     return (
-      <Space direction="vertical" size="small">
+      <Space direction="vertical" size="small" style={{ width: '100%' }}>
         {schedules.map((schedule, index) => (
-          <Tag color="blue" key={index}>
-            <Space>
-              <CalendarOutlined /> {schedule.weekday}
-              <ClockCircleOutlined /> {schedule.time}
+          <Tag color="blue" key={index} style={{ padding: '2px 6px' }}>
+            <Space size={8} align="center">
+              <CalendarOutlined style={{ fontSize: '12px' }} />
+              <span style={{ marginRight: '8px' }}>{schedule.weekday}</span>
+              <ClockCircleOutlined style={{ fontSize: '12px' }} />
+              <span>{schedule.time}</span>
             </Space>
           </Tag>
         ))}
@@ -186,6 +188,14 @@ const ClassSelection = ({
   const renderSelectedClass = () => {
     if (!selectedClass) return null;
     
+    // Ensure selected class has schedules
+    const schedules = selectedClass.schedules && selectedClass.schedules.length > 0 
+      ? selectedClass.schedules 
+      : [{ 
+          weekday: selectedClass.ngayHoc, 
+          time: `${selectedClass.gioBatDau} - ${selectedClass.gioKetThuc}` 
+        }];
+    
     return (
       <Card 
         type="inner" 
@@ -204,7 +214,7 @@ const ClassSelection = ({
           <div>
             <Text strong>Lịch học:</Text>
             <div style={{ marginTop: '8px' }}>
-              {renderSchedules(selectedClass.schedules)}
+              {renderSchedules(schedules)}
             </div>
           </div>
           <div>
@@ -226,6 +236,55 @@ const ClassSelection = ({
       </Card>
     );
   }
+
+  // Tạo lại thông tin lịch học từ các trường nguyên bản nếu schedules rỗng
+  const classesWithSchedules = filteredClasses.map(classItem => {
+    // Nếu không có schedules hoặc mảng rỗng, tạo lại từ ngayHoc, gioBatDau, gioKetThuc
+    if (!classItem.schedules || classItem.schedules.length === 0) {
+      return {
+        ...classItem,
+        schedules: [{
+          weekday: classItem.ngayHoc,
+          time: `${classItem.gioBatDau} - ${classItem.gioKetThuc}`
+        }]
+      };
+    }
+    return classItem;
+  });
+
+  // Gộp các lớp có cùng mã lớp
+  const groupedClasses = {};
+  
+  classesWithSchedules.forEach(classItem => {
+    const classCode = classItem[CLASS_FIELDS.CODE];
+    
+    if (!groupedClasses[classCode]) {
+      groupedClasses[classCode] = {
+        ...classItem,
+        originalEntries: [classItem],
+        schedules: [...classItem.schedules]
+      };
+    } else {
+      // Thêm bản ghi gốc vào danh sách
+      groupedClasses[classCode].originalEntries.push(classItem);
+      
+      // Thêm lịch học mới nếu chưa tồn tại
+      classItem.schedules.forEach(schedule => {
+        const exists = groupedClasses[classCode].schedules.some(
+          s => s.weekday === schedule.weekday && s.time === schedule.time
+        );
+        
+        if (!exists) {
+          groupedClasses[classCode].schedules.push(schedule);
+        }
+      });
+    }
+  });
+  
+  // Chuyển đổi thành mảng để hiển thị
+  const finalClassList = Object.values(groupedClasses);
+  
+  console.log("Classes to display:", finalClassList);
 
   return (
     <Card style={{ borderRadius: '8px', marginBottom: '20px' }}>
@@ -263,9 +322,9 @@ const ClassSelection = ({
         </Col>
       </Row>
       
-      {filteredClasses && filteredClasses.length > 0 ? (
+      {finalClassList && finalClassList.length > 0 ? (
         <Table 
-          dataSource={filteredClasses} 
+          dataSource={finalClassList} 
           columns={columns} 
           rowKey={CLASS_FIELDS.CODE} 
           pagination={{ 
@@ -296,7 +355,7 @@ const ClassSelection = ({
         </Button>
         <Button 
           type="primary" 
-          onClick={() => onClassSelect(selectedClass)}
+          onClick={() => onClassSelect(selectedClass, selectedClass?.originalEntries)}
           disabled={!selectedClass || loading}
           loading={loading}
         >

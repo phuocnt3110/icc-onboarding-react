@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { API_CONFIG, TABLE_IDS, FIELD_MAPPINGS, MESSAGES } from '../../config';
+import { processClassList } from './utils';
 
 // Extract values from config
 const { TOKEN, BASE_URL, TIMEOUT, MAX_RETRIES } = API_CONFIG;
@@ -153,6 +154,7 @@ export const checkReservation = async (maLopBanGiao) => {
 
 /**
  * Fetch available classes based on student requirements
+ * Optimized to filter non-Vietnamese fields at API level and Vietnamese fields at client side
  * @param {Object} filters - Filter criteria
  * @returns {Promise<Array>} - List of available classes
  * @throws {Error} - If filters invalid or API error
@@ -174,67 +176,169 @@ export const fetchAvailableClasses = async (filters) => {
   }
   
   try {
-    // Simplest approach: get all available classes first with minimal filtering
-    const response = await apiClient.get(`/tables/${CLASS}/records?limit=100`);
+    // Only filter non-Vietnamese fields at API level
+    const apiConditions = [];
+    
+    // Product filter (non-Vietnamese)
+    if (sanPham) {
+      apiConditions.push(`(${CLASS_FIELDS.PRODUCT},eq,${sanPham})`);
+    }
+    
+    // Size filter (non-Vietnamese)
+    if (sizeLop) {
+      apiConditions.push(`(${CLASS_FIELDS.SIZE},eq,${sizeLop})`);
+    }
+    
+    // Level/trinhDo filter (non-Vietnamese)
+    if (goiMua) {
+      apiConditions.push(`(${CLASS_FIELDS.LEVEL},eq,${goiMua})`);
+    }
+    
+    // Build where clause for API filtering
+    const whereClause = apiConditions.join('~and');
+    
+    // API parameters
+    const params = { 
+      limit: 100 
+    };
+    
+    if (whereClause) {
+      params.where = whereClause;
+    }
+    
+    console.log('API filter conditions:', params.where);
+    
+    // Call API with non-Vietnamese filters
+    const response = await apiClient.get(`/tables/${CLASS}/records`, { params });
     
     if (!response.data || !response.data.list) {
       return [];
     }
     
-    const allClasses = response.data.list;
-    console.log(`Found ${allClasses.length} total classes to filter`);
+    const classes = response.data.list;
+    console.log(`Found ${classes.length} classes from API before client-side filtering`);
     
-    // Filter manually in JavaScript using the field mappings from config
-    const filteredClasses = allClasses.filter(classItem => {
-      // Filter by status
+    // Apply Vietnamese and formula-based filters at client side
+    const filteredClasses = classes.filter(classItem => {
+      // Status filter (Vietnamese)
       if (classItem[CLASS_FIELDS.STATUS] !== 'Dự kiến khai giảng') {
         return false;
       }
       
-      // Filter by available slots if the field exists
-      if (classItem[CLASS_FIELDS.SLOTS_LEFT] !== undefined && 
-          classItem[CLASS_FIELDS.SLOTS_LEFT] <= 0) {
+      // Teacher type filter (Vietnamese)
+      if (loaiGv && classItem[CLASS_FIELDS.TEACHER_TYPE] !== loaiGv) {
         return false;
       }
       
-      // Check product match - use both sanPham and goiMua
-      const productToMatch = sanPham || goiMua || '';
-      const classProduct = classItem[CLASS_FIELDS.PRODUCT] || '';
-      
-      if (productToMatch && classProduct) {
-        // Case insensitive comparison
-        const productMatches = 
-          classProduct.toLowerCase().includes(productToMatch.toLowerCase()) || 
-          productToMatch.toLowerCase().includes(classProduct.toLowerCase());
-          
-        if (!productMatches) {
-          return false;
-        }
-      }
-      
-      // Check size match if both are specified
-      if (sizeLop && classItem[CLASS_FIELDS.SIZE]) {
-        if (sizeLop !== classItem[CLASS_FIELDS.SIZE]) {
-          return false;
-        }
-      }
-      
-      // Check teacher type match if both are specified
-      if (loaiGv && classItem[CLASS_FIELDS.TEACHER_TYPE]) {
-        if (loaiGv !== classItem[CLASS_FIELDS.TEACHER_TYPE]) {
-          return false;
-        }
+      // Available slots filter (formula field)
+      if (classItem[CLASS_FIELDS.SLOTS_LEFT] !== undefined && 
+          classItem[CLASS_FIELDS.SLOTS_LEFT] <= 0) {
+        return false;
       }
       
       // All conditions passed
       return true;
     });
     
-    console.log(`Found ${filteredClasses.length} classes matching criteria after filtering`);
-    return filteredClasses;
+    console.log(`Found ${filteredClasses.length} classes after client-side filtering`);
+    
+    // Enhance class data with schedules for display
+    const enhancedClasses = filteredClasses.map(classItem => {
+
+      console.log("Schedule fields:", {
+        weekday: classItem[CLASS_FIELDS.WEEKDAY],
+        startTime: classItem[CLASS_FIELDS.START_TIME],
+        endTime: classItem[CLASS_FIELDS.END_TIME]
+      });
+      
+      // Create schedules structure for each class
+      return {
+        ...classItem,
+        schedules: [{
+          weekday: classItem[CLASS_FIELDS.WEEKDAY], // ngayHoc
+          time: `${classItem[CLASS_FIELDS.START_TIME]} - ${classItem[CLASS_FIELDS.END_TIME]}` // gioBatDau - gioKetThuc
+        }]
+      };
+    });
+    
+    // Process and group classes with the same code
+    const processedClasses = processClassList(enhancedClasses);
+    console.log(`Processed ${processedClasses.length} classes for display`);
+    
+    return processedClasses;
+    
   } catch (error) {
     console.error('Error fetching available classes:', error);
-    throw error.originalError ? error : new Error(`Lỗi khi tải danh sách lớp học: ${error.message}`);
+    
+    // Fallback: Complete client-side filtering if API filtering fails
+    console.warn('API filtering failed, falling back to complete client-side filtering');
+    try {
+      const response = await apiClient.get(`/tables/${CLASS}/records?limit=100`);
+      
+      if (!response.data || !response.data.list) {
+        return [];
+      }
+      
+      const allClasses = response.data.list;
+      console.log(`Fallback: Found ${allClasses.length} total classes to filter`);
+      
+      // Filter all conditions at client side
+      const filteredClasses = allClasses.filter(classItem => {
+        // Status filter (Vietnamese)
+        if (classItem[CLASS_FIELDS.STATUS] !== 'Dự kiến khai giảng') {
+          return false;
+        }
+        
+        // Available slots filter (formula field)
+        if (classItem[CLASS_FIELDS.SLOTS_LEFT] !== undefined && 
+            classItem[CLASS_FIELDS.SLOTS_LEFT] <= 0) {
+          return false;
+        }
+        
+        // Product filter
+        if (sanPham && classItem[CLASS_FIELDS.PRODUCT] !== sanPham) {
+          return false;
+        }
+        
+        // Size filter
+        if (sizeLop && classItem[CLASS_FIELDS.SIZE] !== sizeLop) {
+          return false;
+        }
+        
+        // Teacher type filter (Vietnamese)
+        if (loaiGv && classItem[CLASS_FIELDS.TEACHER_TYPE] !== loaiGv) {
+          return false;
+        }
+        
+        // Level filter
+        if (goiMua && classItem[CLASS_FIELDS.LEVEL] !== goiMua) {
+          return false;
+        }
+        
+        // All conditions passed
+        return true;
+      });
+      
+      // Enhance classes with schedules
+      const enhancedClasses = filteredClasses.map(classItem => {
+        return {
+          ...classItem,
+          schedules: [{
+            weekday: classItem[CLASS_FIELDS.WEEKDAY],
+            time: `${classItem[CLASS_FIELDS.START_TIME]} - ${classItem[CLASS_FIELDS.END_TIME]}`
+          }]
+        };
+      });
+      
+      // Process classes for display
+      const processedClasses = processClassList(enhancedClasses);
+      console.log(`Fallback: Processed ${processedClasses.length} classes for display`);
+      
+      return processedClasses;
+    } catch (fallbackError) {
+      console.error('Even fallback filtering failed:', fallbackError);
+      throw fallbackError.originalError ? fallbackError : new Error(`Lỗi khi tải danh sách lớp học: ${fallbackError.message}`);
+    }
   }
 };
 

@@ -13,7 +13,7 @@ export const API_CONFIG = {
   
   // Table IDs
   export const TABLE_IDS = {
-    STUDENT: "muavbrdc7f1epco",  // Bảng data_ban_giao_new
+    STUDENT: "muavbrdc7f1epco",  // Bảng data_main
     RESERVATION: "mbzjxhps0pfgw75",  // Bảng form_giu_cho
     CLASS: "mdtxnu17rxx23iq"  // Bảng data_class_total
   };
@@ -42,24 +42,24 @@ export const API_CONFIG = {
       START_DATE: "ngayKhaiGiangDuKien",
       STATUS: "trangThaiChonLop",
       LOCATION: "diaChi",
-      CLASS_RESERVATION: "maLopBanGiao"
     },
     
     // Class table field mappings
     CLASS: {
       ID: "Id",
-      CODE: "Classcode",
-      PRODUCT: "Product",
-      SIZE: "Size",
-      TEACHER_TYPE: "Teacher_type",
-      LEVEL: "Level",
-      STATUS: "Status",
-      START_DATE: "Start_date",
+      CODE: "classCode",
+      PRODUCT: "product",
+      SIZE: "size",
+      TEACHER_TYPE: "teacherType",
+      LEVEL: "trinhDo",
+      STATUS: "status",
+      START_DATE: "ngayKhaiGiangDuKien",
       SLOTS_LEFT: "soSlotConLai",
       TOTAL_SLOTS: "siSo",
       REGISTERED: "soDaDangKy",
-      WEEKDAY: "Weekday",
-      TIME: "Time"
+      WEEKDAY: "ngayHoc",
+      START_TIME: "gioBatDau",
+      END_TIME: "gioKetThuc",
     },
     
     // Reservation table field mappings
@@ -67,7 +67,7 @@ export const API_CONFIG = {
       ID: "Id",
       ORDER_CODE: "ma_order",
       CLASS_CODE: "ma_lop",
-      IS_VALID: "maCheckHopLe"
+      IS_VALID: "checkHopLe"
     }
   };
   
