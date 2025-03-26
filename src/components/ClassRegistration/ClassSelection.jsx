@@ -23,9 +23,13 @@ import {
   ExclamationCircleOutlined
 } from '@ant-design/icons';
 import { formatDate, validateClassSelection } from './utils';
+import { FIELD_MAPPINGS } from '../../config';
 
 const { Title, Text, Paragraph } = Typography;
 const { Search } = Input;
+
+// Extract field mappings for easier access
+const { STUDENT: STUDENT_FIELDS, CLASS: CLASS_FIELDS } = FIELD_MAPPINGS;
 
 /**
  * Component to display available classes for selection
@@ -71,12 +75,12 @@ const ClassSelection = ({
         
         // Search in multiple fields
         return (
-          (classItem.Classcode && classItem.Classcode.toLowerCase().includes(searchValue)) ||
+          (classItem[CLASS_FIELDS.CODE] && classItem[CLASS_FIELDS.CODE].toLowerCase().includes(searchValue)) ||
           (classItem.schedules && classItem.schedules.some(s => 
             s.weekday.toLowerCase().includes(searchValue) || 
             s.time.toLowerCase().includes(searchValue)
           )) ||
-          (classItem.Start_date && classItem.Start_date.toLowerCase().includes(searchValue))
+          (classItem[CLASS_FIELDS.START_DATE] && classItem[CLASS_FIELDS.START_DATE].toLowerCase().includes(searchValue))
         );
       });
       
@@ -120,11 +124,11 @@ const ClassSelection = ({
   const columns = [
     {
       title: 'Mã lớp',
-      dataIndex: 'Classcode',
-      key: 'Classcode',
+      dataIndex: CLASS_FIELDS.CODE,
+      key: 'code',
       sorter: (a, b) => {
-        if (!a.Classcode || !b.Classcode) return 0;
-        return a.Classcode.localeCompare(b.Classcode);
+        if (!a[CLASS_FIELDS.CODE] || !b[CLASS_FIELDS.CODE]) return 0;
+        return a[CLASS_FIELDS.CODE].localeCompare(b[CLASS_FIELDS.CODE]);
       },
       defaultSortOrder: 'ascend',
     },
@@ -140,24 +144,27 @@ const ClassSelection = ({
       render: (text, record) => (
         <Space>
           <UserOutlined />
-          <span>{record.soDaDangKy || 0}/{record.siSo || 0}</span>
+          <span>
+            {record[CLASS_FIELDS.REGISTERED] || 0}/
+            {record[CLASS_FIELDS.TOTAL_SLOTS] || 0}
+          </span>
         </Space>
       ),
       sorter: (a, b) => {
-        const aRatio = (a.soDaDangKy || 0) / (a.siSo || 1);
-        const bRatio = (b.soDaDangKy || 0) / (b.siSo || 1);
+        const aRatio = (a[CLASS_FIELDS.REGISTERED] || 0) / (a[CLASS_FIELDS.TOTAL_SLOTS] || 1);
+        const bRatio = (b[CLASS_FIELDS.REGISTERED] || 0) / (b[CLASS_FIELDS.TOTAL_SLOTS] || 1);
         return aRatio - bRatio;
       },
       defaultSortOrder: 'ascend',
     },
     {
       title: 'Ngày khai giảng',
-      dataIndex: 'Start_date',
-      key: 'Start_date',
+      dataIndex: CLASS_FIELDS.START_DATE,
+      key: 'startDate',
       render: (text) => formatDate(text),
       sorter: (a, b) => {
-        if (!a.Start_date || !b.Start_date) return 0;
-        return new Date(a.Start_date) - new Date(b.Start_date);
+        if (!a[CLASS_FIELDS.START_DATE] || !b[CLASS_FIELDS.START_DATE]) return 0;
+        return new Date(a[CLASS_FIELDS.START_DATE]) - new Date(b[CLASS_FIELDS.START_DATE]);
       },
     },
     {
@@ -192,7 +199,7 @@ const ClassSelection = ({
       >
         <Space direction="vertical" size="middle" style={{ width: '100%' }}>
           <div>
-            <Text strong>Mã lớp:</Text> {selectedClass.Classcode}
+            <Text strong>Mã lớp:</Text> {selectedClass[CLASS_FIELDS.CODE]}
           </div>
           <div>
             <Text strong>Lịch học:</Text>
@@ -201,10 +208,10 @@ const ClassSelection = ({
             </div>
           </div>
           <div>
-            <Text strong>Ngày khai giảng:</Text> {formatDate(selectedClass.Start_date)}
+            <Text strong>Ngày khai giảng:</Text> {formatDate(selectedClass[CLASS_FIELDS.START_DATE])}
           </div>
           <div>
-            <Text strong>Sĩ số hiện tại:</Text> {selectedClass.soDaDangKy || 0}/{selectedClass.siSo || 0}
+            <Text strong>Sĩ số hiện tại:</Text> {selectedClass[CLASS_FIELDS.REGISTERED] || 0}/{selectedClass[CLASS_FIELDS.TOTAL_SLOTS] || 0}
           </div>
         </Space>
       </Card>
@@ -230,7 +237,7 @@ const ClassSelection = ({
       {showWarning && (
         <Alert
           message="Cảnh báo"
-          description={`Bạn đã giữ chỗ trước đó, nhưng chúng tôi không tìm thấy ${studentData?.maLopBanGiao || 'mã lớp'} của bạn. Vui lòng liên hệ với tư vấn viên của bạn, hoặc tiếp tục chọn lịch học theo danh sách dưới đây.`}
+          description={`Bạn đã giữ chỗ trước đó, nhưng chúng tôi không tìm thấy ${studentData[STUDENT_FIELDS.CLASS_RESERVATION] || 'mã lớp'} của bạn. Vui lòng liên hệ với tư vấn viên của bạn, hoặc tiếp tục chọn lịch học theo danh sách dưới đây.`}
           type="warning"
           showIcon
           icon={<ExclamationCircleOutlined />}
@@ -260,7 +267,7 @@ const ClassSelection = ({
         <Table 
           dataSource={filteredClasses} 
           columns={columns} 
-          rowKey="Classcode" 
+          rowKey={CLASS_FIELDS.CODE} 
           pagination={{ 
             pageSize: 5,
             showSizeChanger: true,

@@ -1,18 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Form, Input, Button, Typography, Row, Col, Divider, message, Spin } from 'antd';
+import { Card, Form, Input, Button, Typography, Row, Col, Divider, message, Spin, Alert } from 'antd';
 import axios from 'axios';
+import { API_CONFIG, TABLE_IDS, FIELD_MAPPINGS, MESSAGES, ROUTES } from '../config';
 
 const { Title, Text } = Typography;
 
-// API configurations
-const API_TOKEN = "45UUXAPg34nKjGVdMpss7iwhccn7xPg4corm_X1c";
-const BASE_URL = "https://noco-erp.com/api/v2";
+// Extract values from config
+const { TOKEN, BASE_URL } = API_CONFIG;
+const { STUDENT } = TABLE_IDS;
+const { STUDENT: STUDENT_FIELDS } = FIELD_MAPPINGS;
 
+// Create API client
 const apiClient = axios.create({
   baseURL: BASE_URL,
   headers: {
     'Content-Type': 'application/json',
-    'xc-token': API_TOKEN
+    'xc-token': TOKEN
   }
 });
 
@@ -26,42 +29,53 @@ const StudentInfo = () => {
   const [loading, setLoading] = useState(false);
   const [editing, setEditing] = useState(false);
   const [studentData, setStudentData] = useState({});
+  const [readOnly, setReadOnly] = useState(false);
+  const [submitError, setSubmitError] = useState(null);
 
   useEffect(() => {
-    // Get student ID from URL
+    // Get id from URL
     const queryParams = new URLSearchParams(window.location.search);
-    const studentId = queryParams.get('id');
+    const id = queryParams.get('id');
     
-    if (studentId) {
-      fetchStudentData(studentId);
+    if (id) {
+      console.log('Fetching data for billItemId:', id);
+      fetchStudentData(id);
+    } else {
+      console.log('No ID found in URL');
+      message.error(MESSAGES.NO_ID_IN_URL);
     }
   }, []);
 
-  // Fetch student data from API
-  const fetchStudentData = async (studentId) => {
+  // Fetch student data using billItemId from config
+  const fetchStudentData = async (id) => {
     setLoading(true);
     try {
-      const response = await apiClient.get(`/tables/m6whmcc44o8tgh8/records?where=(studentId,allof,${studentId})`);
+      const response = await apiClient.get(`/tables/${STUDENT}/records?where=(${STUDENT_FIELDS.BILL_ITEM_ID},eq,${id})`);
+      
+      console.log('API response:', response.data);
       
       if (response.data && response.data.list && response.data.list.length > 0) {
         const data = response.data.list[0];
+        console.log('Found student data:', data);
         setStudentData(data);
         
-        // Initialize form with data
+        // Initialize form with field mappings from config
         form.setFieldsValue({
-          hoTenHocVien: data.hoTenHocVien || '',
-          sdtHocVien: data.sdtHocVien || '',
-          emailHocVien: data.emailHocVien || '',
-          hoTenDaiDien: data.hoTenDaiDien || '',
-          sdtDaiDien: data.sdtDaiDien || '',
-          emailDaiDien: data.emailDaiDien || ''
+          hoTenHocVien: data[STUDENT_FIELDS.NAME] || '',
+          sdtHocVien: data[STUDENT_FIELDS.PHONE] || '',
+          emailHocVien: data[STUDENT_FIELDS.EMAIL] || '',
+          hoTenDaiDien: data[STUDENT_FIELDS.GUARDIAN_NAME] || '',
+          sdtDaiDien: data[STUDENT_FIELDS.GUARDIAN_PHONE] || '',
+          emailDaiDien: data[STUDENT_FIELDS.GUARDIAN_EMAIL] || ''
         });
       } else {
+        console.log('No student data found for ID:', id);
         message.error('Không tìm thấy thông tin học viên');
       }
     } catch (error) {
       console.error('Error fetching student data:', error);
-      message.error('Lỗi khi tải dữ liệu học viên');
+      console.error('Error details:', error.response ? error.response.data : 'No response data');
+      message.error(`Lỗi khi tải dữ liệu học viên: ${error.message}`);
     } finally {
       setLoading(false);
     }
@@ -70,38 +84,82 @@ const StudentInfo = () => {
   // Handle edit button click
   const handleEdit = () => {
     setEditing(true);
+    setSubmitError(null);
   };
 
   // Handle form submission
   const handleSubmit = async (values) => {
     setLoading(true);
+    setSubmitError(null);
     try {
-      // Update student data
-      await apiClient.patch(`/tables/m6whmcc44o8tgh8/records`, {
-        Id: studentData.Id,
-        ...values
-      });
+      // Map the form field names back to the database field names using config
+      const updatedValues = {
+        [STUDENT_FIELDS.NAME]: values.hoTenHocVien,
+        [STUDENT_FIELDS.PHONE]: values.sdtHocVien,
+        [STUDENT_FIELDS.EMAIL]: values.emailHocVien,
+        [STUDENT_FIELDS.GUARDIAN_NAME]: values.hoTenDaiDien,
+        [STUDENT_FIELDS.GUARDIAN_PHONE]: values.sdtDaiDien,
+        [STUDENT_FIELDS.GUARDIAN_EMAIL]: values.emailDaiDien
+      };
 
-      message.success('Cập nhật thông tin thành công');
-      setEditing(false);
-      
-      // Update local state
-      setStudentData(prev => ({
-        ...prev,
-        ...values
-      }));
-      
-      // Redirect to step two after successful update
-      const studentId = studentData.studentId;
-      if (studentId) {
-        window.location.href = `/step-two?id=${studentId}`;
+      // Try to update student data
+      try {
+        await apiClient.patch(`/tables/${STUDENT}/records`, {
+          Id: studentData.Id,
+          ...updatedValues
+        });
+
+        message.success(MESSAGES.UPDATE_SUCCESS);
+        setEditing(false);
+        
+        // Update local state with the correct field mappings
+        setStudentData(prev => ({
+          ...prev,
+          ...updatedValues
+        }));
+      } catch (error) {
+        console.error('Error updating student data:', error);
+        
+        // Check if it's a permission error
+        if (error.response && error.response.status === 403) {
+          // Set read-only mode and show explanation
+          setReadOnly(true);
+          setSubmitError('Không có quyền cập nhật dữ liệu. Chuyển sang chế độ chỉ đọc.');
+          
+          // Still proceed to step two with the current data
+          setTimeout(() => {
+            proceedToStepTwo();
+          }, 2000);
+        } else {
+          setSubmitError(MESSAGES.UPDATE_FAILED.replace('{error}', error.message));
+        }
+        return;
       }
+      
+      // Proceed to step two
+      proceedToStepTwo();
+      
     } catch (error) {
-      console.error('Error updating student data:', error);
-      message.error('Lỗi khi cập nhật thông tin');
+      console.error('Error in form submission:', error);
+      setSubmitError(`Lỗi xử lý form: ${error.message}`);
     } finally {
       setLoading(false);
     }
+  };
+  
+  // Function to proceed to step two
+  const proceedToStepTwo = () => {
+    const id = studentData[STUDENT_FIELDS.BILL_ITEM_ID];
+    if (id) {
+      window.location.href = `${ROUTES.STEP_TWO}?id=${id}`;
+    } else {
+      setSubmitError('Không tìm thấy ID để chuyển trang');
+    }
+  };
+  
+  // Handle direct proceed to step two (skip editing)
+  const handleProceedWithoutEditing = () => {
+    proceedToStepTwo();
   };
 
   return (
@@ -111,173 +169,202 @@ const StudentInfo = () => {
           <Spin size="large" tip="Đang tải thông tin..." />
         </div>
       ) : (
-        <Form
-          form={form}
-          layout="vertical"
-          onFinish={handleSubmit}
-          size="middle"
-          // Disable the automatic asterisks at the beginning
-          requiredMark={false}
-        >
-          {/* Course Information */}
-          <Card style={{ borderRadius: '8px 8px 0 0', marginBottom: 0 }}>
-            <Title level={5} className="card-title">
-              A. Thông tin khóa học
-            </Title>
-            <Divider />
-            
-            <Row gutter={[16, 8]}>
-              <Col xs={24} sm={8}>
-                <Text strong>Khóa học đã đăng ký:</Text>
-              </Col>
-              <Col xs={24} sm={16}>
-                <Text>{studentData.tenSanPham || ''}</Text>
-              </Col>
-              
-              <Col xs={24} sm={8}>
-                <Text strong>Trình độ bắt đầu:</Text>
-              </Col>
-              <Col xs={24} sm={16}>
-                <Text>{studentData.trinhDo || ''}</Text>
-              </Col>
-              
-              <Col xs={24} sm={8}>
-                <Text strong>Sĩ số:</Text>
-              </Col>
-              <Col xs={24} sm={16}>
-                <Text>{studentData.size || ''}</Text>
-              </Col>
-              
-              <Col xs={24} sm={8}>
-                <Text strong>Giáo viên:</Text>
-              </Col>
-              <Col xs={24} sm={16}>
-                <Text>{studentData.loaiGiaoVien || ''}</Text>
-              </Col>
-              
-              <Col xs={24} sm={8}>
-                <Text strong>Số buổi:</Text>
-              </Col>
-              <Col xs={24} sm={16}>
-                <Text>{studentData.soBuoi || ''}</Text>
-              </Col>
-              
-              <Col xs={24} sm={8}>
-                <Text strong>Học phí:</Text>
-              </Col>
-              <Col xs={24} sm={16}>
-                <Text>{studentData.giaThucDong ? `${parseInt(studentData.giaThucDong).toLocaleString('vi-VN')} VNĐ` : ''}</Text>
-              </Col>
-            </Row>
-          </Card>
+        <>
+          {readOnly && (
+            <Alert
+              message="Chế độ chỉ đọc"
+              description="API token hiện tại chỉ có quyền đọc dữ liệu, không thể cập nhật thông tin. Bạn vẫn có thể tiếp tục đến bước tiếp theo."
+              type="info"
+              showIcon
+              style={{ marginBottom: '20px' }}
+            />
+          )}
           
-          {/* Student Information */}
-          <Card style={{ borderRadius: 0, marginTop: 0, marginBottom: 0 }}>
-            <Title level={5} className="card-title">
-              B. Thông tin học viên
-            </Title>
-            <Divider />
-            
-            <Form.Item
-              name="hoTenHocVien"
-              label={<RequiredLabel text="Họ và tên học viên" />}
-              rules={[{ required: true, message: 'Vui lòng nhập họ tên học viên' }]}
-            >
-              <Input disabled={!editing} />
-            </Form.Item>
-            
-            <Form.Item
-              name="sdtHocVien"
-              label={<RequiredLabel text="Số điện thoại học viên" />}
-              rules={[
-                { required: true, message: 'Vui lòng nhập số điện thoại học viên' },
-                { pattern: /^0\d{9,10}$/, message: 'Số điện thoại không hợp lệ' }
-              ]}
-            >
-              <Input disabled={!editing} />
-            </Form.Item>
-            
-            <Form.Item
-              name="emailHocVien"
-              label={<RequiredLabel text="Email học viên" />}
-              rules={[
-                { required: true, message: 'Vui lòng nhập email học viên' },
-                { type: 'email', message: 'Email không hợp lệ' }
-              ]}
-            >
-              <Input disabled={!editing} />
-            </Form.Item>
-          </Card>
+          {submitError && (
+            <Alert
+              message="Lỗi"
+              description={submitError}
+              type="error"
+              showIcon
+              style={{ marginBottom: '20px' }}
+            />
+          )}
           
-          {/* Contact Information */}
-          <Card style={{ borderRadius: '0 0 8px 8px', marginTop: 0 }}>
-            <Title level={5} className="card-title">
-              C. Thông tin người liên hệ, nhận báo cáo học tập
-            </Title>
-            <Divider />
-            
-            <Form.Item
-              name="hoTenDaiDien"
-              label={<RequiredLabel text="Họ tên người liên hệ" />}
-              rules={[{ required: true, message: 'Vui lòng nhập họ tên người liên hệ' }]}
-            >
-              <Input disabled={!editing} />
-            </Form.Item>
-            
-            <Form.Item
-              name="sdtDaiDien"
-              label={<RequiredLabel text="Số điện thoại người liên hệ" />}
-              rules={[
-                { required: true, message: 'Vui lòng nhập số điện thoại người liên hệ' },
-                { pattern: /^0\d{9,10}$/, message: 'Số điện thoại không hợp lệ' }
-              ]}
-            >
-              <Input disabled={!editing} />
-            </Form.Item>
-            
-            <Form.Item
-              name="emailDaiDien"
-              label={<RequiredLabel text="Email người liên hệ" />}
-              rules={[
-                { required: true, message: 'Vui lòng nhập email người liên hệ' },
-                { type: 'email', message: 'Email không hợp lệ' }
-              ]}
-            >
-              <Input disabled={!editing} />
-            </Form.Item>
-          
-            <Text type="danger" style={{ display: 'block', marginBottom: 16 }}>
-              (*) là trường thông tin bắt buộc nhập
-            </Text>
-            
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              {!editing ? (
-                <Button 
-                  type="default"
-                  onClick={handleEdit}
-                >
-                  Sửa thông tin
-                </Button>
-              ) : (
-                <Button 
-                  type="default" 
-                  onClick={() => setEditing(false)}
-                >
-                  Hủy
-                </Button>
-              )}
+          <Form
+            form={form}
+            layout="vertical"
+            onFinish={handleSubmit}
+            size="middle"
+            // Disable the automatic asterisks at the beginning
+            requiredMark={false}
+          >
+            {/* Course Information */}
+            <Card style={{ borderRadius: '8px 8px 0 0', marginBottom: 0 }}>
+              <Title level={5} className="card-title">
+                A. Thông tin khóa học
+              </Title>
+              <Divider />
               
-              <Button 
-                type="primary" 
-                htmlType="submit"
-                loading={loading}
-                disabled={!editing}
+              <Row gutter={[16, 8]}>
+                <Col xs={24} sm={8}>
+                  <Text strong>Khóa học đã đăng ký:</Text>
+                </Col>
+                <Col xs={24} sm={16}>
+                  <Text>{studentData[STUDENT_FIELDS.PACKAGE] || studentData[STUDENT_FIELDS.PRODUCT] || ''}</Text>
+                </Col>
+                
+                <Col xs={24} sm={8}>
+                  <Text strong>Loại lớp:</Text>
+                </Col>
+                <Col xs={24} sm={16}>
+                  <Text>{studentData[STUDENT_FIELDS.CLASS_SIZE] || '-'}</Text>
+                </Col>
+                
+                <Col xs={24} sm={8}>
+                  <Text strong>Giáo viên:</Text>
+                </Col>
+                <Col xs={24} sm={16}>
+                  <Text>{studentData[STUDENT_FIELDS.TEACHER_TYPE] || '-'}</Text>
+                </Col>
+                
+                <Col xs={24} sm={8}>
+                  <Text strong>Số buổi:</Text>
+                </Col>
+                <Col xs={24} sm={16}>
+                  <Text>{studentData[STUDENT_FIELDS.SESSIONS] || '-'}</Text>
+                </Col>
+                
+                <Col xs={24} sm={8}>
+                  <Text strong>Học phí:</Text>
+                </Col>
+                <Col xs={24} sm={16}>
+                  <Text>{studentData[STUDENT_FIELDS.PRICE] ? 
+                    `${parseInt(studentData[STUDENT_FIELDS.PRICE]).toLocaleString('vi-VN')} VNĐ` : '-'}</Text>
+                </Col>
+              </Row>
+            </Card>
+            
+            {/* Student Information */}
+            <Card style={{ borderRadius: 0, marginTop: 0, marginBottom: 0 }}>
+              <Title level={5} className="card-title">
+                B. Thông tin học viên
+              </Title>
+              <Divider />
+              
+              <Form.Item
+                name="hoTenHocVien"
+                label={<RequiredLabel text="Họ và tên học viên" />}
+                rules={[{ required: true, message: 'Vui lòng nhập họ tên học viên' }]}
               >
-                Xác nhận thông tin
-              </Button>
-            </div>
-          </Card>
-        </Form>
+                <Input disabled={!editing || readOnly} />
+              </Form.Item>
+              
+              <Form.Item
+                name="sdtHocVien"
+                label={<RequiredLabel text="Số điện thoại học viên" />}
+                rules={[
+                  { required: true, message: 'Vui lòng nhập số điện thoại học viên' },
+                  { pattern: /^0\d{9,10}$|^84-\d+$/, message: 'Số điện thoại không hợp lệ' }
+                ]}
+              >
+                <Input disabled={!editing || readOnly} />
+              </Form.Item>
+              
+              <Form.Item
+                name="emailHocVien"
+                label={<RequiredLabel text="Email học viên" />}
+                rules={[
+                  { required: true, message: 'Vui lòng nhập email học viên' },
+                  { type: 'email', message: 'Email không hợp lệ' }
+                ]}
+              >
+                <Input disabled={!editing || readOnly} />
+              </Form.Item>
+            </Card>
+            
+            {/* Contact Information */}
+            <Card style={{ borderRadius: '0 0 8px 8px', marginTop: 0 }}>
+              <Title level={5} className="card-title">
+                C. Thông tin người liên hệ, nhận báo cáo học tập
+              </Title>
+              <Divider />
+              
+              <Form.Item
+                name="hoTenDaiDien"
+                label={<RequiredLabel text="Họ tên người liên hệ" />}
+                rules={[{ required: true, message: 'Vui lòng nhập họ tên người liên hệ' }]}
+              >
+                <Input disabled={!editing || readOnly} />
+              </Form.Item>
+              
+              <Form.Item
+                name="sdtDaiDien"
+                label={<RequiredLabel text="Số điện thoại người liên hệ" />}
+                rules={[
+                  { required: true, message: 'Vui lòng nhập số điện thoại người liên hệ' },
+                  { pattern: /^0\d{9,10}$|^84-\d+$/, message: 'Số điện thoại không hợp lệ' }
+                ]}
+              >
+                <Input disabled={!editing || readOnly} />
+              </Form.Item>
+              
+              <Form.Item
+                name="emailDaiDien"
+                label={<RequiredLabel text="Email người liên hệ" />}
+                rules={[
+                  { required: true, message: 'Vui lòng nhập email người liên hệ' },
+                  { type: 'email', message: 'Email không hợp lệ' }
+                ]}
+              >
+                <Input disabled={!editing || readOnly} />
+              </Form.Item>
+            
+              <Text type="danger" style={{ display: 'block', marginBottom: 16 }}>
+                (*) là trường thông tin bắt buộc nhập
+              </Text>
+              
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                {!editing ? (
+                  <>
+                    <Button 
+                      type="default"
+                      onClick={handleEdit}
+                      disabled={readOnly}
+                    >
+                      Sửa thông tin
+                    </Button>
+                    <Button 
+                      type="primary" 
+                      onClick={handleProceedWithoutEditing}
+                    >
+                      Tiếp tục
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button 
+                      type="default" 
+                      onClick={() => {
+                        setEditing(false);
+                        setSubmitError(null);
+                      }}
+                    >
+                      Hủy
+                    </Button>
+                    <Button 
+                      type="primary" 
+                      htmlType="submit"
+                      loading={loading}
+                      disabled={readOnly}
+                    >
+                      Xác nhận thông tin
+                    </Button>
+                  </>
+                )}
+              </div>
+            </Card>
+          </Form>
+        </>
       )}
     </div>
   );

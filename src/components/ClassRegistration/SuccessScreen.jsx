@@ -1,8 +1,12 @@
 import React from 'react';
 import { Card, Typography, Button, Result, Descriptions, Space, Skeleton } from 'antd';
 import { formatDate } from './utils';
+import { FIELD_MAPPINGS } from '../../config';
 
 const { Text, Paragraph } = Typography;
+
+// Extract field mappings for easier access
+const { STUDENT: STUDENT_FIELDS } = FIELD_MAPPINGS;
 
 /**
  * Component to display success message after schedule selection
@@ -17,13 +21,15 @@ const SuccessScreen = ({
   onComplete,
   loading = false
 }) => {
-  // Get appropriate schedule type description
+  // Get appropriate schedule type description based on status
   const scheduleType = () => {
     if (!studentData) return '';
     
-    if (studentData.trangThai === "Đã xác nhận lịch được giữ") {
+    const status = studentData[STUDENT_FIELDS.STATUS];
+    
+    if (status === "Đã xác nhận lịch được giữ") {
       return "giữ chỗ";
-    } else if (studentData.trangThai === "Đăng ký lịch ngoài") {
+    } else if (status === "Đăng ký lịch ngoài") {
       return "tùy chỉnh";
     } else {
       return "lớp học";
@@ -47,7 +53,11 @@ const SuccessScreen = ({
         subTitle={
           <Space direction="vertical">
             <Paragraph>
-              Bạn đã đăng ký thành công lịch học {scheduleType()} cho khóa học "{studentData.tenSanPham}".
+              Bạn đã đăng ký thành công lịch học {scheduleType()} cho khóa học "{
+                studentData[STUDENT_FIELDS.PACKAGE] || 
+                studentData[STUDENT_FIELDS.PRODUCT] || 
+                'của bạn'
+              }".
             </Paragraph>
             <Paragraph>
               Chúng tôi sẽ liên hệ với bạn để xác nhận lịch học trong thời gian sớm nhất.
@@ -66,45 +76,47 @@ const SuccessScreen = ({
       
       <div style={{ background: '#fafafa', padding: '24px', borderRadius: '2px', marginTop: '24px' }}>
         <Descriptions title="Thông tin lớp học" bordered column={{ xs: 1, sm: 2 }}>
-          {studentData.maLop && (
+          {studentData[STUDENT_FIELDS.CLASS_CODE] && (
             <Descriptions.Item label="Mã lớp" span={2}>
-              {studentData.maLop}
+              {studentData[STUDENT_FIELDS.CLASS_CODE]}
             </Descriptions.Item>
           )}
           
           <Descriptions.Item label="Khóa học" span={2}>
-            {studentData.tenSanPham || 'Không có thông tin'}
+            {studentData[STUDENT_FIELDS.PACKAGE] || 
+             studentData[STUDENT_FIELDS.PRODUCT] || 
+             'Không có thông tin'}
           </Descriptions.Item>
           
           <Descriptions.Item label="Loại lớp">
-            {studentData.size || 'Không có thông tin'}
+            {studentData[STUDENT_FIELDS.CLASS_SIZE] || 'Không có thông tin'}
           </Descriptions.Item>
           
           <Descriptions.Item label="Giáo viên">
-            {studentData.loaiGiaoVien || 'Không có thông tin'}
+            {studentData[STUDENT_FIELDS.TEACHER_TYPE] || 'Không có thông tin'}
           </Descriptions.Item>
           
           <Descriptions.Item label="Trình độ">
-            {studentData.trinhDo || 'Không có thông tin'}
+            {studentData[STUDENT_FIELDS.LEVEL] || 'Không có thông tin'}
           </Descriptions.Item>
           
           <Descriptions.Item label="Số buổi">
-            {studentData.soBuoi || 'Không có thông tin'}
+            {studentData[STUDENT_FIELDS.SESSIONS] || 'Không có thông tin'}
           </Descriptions.Item>
           
           <Descriptions.Item label="Lịch học" span={2}>
-            {studentData.lichHoc || 'Không có thông tin'}
+            {studentData[STUDENT_FIELDS.SCHEDULE] || 'Không có thông tin'}
           </Descriptions.Item>
           
-          {studentData.ngayKhaiGiangDuKien && (
+          {studentData[STUDENT_FIELDS.START_DATE] && (
             <Descriptions.Item label="Ngày khai giảng" span={2}>
-              {formatDate(studentData.ngayKhaiGiangDuKien)}
+              {formatDate(studentData[STUDENT_FIELDS.START_DATE])}
             </Descriptions.Item>
           )}
           
           <Descriptions.Item label="Trạng thái" span={2}>
             <Text strong type="success">
-              {studentData.trangThai || 'Không có thông tin'}
+              {studentData[STUDENT_FIELDS.STATUS] || 'Không có thông tin'}
             </Text>
           </Descriptions.Item>
         </Descriptions>

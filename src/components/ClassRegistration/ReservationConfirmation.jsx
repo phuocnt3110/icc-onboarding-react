@@ -2,8 +2,12 @@ import React from 'react';
 import { Card, Typography, Button, Divider, Descriptions, Space, Alert, Skeleton } from 'antd';
 import { CheckCircleOutlined, InfoCircleOutlined } from '@ant-design/icons';
 import { formatDate } from './utils';
+import { FIELD_MAPPINGS } from '../../config';
 
 const { Title, Text, Paragraph } = Typography;
+
+// Extract field mappings for easier access
+const { STUDENT: STUDENT_FIELDS, RESERVATION: RESERVATION_FIELDS } = FIELD_MAPPINGS;
 
 /**
  * Component to display reservation information and confirm
@@ -31,7 +35,7 @@ const ReservationConfirmation = ({
   }
 
   // Check if reservation has required data
-  const hasReservationData = reservationData && reservationData.ma_lop;
+  const hasReservationData = reservationData && reservationData[RESERVATION_FIELDS.CLASS_CODE];
   
   return (
     <Card style={{ borderRadius: '8px', marginBottom: '20px' }}>
@@ -71,35 +75,35 @@ const ReservationConfirmation = ({
         >
           <Descriptions column={{ xs: 1, sm: 2 }} bordered>
             <Descriptions.Item label="Mã lớp" span={2}>
-              {reservationData?.ma_lop || 'Không có thông tin'}
+              {reservationData[RESERVATION_FIELDS.CLASS_CODE] || 'Không có thông tin'}
             </Descriptions.Item>
             
             <Descriptions.Item label="Tên khóa học" span={2}>
-              {studentData?.tenSanPham || 'Không có thông tin'}
+              {studentData[STUDENT_FIELDS.PACKAGE] || studentData[STUDENT_FIELDS.PRODUCT] || 'Không có thông tin'}
             </Descriptions.Item>
             
             <Descriptions.Item label="Loại lớp">
-              {studentData?.size || 'Không có thông tin'}
+              {studentData[STUDENT_FIELDS.CLASS_SIZE] || 'Không có thông tin'}
             </Descriptions.Item>
             
             <Descriptions.Item label="Giáo viên">
-              {studentData?.loaiGiaoVien || 'Không có thông tin'}
+              {studentData[STUDENT_FIELDS.TEACHER_TYPE] || 'Không có thông tin'}
             </Descriptions.Item>
             
             <Descriptions.Item label="Trình độ">
-              {studentData?.trinhDo || 'Không có thông tin'}
+              {studentData[STUDENT_FIELDS.LEVEL] || 'Không có thông tin'}
             </Descriptions.Item>
             
             <Descriptions.Item label="Số buổi">
-              {studentData?.soBuoi || 'Không có thông tin'}
+              {studentData[STUDENT_FIELDS.SESSIONS] || 'Không có thông tin'}
             </Descriptions.Item>
             
             <Descriptions.Item label="Lịch học" span={2}>
-              {studentData?.lichHoc || 'Không có thông tin'}
+              {studentData[STUDENT_FIELDS.SCHEDULE] || 'Không có thông tin'}
             </Descriptions.Item>
             
             <Descriptions.Item label="Ngày khai giảng" span={2}>
-              {formatDate(studentData?.ngayKhaiGiangDuKien) || 'Không có thông tin'}
+              {formatDate(studentData[STUDENT_FIELDS.START_DATE]) || 'Không có thông tin'}
             </Descriptions.Item>
           </Descriptions>
         </Card>

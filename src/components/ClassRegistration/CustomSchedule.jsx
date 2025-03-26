@@ -22,9 +22,13 @@ import {
   InfoCircleOutlined
 } from '@ant-design/icons';
 import { TIME_SLOTS, WEEKDAYS, validateScheduleSelection } from './utils';
+import { FIELD_MAPPINGS } from '../../config';
 
 const { Title, Text, Paragraph } = Typography;
 const { Panel } = Collapse;
+
+// Extract field mappings for easier access
+const { STUDENT: STUDENT_FIELDS } = FIELD_MAPPINGS;
 
 /**
  * Component to select custom schedule
@@ -48,10 +52,10 @@ const CustomSchedule = ({
   
   // Set initial values based on student data if available
   useEffect(() => {
-    if (studentData && studentData.lichHoc) {
+    if (studentData && studentData[STUDENT_FIELDS.SCHEDULE]) {
       try {
         // Try to parse existing schedule
-        const scheduleEntries = studentData.lichHoc.split(' / ');
+        const scheduleEntries = studentData[STUDENT_FIELDS.SCHEDULE].split(' / ');
         const initialValues = {};
         
         scheduleEntries.forEach(entry => {
@@ -198,7 +202,7 @@ const CustomSchedule = ({
       {fromCase2 && (
         <Alert
           message="Cảnh báo"
-          description={`Bạn đã giữ chỗ trước đó, nhưng chúng tôi không tìm thấy ${studentData?.maLopBanGiao || 'mã lớp'} của bạn. Vui lòng liên hệ với tư vấn viên của bạn, hoặc tiếp tục chọn lịch học theo ý muốn dưới đây.`}
+          description={`Bạn đã giữ chỗ trước đó, nhưng chúng tôi không tìm thấy ${studentData?.[STUDENT_FIELDS.CLASS_RESERVATION] || 'mã lớp'} của bạn. Vui lòng liên hệ với tư vấn viên của bạn, hoặc tiếp tục chọn lịch học theo ý muốn dưới đây.`}
           type="warning"
           showIcon
           icon={<ExclamationCircleOutlined />}

@@ -6,6 +6,10 @@ import ReservationConfirmation from './ReservationConfirmation';
 import ClassSelection from './ClassSelection';
 import CustomSchedule from './CustomSchedule';
 import SuccessScreen from './SuccessScreen';
+import { MESSAGES, FIELD_MAPPINGS } from '../../config';
+
+// Extract field mappings for easier access
+const { STUDENT: STUDENT_FIELDS } = FIELD_MAPPINGS;
 
 /**
  * Main component for class registration process
@@ -23,40 +27,40 @@ const ClassRegistration = () => {
   const [processingAction, setProcessingAction] = useState(false);
 
   useEffect(() => {
-    // Get student ID from URL
+    // Get ID from URL
     const queryParams = new URLSearchParams(window.location.search);
-    const studentId = queryParams.get('id');
+    const id = queryParams.get('id');
     
-    if (studentId) {
-      loadStudentData(studentId);
+    if (id) {
+      loadStudentData(id);
     } else {
       setLoading(false);
-      setErrorMessage('Không tìm thấy mã học viên trong URL. Vui lòng kiểm tra lại đường dẫn.');
+      setErrorMessage(MESSAGES.NO_ID_IN_URL);
       setCurrentScreen('error');
     }
   }, []);
 
   /**
    * Main function to load student data and determine the case
-   * @param {string} studentId - Student ID from URL
+   * @param {string} id - Bill Item ID from URL
    */
-  const loadStudentData = async (studentId) => {
+  const loadStudentData = async (id) => {
     try {
       setLoading(true);
       
-      // Fetch student data
-      const data = await fetchStudentData(studentId);
+      // Fetch student data with billItemId
+      const data = await fetchStudentData(id);
       setStudentData(data);
       
       console.log('Student data:', data);
       
-      // Check if student has maLopBanGiao
-      if (data.maLopBanGiao) {
+      // Check if student has class reservation code
+      if (data[STUDENT_FIELDS.CLASS_RESERVATION]) {
         // Look for reservation in form_giu_cho
-        const reservation = await checkReservation(data.maLopBanGiao);
+        const reservation = await checkReservation(data[STUDENT_FIELDS.CLASS_RESERVATION]);
         
         if (reservation) {
-          if (reservation.maCheckHopLe === true) {
+          if (reservation[FIELD_MAPPINGS.RESERVATION.IS_VALID] === true) {
             // Case 1: Valid reservation
             setReservationData(reservation);
             setCurrentCase(1);
@@ -81,7 +85,7 @@ const ClassRegistration = () => {
     } catch (error) {
       console.error('Error loading student data:', error);
       setLoading(false);
-      setErrorMessage(error.message || 'Lỗi khi tải dữ liệu học viên');
+      setErrorMessage(error.message || MESSAGES.STUDENT_DATA_LOAD_ERROR);
       setCurrentScreen('error');
     }
   };
@@ -94,23 +98,31 @@ const ClassRegistration = () => {
   const handleCase3 = async (data, showWarning = false) => {
     setCurrentCase(3);
     
-    if (data.size === '1:01') {
+    if (data[STUDENT_FIELDS.CLASS_SIZE] === '1:01') {
       // Case 3b: 1:1 class - show custom schedule screen
       setCurrentScreen('customSchedule');
       setLoading(false);
     } else {
       // Case 3a: Non 1:1 class - fetch available classes
       try {
-        // Validate required fields before fetching classes
-        if (!data.tenSanPham || !data.size || !data.loaiGiaoVien || !data.trinhDo) {
-          throw new Error('Thiếu thông tin học viên cần thiết: khóa học, loại lớp, giáo viên, hoặc trình độ');
+        // Log what we're using for debugging
+        console.log('Student data for class search:', {
+          sanPham: data[STUDENT_FIELDS.PRODUCT],
+          sizeLop: data[STUDENT_FIELDS.CLASS_SIZE], 
+          loaiGv: data[STUDENT_FIELDS.TEACHER_TYPE],
+          goiMua: data[STUDENT_FIELDS.PACKAGE],
+        });
+        
+        // Check if we have minimal data to search
+        if (!data[STUDENT_FIELDS.PRODUCT] && !data[STUDENT_FIELDS.PACKAGE]) {
+          throw new Error(MESSAGES.MISSING_COURSE_INFO);
         }
         
         const classesData = await fetchAvailableClasses({
-          tenSanPham: data.tenSanPham,
-          size: data.size,
-          loaiGiaoVien: data.loaiGiaoVien,
-          trinhDo: data.trinhDo
+          sanPham: data[STUDENT_FIELDS.PRODUCT],
+          sizeLop: data[STUDENT_FIELDS.CLASS_SIZE],
+          loaiGv: data[STUDENT_FIELDS.TEACHER_TYPE],
+          goiMua: data[STUDENT_FIELDS.PACKAGE]
         });
         
         // Process and group classes with the same code
@@ -120,11 +132,13 @@ const ClassRegistration = () => {
         
         // Show message if no classes found
         if (processedClasses.length === 0) {
-          message.info('Không tìm thấy lớp học phù hợp. Bạn có thể chọn lịch học theo ý muốn.');
+          message.info(MESSAGES.NO_CLASSES_FOUND);
+        } else {
+          message.success(MESSAGES.CLASSES_FOUND.replace('{count}', processedClasses.length));
         }
       } catch (error) {
         console.error('Error fetching available classes:', error);
-        message.error(error.message || 'Lỗi khi tải danh sách lớp học');
+        message.error(error.message || MESSAGES.CLASS_FETCH_ERROR);
         // Still show the class list screen, but it will display empty state
         setCurrentScreen('classList');
       } finally {
@@ -133,7 +147,10 @@ const ClassRegistration = () => {
     }
     
     if (showWarning) {
-      message.warning(`Bạn đã giữ chỗ trước đó, nhưng chúng tôi không tìm thấy ${data.maLopBanGiao || 'mã lớp'} của bạn. Vui lòng liên hệ với tư vấn viên của bạn, hoặc tiếp tục chọn lịch học theo danh sách dưới đây.`);
+      message.warning(MESSAGES.RESERVATION_NOT_FOUND.replace(
+        '{code}', 
+        data[STUDENT_FIELDS.CLASS_RESERVATION] || MESSAGES.CLASS_CODE
+      ));
     }
   };
 
@@ -143,7 +160,7 @@ const ClassRegistration = () => {
    */
   const handleClassSelection = async (selectedClass) => {
     if (!selectedClass) {
-      message.error('Vui lòng chọn một lớp học');
+      message.error(MESSAGES.SELECT_CLASS);
       return;
     }
     
@@ -161,32 +178,32 @@ const ClassRegistration = () => {
       const formattedSchedule = formatSchedule(selectedClass.schedules);
       
       if (!formattedSchedule) {
-        throw new Error('Lịch học không hợp lệ');
+        throw new Error(MESSAGES.INVALID_SCHEDULE);
       }
       
       // Update student data
       await updateStudentClass(studentData.Id, {
-        maLop: selectedClass.Classcode,
-        lichHoc: formattedSchedule,
-        ngayKhaiGiangDuKien: selectedClass.Start_date,
-        trangThai: "Đã xác nhận lịch"
+        [STUDENT_FIELDS.CLASS_CODE]: selectedClass[FIELD_MAPPINGS.CLASS.CODE],
+        [STUDENT_FIELDS.SCHEDULE]: formattedSchedule,
+        [STUDENT_FIELDS.START_DATE]: selectedClass[FIELD_MAPPINGS.CLASS.START_DATE],
+        [STUDENT_FIELDS.STATUS]: "Đã xác nhận lịch"
       });
       
       // Update local state
       setStudentData(prev => ({
         ...prev,
-        maLop: selectedClass.Classcode,
-        lichHoc: formattedSchedule,
-        ngayKhaiGiangDuKien: selectedClass.Start_date,
-        trangThai: "Đã xác nhận lịch"
+        [STUDENT_FIELDS.CLASS_CODE]: selectedClass[FIELD_MAPPINGS.CLASS.CODE],
+        [STUDENT_FIELDS.SCHEDULE]: formattedSchedule,
+        [STUDENT_FIELDS.START_DATE]: selectedClass[FIELD_MAPPINGS.CLASS.START_DATE],
+        [STUDENT_FIELDS.STATUS]: "Đã xác nhận lịch"
       }));
       
       // Show success screen
       setCurrentScreen('success');
-      message.success('Đăng ký lớp học thành công!');
+      message.success(MESSAGES.CLASS_REGISTRATION_SUCCESS);
     } catch (error) {
       console.error('Error updating class selection:', error);
-      message.error(error.message || 'Lỗi khi đăng ký lớp học');
+      message.error(error.message || MESSAGES.CLASS_REGISTRATION_FAILED.replace('{error}', ''));
     } finally {
       setProcessingAction(false);
     }
@@ -197,7 +214,7 @@ const ClassRegistration = () => {
    */
   const handleConfirmReservation = async () => {
     if (!studentData || !studentData.Id || !reservationData) {
-      message.error('Thiếu thông tin để xác nhận giữ chỗ');
+      message.error(MESSAGES.MISSING_RESERVATION_INFO);
       return;
     }
     
@@ -206,21 +223,21 @@ const ClassRegistration = () => {
     try {
       // Update student data to confirm reservation
       await updateStudentClass(studentData.Id, {
-        trangThai: "Đã xác nhận lịch được giữ"
+        [STUDENT_FIELDS.STATUS]: "Đã xác nhận lịch được giữ"
       });
       
       // Update local state
       setStudentData(prev => ({
         ...prev,
-        trangThai: "Đã xác nhận lịch được giữ"
+        [STUDENT_FIELDS.STATUS]: "Đã xác nhận lịch được giữ"
       }));
       
       // Show success screen
       setCurrentScreen('success');
-      message.success('Xác nhận lịch học thành công!');
+      message.success(MESSAGES.RESERVATION_CONFIRMATION_SUCCESS);
     } catch (error) {
       console.error('Error confirming reservation:', error);
-      message.error(error.message || 'Lỗi khi xác nhận lịch học');
+      message.error(error.message || MESSAGES.RESERVATION_CONFIRMATION_FAILED.replace('{error}', ''));
     } finally {
       setProcessingAction(false);
     }
@@ -232,7 +249,7 @@ const ClassRegistration = () => {
    */
   const handleCustomScheduleSubmit = async (selectedSchedules) => {
     if (!studentData || !studentData.Id) {
-      message.error('Thiếu thông tin học viên');
+      message.error(MESSAGES.MISSING_STUDENT_INFO);
       return;
     }
     
@@ -250,28 +267,28 @@ const ClassRegistration = () => {
       const formattedSchedule = formatSchedule(selectedSchedules);
       
       if (!formattedSchedule) {
-        throw new Error('Lịch học không hợp lệ');
+        throw new Error(MESSAGES.INVALID_SCHEDULE);
       }
       
       // Update student data
       await updateStudentClass(studentData.Id, {
-        lichHoc: formattedSchedule,
-        trangThai: "Đăng ký lịch ngoài"
+        [STUDENT_FIELDS.SCHEDULE]: formattedSchedule,
+        [STUDENT_FIELDS.STATUS]: "Đăng ký lịch ngoài"
       });
       
       // Update local state
       setStudentData(prev => ({
         ...prev,
-        lichHoc: formattedSchedule,
-        trangThai: "Đăng ký lịch ngoài"
+        [STUDENT_FIELDS.SCHEDULE]: formattedSchedule,
+        [STUDENT_FIELDS.STATUS]: "Đăng ký lịch ngoài"
       }));
       
       // Show success screen
       setCurrentScreen('success');
-      message.success('Đăng ký lịch học thành công!');
+      message.success(MESSAGES.CUSTOM_SCHEDULE_SUCCESS);
     } catch (error) {
       console.error('Error updating custom schedule:', error);
-      message.error(error.message || 'Lỗi khi đăng ký lịch học');
+      message.error(error.message || MESSAGES.CUSTOM_SCHEDULE_FAILED.replace('{error}', ''));
     } finally {
       setProcessingAction(false);
     }
@@ -285,7 +302,7 @@ const ClassRegistration = () => {
   };
 
   const handleChooseAgain = () => {
-    if (studentData.size === '1:01') {
+    if (studentData[STUDENT_FIELDS.CLASS_SIZE] === '1:01') {
       setCurrentScreen('customSchedule');
     } else {
       setCurrentScreen('classList');
@@ -302,10 +319,10 @@ const ClassRegistration = () => {
 
   const handleRetry = () => {
     const queryParams = new URLSearchParams(window.location.search);
-    const studentId = queryParams.get('id');
+    const id = queryParams.get('id');
     
-    if (studentId) {
-      loadStudentData(studentId);
+    if (id) {
+      loadStudentData(id);
     } else {
       window.location.href = '/step-one';
     }
@@ -368,7 +385,7 @@ const ClassRegistration = () => {
           <CustomSchedule
             studentData={studentData}
             onSubmit={handleCustomScheduleSubmit}
-            onCancel={() => studentData.size === '1:01' ? window.history.back() : setCurrentScreen('classList')}
+            onCancel={() => studentData[STUDENT_FIELDS.CLASS_SIZE] === '1:01' ? window.history.back() : setCurrentScreen('classList')}
             loading={processingAction}
             fromCase2={currentCase === 2}
           />
