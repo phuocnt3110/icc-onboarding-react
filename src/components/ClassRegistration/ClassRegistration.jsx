@@ -1,23 +1,12 @@
 import React from 'react';
-import { Card, Typography, Button, Result } from 'antd';
+import MainClassRegistration from './index';
 
-const { Title, Text } = Typography;
-
+/**
+ * ClassRegistration component
+ * This is just a wrapper for the main implementation in index.jsx
+ */
 const ClassRegistration = () => {
-  return (
-    <Card style={{ borderRadius: '8px', marginBottom: '20px' }}>
-      <Result
-        status="info"
-        title="Đang phát triển"
-        subTitle="Tính năng đặt lịch học đang được phát triển"
-        extra={
-          <Button type="primary" onClick={() => window.history.back()}>
-            Quay lại
-          </Button>
-        }
-      />
-    </Card>
-  );
+  return <MainClassRegistration />;
 };
 
 export default ClassRegistration;

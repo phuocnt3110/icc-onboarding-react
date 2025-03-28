@@ -1,6 +1,5 @@
 import axios from 'axios';
 import { API_CONFIG, TABLE_IDS, FIELD_MAPPINGS, MESSAGES } from '../../config';
-import { processClassList } from './utils';
 
 // Extract values from config
 const { TOKEN, BASE_URL, TIMEOUT, MAX_RETRIES } = API_CONFIG;
@@ -154,7 +153,7 @@ export const checkReservation = async (maLopBanGiao) => {
 
 /**
  * Fetch available classes based on student requirements
- * Optimized to filter non-Vietnamese fields at API level and Vietnamese fields at client side
+ * Modified to not group classes with the same code
  * @param {Object} filters - Filter criteria
  * @returns {Promise<Array>} - List of available classes
  * @throws {Error} - If filters invalid or API error
@@ -242,16 +241,11 @@ export const fetchAvailableClasses = async (filters) => {
     
     console.log(`Found ${filteredClasses.length} classes after client-side filtering`);
     
-    // Enhance class data with schedules for display
+    // Enhance class data with schedules for display but don't group them
     const enhancedClasses = filteredClasses.map(classItem => {
-
-      console.log("Schedule fields:", {
-        weekday: classItem[CLASS_FIELDS.WEEKDAY],
-        startTime: classItem[CLASS_FIELDS.START_TIME],
-        endTime: classItem[CLASS_FIELDS.END_TIME]
-      });
+      console.log("Processing class:", classItem[CLASS_FIELDS.CODE], "with weekday:", classItem[CLASS_FIELDS.WEEKDAY]);
       
-      // Create schedules structure for each class
+      // Create schedule structure for each class
       return {
         ...classItem,
         schedules: [{
@@ -261,11 +255,9 @@ export const fetchAvailableClasses = async (filters) => {
       };
     });
     
-    // Process and group classes with the same code
-    const processedClasses = processClassList(enhancedClasses);
-    console.log(`Processed ${processedClasses.length} classes for display`);
+    console.log(`Processing completed, returning ${enhancedClasses.length} classes`);
     
-    return processedClasses;
+    return enhancedClasses;
     
   } catch (error) {
     console.error('Error fetching available classes:', error);
@@ -319,7 +311,7 @@ export const fetchAvailableClasses = async (filters) => {
         return true;
       });
       
-      // Enhance classes with schedules
+      // Enhance classes with schedules but don't group them
       const enhancedClasses = filteredClasses.map(classItem => {
         return {
           ...classItem,
@@ -330,11 +322,9 @@ export const fetchAvailableClasses = async (filters) => {
         };
       });
       
-      // Process classes for display
-      const processedClasses = processClassList(enhancedClasses);
-      console.log(`Fallback: Processed ${processedClasses.length} classes for display`);
+      console.log(`Fallback: Processing completed, returning ${enhancedClasses.length} classes`);
       
-      return processedClasses;
+      return enhancedClasses;
     } catch (fallbackError) {
       console.error('Even fallback filtering failed:', fallbackError);
       throw fallbackError.originalError ? fallbackError : new Error(`Lỗi khi tải danh sách lớp học: ${fallbackError.message}`);

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Spin, Result, Button, message } from 'antd';
 import { fetchStudentData, checkReservation, fetchAvailableClasses, updateStudentClass } from './api';
-import { processClassList, formatSchedule, validateScheduleSelection, validateClassSelection } from './utils';
+import { formatSchedule, validateScheduleSelection, validateClassSelection } from './utils';
 import ReservationConfirmation from './ReservationConfirmation';
 import ClassSelection from './ClassSelection';
 import CustomSchedule from './CustomSchedule';
@@ -125,16 +125,15 @@ const ClassRegistration = () => {
           goiMua: data[STUDENT_FIELDS.PACKAGE]
         });
         
-        // Process and group classes with the same code
-        const processedClasses = processClassList(classesData);
-        setClassList(processedClasses);
+        // Set classes list directly without grouping
+        setClassList(classesData);
         setCurrentScreen('classList');
         
         // Show message if no classes found
-        if (processedClasses.length === 0) {
+        if (classesData.length === 0) {
           message.info(MESSAGES.NO_CLASSES_FOUND);
         } else {
-          message.success(MESSAGES.CLASSES_FOUND.replace('{count}', processedClasses.length));
+          message.success(MESSAGES.CLASSES_FOUND.replace('{count}', classesData.length));
         }
       } catch (error) {
         console.error('Error fetching available classes:', error);
@@ -174,8 +173,14 @@ const ClassRegistration = () => {
     setProcessingAction(true);
     
     try {
-      // Format the schedule string
-      const formattedSchedule = formatSchedule(selectedClass.schedules);
+      // Create schedule from individual class
+      const schedule = {
+        weekday: selectedClass[FIELD_MAPPINGS.CLASS.WEEKDAY] || '',
+        time: `${selectedClass[FIELD_MAPPINGS.CLASS.START_TIME] || ''} - ${selectedClass[FIELD_MAPPINGS.CLASS.END_TIME] || ''}`
+      };
+      
+      // Format the schedule string using the single schedule
+      const formattedSchedule = formatSchedule([schedule]);
       
       if (!formattedSchedule) {
         throw new Error(MESSAGES.INVALID_SCHEDULE);

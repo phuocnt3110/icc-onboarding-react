@@ -135,10 +135,17 @@ const ClassSelection = ({
       defaultSortOrder: 'ascend',
     },
     {
-      title: 'Lịch học',
-      dataIndex: 'schedules',
-      key: 'schedules',
-      render: renderSchedules,
+      title: 'Ngày học',
+      dataIndex: CLASS_FIELDS.WEEKDAY,
+      key: 'weekday',
+      render: (text) => text || 'Không có thông tin',
+    },
+    {
+      title: 'Giờ học',
+      key: 'time',
+      render: (_, record) => (
+        <span>{`${record[CLASS_FIELDS.START_TIME] || ''} - ${record[CLASS_FIELDS.END_TIME] || ''}`}</span>
+      ),
     },
     {
       title: 'Sĩ số',
@@ -188,14 +195,6 @@ const ClassSelection = ({
   const renderSelectedClass = () => {
     if (!selectedClass) return null;
     
-    // Ensure selected class has schedules
-    const schedules = selectedClass.schedules && selectedClass.schedules.length > 0 
-      ? selectedClass.schedules 
-      : [{ 
-          weekday: selectedClass.ngayHoc, 
-          time: `${selectedClass.gioBatDau} - ${selectedClass.gioKetThuc}` 
-        }];
-    
     return (
       <Card 
         type="inner" 
@@ -212,10 +211,10 @@ const ClassSelection = ({
             <Text strong>Mã lớp:</Text> {selectedClass[CLASS_FIELDS.CODE]}
           </div>
           <div>
-            <Text strong>Lịch học:</Text>
-            <div style={{ marginTop: '8px' }}>
-              {renderSchedules(schedules)}
-            </div>
+            <Text strong>Ngày học:</Text> {selectedClass[CLASS_FIELDS.WEEKDAY] || 'Không có thông tin'}
+          </div>
+          <div>
+            <Text strong>Giờ học:</Text> {`${selectedClass[CLASS_FIELDS.START_TIME] || ''} - ${selectedClass[CLASS_FIELDS.END_TIME] || ''}`}
           </div>
           <div>
             <Text strong>Ngày khai giảng:</Text> {formatDate(selectedClass[CLASS_FIELDS.START_DATE])}
@@ -237,54 +236,19 @@ const ClassSelection = ({
     );
   }
 
-  // Tạo lại thông tin lịch học từ các trường nguyên bản nếu schedules rỗng
-  const classesWithSchedules = filteredClasses.map(classItem => {
-    // Nếu không có schedules hoặc mảng rỗng, tạo lại từ ngayHoc, gioBatDau, gioKetThuc
+  // Add schedule info if missing
+  const processedClasses = classList.map(classItem => {
     if (!classItem.schedules || classItem.schedules.length === 0) {
       return {
         ...classItem,
         schedules: [{
-          weekday: classItem.ngayHoc,
-          time: `${classItem.gioBatDau} - ${classItem.gioKetThuc}`
+          weekday: classItem[CLASS_FIELDS.WEEKDAY] || '',
+          time: `${classItem[CLASS_FIELDS.START_TIME] || ''} - ${classItem[CLASS_FIELDS.END_TIME] || ''}`
         }]
       };
     }
     return classItem;
   });
-
-  // Gộp các lớp có cùng mã lớp
-  const groupedClasses = {};
-  
-  classesWithSchedules.forEach(classItem => {
-    const classCode = classItem[CLASS_FIELDS.CODE];
-    
-    if (!groupedClasses[classCode]) {
-      groupedClasses[classCode] = {
-        ...classItem,
-        originalEntries: [classItem],
-        schedules: [...classItem.schedules]
-      };
-    } else {
-      // Thêm bản ghi gốc vào danh sách
-      groupedClasses[classCode].originalEntries.push(classItem);
-      
-      // Thêm lịch học mới nếu chưa tồn tại
-      classItem.schedules.forEach(schedule => {
-        const exists = groupedClasses[classCode].schedules.some(
-          s => s.weekday === schedule.weekday && s.time === schedule.time
-        );
-        
-        if (!exists) {
-          groupedClasses[classCode].schedules.push(schedule);
-        }
-      });
-    }
-  });
-  
-  // Chuyển đổi thành mảng để hiển thị
-  const finalClassList = Object.values(groupedClasses);
-  
-  console.log("Classes to display:", finalClassList);
 
   return (
     <Card style={{ borderRadius: '8px', marginBottom: '20px' }}>
@@ -322,11 +286,11 @@ const ClassSelection = ({
         </Col>
       </Row>
       
-      {finalClassList && finalClassList.length > 0 ? (
+      {filteredClasses && filteredClasses.length > 0 ? (
         <Table 
-          dataSource={finalClassList} 
+          dataSource={filteredClasses} 
           columns={columns} 
-          rowKey={CLASS_FIELDS.CODE} 
+          rowKey={(record) => `${record[CLASS_FIELDS.CODE]}_${record[CLASS_FIELDS.WEEKDAY]}_${record[CLASS_FIELDS.START_TIME]}`} 
           pagination={{ 
             pageSize: 5,
             showSizeChanger: true,
@@ -355,7 +319,7 @@ const ClassSelection = ({
         </Button>
         <Button 
           type="primary" 
-          onClick={() => onClassSelect(selectedClass, selectedClass?.originalEntries)}
+          onClick={() => onClassSelect(selectedClass)}
           disabled={!selectedClass || loading}
           loading={loading}
         >
