@@ -13,7 +13,9 @@ import {
   Input,
   Row,
   Col,
-  Tooltip
+  Tooltip,
+  Modal,
+  message
 } from 'antd';
 import { 
   CalendarOutlined, 
@@ -21,7 +23,8 @@ import {
   UserOutlined, 
   CheckCircleOutlined,
   SearchOutlined,
-  ExclamationCircleOutlined
+  ExclamationCircleOutlined,
+  QuestionCircleOutlined
 } from '@ant-design/icons';
 import { formatDate, validateClassSelection } from './utils';
 import { FIELD_MAPPINGS } from '../../config';
@@ -42,6 +45,7 @@ const { STUDENT: STUDENT_FIELDS, CLASS: CLASS_FIELDS } = FIELD_MAPPINGS;
  * @param {Function} onClassSelect - Function to call when selecting a class
  * @param {Function} onSwitchToCustomSchedule - Function to call when switching to custom schedule
  * @param {boolean} loading - Loading state
+ * @param {Function} onRefresh - Function to refresh class list data
  */
 const ClassSelection = ({ 
   studentData, 
@@ -49,7 +53,8 @@ const ClassSelection = ({
   showWarning = false, 
   onClassSelect, 
   onSwitchToCustomSchedule,
-  loading = false
+  loading = false,
+  onRefresh
 }) => {
   const [selectedClass, setSelectedClass] = useState(null);
   const [selectedSchedule, setSelectedSchedule] = useState(null);
@@ -57,6 +62,8 @@ const ClassSelection = ({
   const [filteredClasses, setFilteredClasses] = useState([]);
   const [groupedClasses, setGroupedClasses] = useState([]);
   const [tableLoading, setTableLoading] = useState(false);
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [classToConfirm, setClassToConfirm] = useState(null);
 
   // Process and group classes when classList changes
   useEffect(() => {
@@ -200,18 +207,94 @@ const ClassSelection = ({
   
   // Handle class and schedule selection
   const handleClassSelection = (record, schedule) => {
-    // If schedule is provided, use its original class
-    const classToSelect = schedule ? schedule.originalClass : record;
+    console.log("Đã nhận nút chọn");
     
-    const validationResult = validateClassSelection(studentData, classToSelect);
-    
-    if (!validationResult.valid) {
-      alert(validationResult.message);
-      return;
+    if (schedule) {
+      // Nếu người dùng chọn một lịch học cụ thể từ tag
+      const classToSelect = schedule.originalClass;
+      
+      // Tìm record đầy đủ từ groupedClasses có chứa tất cả lịch học 
+      const fullRecord = groupedClasses.find(item => 
+        item[CLASS_FIELDS.CODE] === classToSelect[CLASS_FIELDS.CODE]
+      );
+      
+      // Kiểm tra tính hợp lệ của lớp học
+      const validationResult = validateClassSelection(studentData, classToSelect);
+      if (!validationResult.valid) {
+        message.error(validationResult.message);
+        return;
+      }
+      
+      // Lưu lại record đầy đủ để hiển thị tất cả lịch học
+      setClassToConfirm(fullRecord);
+      setSelectedSchedule(schedule);
+    } else {
+      // Nếu người dùng nhấn nút "Chọn" trên bảng
+      // Kiểm tra tính hợp lệ của lớp học
+      const validationResult = validateClassSelection(studentData, record);
+      if (!validationResult.valid) {
+        message.error(validationResult.message);
+        return;
+      }
+      
+      // Lưu lại record đã được gom nhóm (đã có allSchedules)
+      setClassToConfirm(record);
     }
     
-    setSelectedClass(classToSelect);
-    setSelectedSchedule(schedule);
+    // Hiển thị modal xác nhận
+    setIsModalVisible(true);
+  };
+  
+  // Xác nhận chọn lớp
+  const handleConfirmSelection = () => {
+    if (classToConfirm) {
+      // Nếu có selectedSchedule, truyền originalClass của schedule đó
+      // Nếu không, truyền toàn bộ classToConfirm
+      const classToSend = selectedSchedule 
+        ? selectedSchedule.originalClass 
+        : classToConfirm;
+      
+      // Gọi onClassSelect để chuyển đến màn hình Success
+      onClassSelect(classToSend);
+    }
+    
+    // Đóng modal
+    setIsModalVisible(false);
+  };
+  
+  // Hủy chọn lớp
+  const handleCancelSelection = () => {
+    // Đóng modal
+    setIsModalVisible(false);
+    
+    // Reset class đã chọn
+    setClassToConfirm(null);
+    
+    // Reset các state liên quan
+    setSelectedClass(null);
+    setSelectedSchedule(null);
+    
+    // Hiển thị thông báo
+    message.info('Đã hủy chọn lớp, đang tải lại dữ liệu...');
+    
+    // Đặt bảng về trạng thái loading
+    setTableLoading(true);
+    
+    // Gọi callback để tải lại dữ liệu từ server
+    if (typeof onRefresh === 'function') {
+      onRefresh().then(() => {
+        // Đảm bảo tableLoading được đặt về false sau khi refresh xong
+        setTableLoading(false);
+      }).catch(() => {
+        // Đảm bảo tableLoading được đặt về false ngay cả khi refresh thất bại
+        setTableLoading(false);
+      });
+    } else {
+      // Fallback nếu không có onRefresh
+      setTimeout(() => {
+        setTableLoading(false);
+      }, 500);
+    }
   };
   
   // Render class schedules as tags
@@ -306,7 +389,6 @@ const ClassSelection = ({
           type="primary" 
           onClick={() => handleClassSelection(record)}
           size="small"
-          disabled={selectedSchedule && selectedSchedule.originalClass[CLASS_FIELDS.CODE] !== record[CLASS_FIELDS.CODE]}
         >
           Chọn
         </Button>
@@ -314,50 +396,6 @@ const ClassSelection = ({
       width: 100,
     },
   ];
-  
-  // Render selected class details
-  const renderSelectedClass = () => {
-    if (!selectedClass) return null;
-    
-    // If we have a selected schedule, display that specific schedule
-    const scheduleToDisplay = selectedSchedule ? 
-      [{
-        weekday: selectedSchedule.weekday,
-        time: selectedSchedule.time
-      }] : 
-      (selectedClass.schedules || []);
-    
-    return (
-      <Card 
-        type="inner" 
-        title={
-          <Space>
-            <CheckCircleOutlined style={{ color: '#52c41a' }} />
-            <span>Thông tin lớp đã chọn</span>
-          </Space>
-        }
-        style={{ marginTop: '20px', marginBottom: '20px' }}
-      >
-        <Space direction="vertical" size="middle" style={{ width: '100%' }}>
-          <div>
-            <Text strong>Mã lớp:</Text> {selectedClass[CLASS_FIELDS.CODE]}
-          </div>
-          <div>
-            <Text strong>Lịch học:</Text>
-            <div style={{ marginTop: '8px' }}>
-              {renderSchedules(scheduleToDisplay)}
-            </div>
-          </div>
-          <div>
-            <Text strong>Ngày khai giảng:</Text> {formatDate(selectedClass[CLASS_FIELDS.START_DATE])}
-          </div>
-          <div>
-            <Text strong>Sĩ số hiện tại:</Text> {selectedClass[CLASS_FIELDS.REGISTERED] || 0}/{selectedClass[CLASS_FIELDS.TOTAL_SLOTS] || 0}
-          </div>
-        </Space>
-      </Card>
-    );
-  };
 
   // If data is still loading, show skeleton
   if (loading && !classList.length) {
@@ -429,21 +467,89 @@ const ClassSelection = ({
         />
       )}
       
-      {renderSelectedClass()}
-      
       <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '20px' }}>
         <Button onClick={onSwitchToCustomSchedule} disabled={loading}>
           Chọn lịch khác
         </Button>
-        <Button 
-          type="primary" 
-          onClick={() => onClassSelect(selectedClass)}
-          disabled={!selectedClass || loading}
-          loading={loading}
-        >
-          Xác nhận lịch học
-        </Button>
       </div>
+      
+      {/* Modal xác nhận chọn lớp */}
+      <Modal
+        title={
+          <Space>
+            <QuestionCircleOutlined style={{ color: '#1890ff' }} />
+            <span>Xác nhận chọn lớp</span>
+          </Space>
+        }
+        open={isModalVisible}
+        onOk={handleConfirmSelection}
+        onCancel={handleCancelSelection}
+        okText="Xác nhận"
+        cancelText="Hủy"
+        centered
+      >
+        {classToConfirm && (
+          <div>
+            <Paragraph>
+              Bạn có chắc chắn muốn chọn lớp này không?
+            </Paragraph>
+            <div style={{ background: '#f5f5f5', padding: '16px', borderRadius: '4px', marginTop: '12px' }}>
+              <Space direction="vertical" size="small" style={{ width: '100%' }}>
+                <div>
+                  <Text strong>Mã lớp:</Text> {classToConfirm[CLASS_FIELDS.CODE]}
+                </div>
+                <div>
+                  <Text strong>Lịch học:</Text>
+                  <div style={{ marginTop: '8px' }}>
+                    {classToConfirm.allSchedules && classToConfirm.allSchedules.length > 0 ? (
+                      // Hiển thị tất cả lịch học từ allSchedules
+                      <Space direction="vertical" size="small" style={{ width: '100%' }}>
+                        {classToConfirm.allSchedules.map((schedule, index) => (
+                          <Tag color="blue" key={index}>
+                            <Space>
+                              <CalendarOutlined /> {schedule.weekday}
+                              <ClockCircleOutlined /> {schedule.time}
+                            </Space>
+                          </Tag>
+                        ))}
+                      </Space>
+                    ) : (
+                      // Backup: Hiển thị lịch học từ schedules hoặc trường nguyên bản
+                      classToConfirm.schedules && classToConfirm.schedules.length > 0 ? (
+                        <Space direction="vertical" size="small" style={{ width: '100%' }}>
+                          {classToConfirm.schedules.map((schedule, index) => (
+                            <Tag color="blue" key={index}>
+                              <Space>
+                                <CalendarOutlined /> {schedule.weekday}
+                                <ClockCircleOutlined /> {schedule.time}
+                              </Space>
+                            </Tag>
+                          ))}
+                        </Space>
+                      ) : (
+                        <Tag color="blue">
+                          <Space>
+                            <CalendarOutlined /> {classToConfirm[CLASS_FIELDS.WEEKDAY] || ''}
+                            <ClockCircleOutlined /> {
+                              `${classToConfirm[CLASS_FIELDS.START_TIME] || ''} - ${classToConfirm[CLASS_FIELDS.END_TIME] || ''}`
+                            }
+                          </Space>
+                        </Tag>
+                      )
+                    )}
+                  </div>
+                </div>
+                <div>
+                  <Text strong>Ngày khai giảng:</Text> {formatDate(classToConfirm[CLASS_FIELDS.START_DATE])}
+                </div>
+                <div>
+                  <Text strong>Sĩ số hiện tại:</Text> {classToConfirm[CLASS_FIELDS.REGISTERED] || 0}/{classToConfirm[CLASS_FIELDS.TOTAL_SLOTS] || 0}
+                </div>
+              </Space>
+            </div>
+          </div>
+        )}
+      </Modal>
     </Card>
   );
 };

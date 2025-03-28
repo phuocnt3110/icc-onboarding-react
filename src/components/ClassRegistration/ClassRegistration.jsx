@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Spin, Result, Button, message } from 'antd';
-import { fetchStudentData, checkReservation, fetchAvailableClasses, updateStudentClass } from './api';
+import { fetchStudentData, checkReservation, fetchAvailableClasses, updateStudentClass, updateClassRegistration } from './api';
 import { formatSchedule, validateScheduleSelection, validateClassSelection } from './utils';
 import ReservationConfirmation from './ReservationConfirmation';
 import ClassSelection from './ClassSelection';
@@ -159,7 +159,89 @@ const ClassRegistration = () => {
    */
   const handleClassSelection = async (selectedClass) => {
     console.log("Đã nhận nút chọn");
-    // Đã xóa toàn bộ xử lý tác vụ cũ
+    
+    if (!selectedClass) {
+      message.error(MESSAGES.SELECT_CLASS);
+      return;
+    }
+    
+    // Validate class selection
+    const validationResult = validateClassSelection(studentData, selectedClass);
+    if (!validationResult.valid) {
+      message.error(validationResult.message);
+      return;
+    }
+    
+    setProcessingAction(true);
+    
+    try {
+      // 1. Xử lý thông tin lịch học từ lớp được chọn
+      let scheduleString = "";
+      
+      // Kiểm tra nếu selectedClass có thông tin về tất cả lịch học
+      if (selectedClass.allSchedules && selectedClass.allSchedules.length > 0) {
+        // Format lịch học: "ngayHoc1 - gioBatDau1 : gioKetThuc1 / ngayHoc2 - gioBatDau2 : gioKetThuc2 /..."
+        scheduleString = selectedClass.allSchedules.map(schedule => {
+          // Từ chuỗi thời gian "08:00 - 10:00", tách thành giờ bắt đầu và giờ kết thúc
+          const timeParts = schedule.time.split(' - ');
+          return `${schedule.weekday} - ${timeParts[0]} : ${timeParts[1]}`;
+        }).join(' / ');
+      } else if (selectedClass.schedules && selectedClass.schedules.length > 0) {
+        // Trường hợp dự phòng, nếu có schedules nhưng không có allSchedules
+        scheduleString = selectedClass.schedules.map(schedule => {
+          const timeParts = schedule.time.split(' - ');
+          return `${schedule.weekday} - ${timeParts[0]} : ${timeParts[1]}`;
+        }).join(' / ');
+      } else {
+        // Trường hợp dự phòng, nếu không có schedules
+        scheduleString = `${selectedClass[FIELD_MAPPINGS.CLASS.WEEKDAY]} - ${selectedClass[FIELD_MAPPINGS.CLASS.START_TIME]} : ${selectedClass[FIELD_MAPPINGS.CLASS.END_TIME]}`;
+      }
+      
+      console.log("Lịch học đã format:", scheduleString);
+      
+      // 2. Cập nhật thông tin học viên
+      await updateStudentClass(studentData.Id, {
+        [STUDENT_FIELDS.CLASS_CODE]: selectedClass[FIELD_MAPPINGS.CLASS.CODE],
+        [STUDENT_FIELDS.SCHEDULE]: scheduleString,
+        [STUDENT_FIELDS.START_DATE]: selectedClass[FIELD_MAPPINGS.CLASS.START_DATE],
+        [STUDENT_FIELDS.STATUS]: "HV Chọn lịch hệ thống"
+      });
+      
+      // 3. Cập nhật số lượng đăng ký trong bảng Class
+      try {
+        // Lấy mã lớp học từ selectedClass
+        const classCode = selectedClass[FIELD_MAPPINGS.CLASS.CODE];
+        
+        if (classCode) {
+          // Gọi API để cập nhật số lượng đăng ký cho tất cả bản ghi của lớp
+          await updateClassRegistration(classCode);
+          console.log("Đã cập nhật số lượng đăng ký cho lớp:", classCode);
+        } else {
+          console.warn("Không tìm thấy mã lớp, không thể cập nhật số lượng đăng ký");
+        }
+      } catch (classUpdateError) {
+        console.error("Lỗi khi cập nhật số lượng đăng ký:", classUpdateError);
+        // Vẫn tiếp tục xử lý vì đã cập nhật thành công thông tin học viên
+      }
+      
+      // 4. Cập nhật state trong component
+      setStudentData(prev => ({
+        ...prev,
+        [STUDENT_FIELDS.CLASS_CODE]: selectedClass[FIELD_MAPPINGS.CLASS.CODE],
+        [STUDENT_FIELDS.SCHEDULE]: scheduleString,
+        [STUDENT_FIELDS.START_DATE]: selectedClass[FIELD_MAPPINGS.CLASS.START_DATE],
+        [STUDENT_FIELDS.STATUS]: "HV Chọn lịch hệ thống"
+      }));
+      
+      // 5. Chuyển đến màn hình thành công
+      setCurrentScreen('success');
+      message.success(MESSAGES.CLASS_REGISTRATION_SUCCESS);
+    } catch (error) {
+      console.error('Error updating class selection:', error);
+      message.error(error.message || MESSAGES.CLASS_REGISTRATION_FAILED.replace('{error}', ''));
+    } finally {
+      setProcessingAction(false);
+    }
   };
 
   /**
@@ -248,6 +330,28 @@ const ClassRegistration = () => {
   };
 
   /**
+   * Refresh class list data from API
+   */
+  const refreshClassList = async () => {
+    try {
+      const classesData = await fetchAvailableClasses({
+        sanPham: studentData[STUDENT_FIELDS.PRODUCT],
+        sizeLop: studentData[STUDENT_FIELDS.CLASS_SIZE],
+        loaiGv: studentData[STUDENT_FIELDS.TEACHER_TYPE],
+        goiMua: studentData[STUDENT_FIELDS.PACKAGE]
+      });
+      
+      setClassList(classesData);
+      message.success('Đã tải lại danh sách lớp học');
+      return Promise.resolve();
+    } catch (error) {
+      console.error('Error refreshing class list:', error);
+      message.error('Không thể tải lại danh sách lớp học');
+      return Promise.reject(error);
+    }
+  };
+
+  /**
    * Navigate between screens
    */
   const handleSwitchToCustomSchedule = () => {
@@ -330,6 +434,7 @@ const ClassRegistration = () => {
             onClassSelect={handleClassSelection}
             onSwitchToCustomSchedule={handleSwitchToCustomSchedule}
             loading={processingAction}
+            onRefresh={refreshClassList}
           />
         );
       

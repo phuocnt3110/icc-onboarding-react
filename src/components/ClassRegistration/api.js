@@ -405,4 +405,47 @@ export const updateStudentClass = async (studentId, updateData) => {
   }
 };
 
+/**
+ * Update class registration count for all records with the same class code
+ * @param {string} classCode - Class code
+ * @returns {Promise<Object>} - Status of update operation
+ * @throws {Error} - If update fails or API error
+ */
+export const updateClassRegistration = async (classCode) => {
+  if (!classCode) {
+    throw new Error('Thiếu mã lớp học');
+  }
+  
+  try {
+    // Tìm tất cả bản ghi có cùng mã lớp
+    const response = await apiClient.get(`/tables/${CLASS}/records?where=(${CLASS_FIELDS.CODE},eq,${classCode})`);
+    
+    if (!response.data || !response.data.list || response.data.list.length === 0) {
+      throw new Error(`Không tìm thấy lớp học với mã ${classCode}`);
+    }
+    
+    const classRecords = response.data.list;
+    console.log(`Tìm thấy ${classRecords.length} bản ghi với mã lớp ${classCode}`);
+    
+    // Cập nhật soDaDangKy cho tất cả bản ghi
+    const updatePromises = classRecords.map(record => {
+      const currentRegistered = record[CLASS_FIELDS.REGISTERED] || 0;
+      const newRegistered = currentRegistered + 1;
+      
+      return apiClient.patch(`/tables/${CLASS}/records`, {
+        Id: record.Id,
+        [CLASS_FIELDS.REGISTERED]: newRegistered
+      });
+    });
+    
+    // Chờ tất cả các request cập nhật hoàn thành
+    await Promise.all(updatePromises);
+    
+    return { success: true, message: `Đã cập nhật ${classRecords.length} bản ghi cho lớp ${classCode}` };
+  } catch (error) {
+    console.error('Error updating class registration:', error);
+    throw error.originalError ? error : new Error(`Lỗi khi cập nhật số lượng đăng ký lớp học: ${error.message}`);
+  }
+};
+
 export default apiClient;
