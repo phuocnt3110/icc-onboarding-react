@@ -1,5 +1,5 @@
 // Export main component and sub-components
-import ClassRegistration from './index.jsx';
+import ClassRegistration from './ClassRegistration.jsx';
 import ReservationConfirmation from './ReservationConfirmation';
 import ClassSelection from './ClassSelection';
 import CustomSchedule from './CustomSchedule';

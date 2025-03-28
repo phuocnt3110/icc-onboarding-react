@@ -257,6 +257,46 @@ export const fetchAvailableClasses = async (filters) => {
     
     console.log(`Processing completed, returning ${enhancedClasses.length} classes`);
     
+    // Hàm xác định thứ tự của ngày trong tuần
+    const getWeekdayOrder = (weekday) => {
+      const weekdayMap = {
+        'Thứ 2': 1,
+        'Thứ 3': 2,
+        'Thứ 4': 3,
+        'Thứ 5': 4,
+        'Thứ 6': 5,
+        'Thứ 7': 6,
+        'Chủ nhật': 7
+      };
+      
+      return weekdayMap[weekday] || 99;
+    };
+
+    // Sắp xếp enhancedClasses trước khi trả về
+    enhancedClasses.sort((a, b) => {
+      // Đầu tiên, sắp xếp theo ngày khai giảng
+      const dateA = a[CLASS_FIELDS.START_DATE] ? new Date(a[CLASS_FIELDS.START_DATE]) : new Date();
+      const dateB = b[CLASS_FIELDS.START_DATE] ? new Date(b[CLASS_FIELDS.START_DATE]) : new Date();
+      if (dateA.getTime() !== dateB.getTime()) {
+        return dateA - dateB;
+      }
+      
+      // Nếu cùng ngày khai giảng, sắp xếp theo mã lớp
+      if (a[CLASS_FIELDS.CODE] !== b[CLASS_FIELDS.CODE]) {
+        return a[CLASS_FIELDS.CODE].localeCompare(b[CLASS_FIELDS.CODE]);
+      }
+      
+      // Nếu cùng mã lớp, sắp xếp theo thứ trong tuần
+      const weekdayOrderA = getWeekdayOrder(a[CLASS_FIELDS.WEEKDAY]);
+      const weekdayOrderB = getWeekdayOrder(b[CLASS_FIELDS.WEEKDAY]);
+      if (weekdayOrderA !== weekdayOrderB) {
+        return weekdayOrderA - weekdayOrderB;
+      }
+      
+      // Nếu cùng thứ, sắp xếp theo giờ bắt đầu
+      return a[CLASS_FIELDS.START_TIME].localeCompare(b[CLASS_FIELDS.START_TIME]);
+    });
+
     return enhancedClasses;
     
   } catch (error) {
