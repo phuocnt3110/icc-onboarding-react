@@ -4,7 +4,7 @@ import { fetchStudentData, checkReservation, fetchAvailableClasses, updateStuden
 import { formatSchedule, validateScheduleSelection, validateClassSelection } from './utils';
 import ReservationConfirmation from './ReservationConfirmation';
 import ClassSelection from './ClassSelection';
-import CustomSchedule from './CustomSchedule';
+import CustomSchedule from './CustomSchedule/index';
 import SuccessScreen from './SuccessScreen';
 import { MESSAGES, FIELD_MAPPINGS } from '../../config';
 
@@ -98,7 +98,7 @@ const ClassRegistration = () => {
   const handleCase3 = async (data, showWarning = false) => {
     setCurrentCase(3);
     
-    if (data[STUDENT_FIELDS.CLASS_SIZE] === '1:01') {
+    if (data[STUDENT_FIELDS.CLASS_SIZE] === '1:1') {
       // Case 3b: 1:1 class - show custom schedule screen
       setCurrentScreen('customSchedule');
       setLoading(false);
@@ -359,7 +359,7 @@ const ClassRegistration = () => {
   };
 
   const handleChooseAgain = () => {
-    if (studentData[STUDENT_FIELDS.CLASS_SIZE] === '1:01') {
+    if (studentData[STUDENT_FIELDS.CLASS_SIZE] === '1:1') {
       setCurrentScreen('customSchedule');
     } else {
       setCurrentScreen('classList');
@@ -443,7 +443,7 @@ const ClassRegistration = () => {
           <CustomSchedule
             studentData={studentData}
             onSubmit={handleCustomScheduleSubmit}
-            onCancel={() => studentData[STUDENT_FIELDS.CLASS_SIZE] === '1:01' ? window.history.back() : setCurrentScreen('classList')}
+            onCancel={() => studentData[STUDENT_FIELDS.CLASS_SIZE] === '1:1' ? window.history.back() : setCurrentScreen('classList')}
             loading={processingAction}
             fromCase2={currentCase === 2}
           />

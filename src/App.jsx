@@ -91,12 +91,13 @@ const App = () => {
             
             {/* Content with added top padding to prevent overlap with fixed header */}
             <Content style={{ 
-              padding: '20px', 
+              padding: '20px 5px', // Giảm padding ngang để mở rộng không gian
               background: 'transparent',
-              marginTop: '64px', // Added margin to prevent content from being hidden under header
-              marginBottom: '50px', // Added margin to prevent content from being hidden under footer
+              marginTop: '64px',
+              marginBottom: '50px',
               position: 'relative',
               zIndex: 1,
+              width: '100%', // Đảm bảo sử dụng toàn bộ không gian ngang
             }}>
               {/* Horizontal Progress Steps */}
               <div className="progress-steps">

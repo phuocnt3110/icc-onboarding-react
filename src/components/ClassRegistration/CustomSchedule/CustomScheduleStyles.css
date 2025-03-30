@@ -1,0 +1,247 @@
+/* Styles for CustomSchedule component */
+.custom-schedule {
+    font-family: inherit;
+    width: 100%;
+  }
+  
+  /* Schedule grid container */
+  .schedule-container {
+    width: 100%;
+    user-select: none;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-x pan-y;
+    margin: 10px 0;
+    border-radius: 4px;
+    background-color: white;
+    overflow: hidden; /* Prevent horizontal scroll */
+  }
+  
+  .schedule-grid {
+    display: flex;
+    width: 100%;
+    position: relative;
+  }
+  
+  /* Filter bar */
+  .filter-bar {
+    margin: 10px 0;
+  }
+  
+  /* Time column styles */
+  .time-column {
+    width: 60px;
+    flex-shrink: 0;
+    flex-grow: 0;
+  }
+  
+  .time-header {
+    height: 50px;
+    border-bottom: 1px solid #f0f0f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #fafafa;
+    font-weight: bold;
+  }
+  
+  .time-slots {
+    position: relative;
+  }
+  
+  .time-slot-cell {
+    height: 36px;
+    border-bottom: 1px solid #f0f0f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+  }
+  
+  /* Day column styles */
+  .day-column {
+    flex: 1;
+    min-width: 0; /* Allow columns to shrink below content size */
+  }
+  
+  .day-header {
+    height: 50px;
+    border-bottom: 1px solid #f0f0f0;
+    border-left: 1px solid #f0f0f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #fafafa;
+    font-weight: bold;
+  }
+  
+  .day-grid {
+    position: relative;
+    border-left: 1px solid #f0f0f0;
+    background-color: white;
+    touch-action: none;
+  }
+  
+  .grid-line {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    height: 1px;
+    background-color: #f0f0f0;
+  }
+  
+  /* Schedule slot styles */
+  .schedule-slot {
+    position: absolute;
+    left: 5%;
+    width: 90%;
+    background-color: #00509f; /* Màu chính của ICANCONNECT */
+    border-radius: 4px;
+    color: white;
+    padding: 4px 4px; /* Reduced padding */
+    cursor: pointer;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    justify-content: center; /* Center content vertically */
+    touch-action: none;
+    min-height: 36px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: background-color 0.2s ease;
+  }
+  
+  .schedule-slot:hover {
+    background-color: #0066cc;
+  }
+  
+  .slot-time {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 12px;
+    text-align: center; /* Center text */
+    max-width: 100%; /* Ensure text doesn't overflow */
+    line-height: 1.3; /* Improve line height for better readability */
+  }
+  
+  /* Drag preview */
+  .drag-preview {
+    position: absolute;
+    left: 5%;
+    width: 90%;
+    z-index: 5;
+    pointer-events: none;
+    border-radius: 4px;
+  }
+  
+  .drag-preview-select {
+    background-color: rgba(0, 80, 159, 0.3);
+    border: 2px dashed #00509f;
+  }
+  
+  .drag-preview-deselect {
+    background-color: rgba(245, 34, 45, 0.2);
+    border: 2px dashed #f5222d;
+  }
+  
+  /* Selected slots styles */
+  .selected-slots-card {
+    margin-top: 15px;
+  }
+  
+  .day-slots {
+    margin-bottom: 10px;
+  }
+  
+  .slot-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 8px;
+  }
+  
+  /* Mobile styles */
+  @media (max-width: 768px) {
+    .time-column {
+      width: 40px;
+    }
+    
+    .time-slot-cell {
+      font-size: 11px;
+    }
+    
+    /* Hide time text on small screens */
+    .schedule-slot .slot-time {
+      display: none;
+    }
+    
+    .schedule-slot {
+      padding: 0; /* Reduce padding on mobile */
+    }
+    
+    .day-header, .time-header {
+      height: 40px;
+      font-size: 11px;
+    }
+  
+    .day-header {
+      padding: 0 2px;
+    }
+  }
+
+  /* Thêm vào CustomScheduleStyles.css */
+
+/* Định dạng bộ lọc thời gian */
+.custom-schedule .ant-segmented {
+    background-color: #f5f5f5;
+    border-radius: 4px;
+    padding: 1px;
+  }
+  
+  /* Highlight mục đã chọn */
+  .custom-schedule .ant-segmented .ant-segmented-item-selected {
+    background-color: #00509f !important; /* Màu chính của ICANCONNECT */
+    color: white !important;
+    font-weight: bold;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+  }
+  
+  /* Hover effect cho các mục chưa chọn */
+  .custom-schedule .ant-segmented .ant-segmented-item:hover:not(.ant-segmented-item-selected) {
+    color: #00509f;
+    background-color: rgba(0, 80, 159, 0.1);
+    border-radius: 4px;
+    transition: all 0.3s ease;
+  }
+  
+  /* Tùy chỉnh từng filter */
+  .custom-schedule .ant-segmented .ant-segmented-item[value="all"].ant-segmented-item-selected {
+    background-color: #00509f !important;
+  }
+  
+  .custom-schedule .ant-segmented .ant-segmented-item[value="morning"].ant-segmented-item-selected {
+    background-color: #f5a623 !important; /* Màu vàng cho buổi sáng */
+  }
+  
+  .custom-schedule .ant-segmented .ant-segmented-item[value="afternoon"].ant-segmented-item-selected {
+    background-color: #d0021b !important; /* Màu đỏ cho buổi chiều */
+  }
+  
+  .custom-schedule .ant-segmented .ant-segmented-item[value="evening"].ant-segmented-item-selected {
+    background-color: #9013fe !important; /* Màu tím cho buổi tối */
+  }
+  
+  /* Tăng kích thước và khoảng cách */
+  .custom-schedule .filter-bar {
+    margin: 10px 10px;
+  }
+  
+  .custom-schedule .ant-segmented {
+    width: 100%;
+  }
+  
+  .custom-schedule .ant-segmented-item {
+    min-height: 32px;
+    line-height: 32px;
+  }

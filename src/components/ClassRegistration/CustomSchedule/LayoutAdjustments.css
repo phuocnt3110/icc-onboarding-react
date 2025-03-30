@@ -1,0 +1,50 @@
+/* Điều chỉnh vùng bao quanh để tối đa hóa không gian */
+
+/* Tăng độ rộng tối đa của form container */
+.form-container {
+    max-width: 95% !important;
+    width: 95% !important;
+    margin: 0 auto !important;
+  }
+  
+  /* Tăng độ rộng của nội dung chính */
+  .ant-layout-content {
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+  }
+  
+  /* Đảm bảo schedule grid không bị quá rộng trên màn hình lớn */
+  @media screen and (min-width: 1600px) {
+    .form-container {
+      max-width: 1500px !important;
+      width: 90% !important;
+    }
+  }
+  
+  /* Đảm bảo schedule grid không bị quá nhỏ trên màn hình nhỏ */
+  @media screen and (max-width: 768px) {
+    .form-container {
+      max-width: 100% !important;
+      width: 100% !important;
+      padding-left: 5px !important;
+      padding-right: 5px !important;
+    }
+  }
+  
+  /* Điều chỉnh layout cụ thể cho component CustomSchedule */
+  .custom-schedule .schedule-grid {
+    min-width: auto !important; /* Bỏ giới hạn tối thiểu */
+    width: 100% !important;
+  }
+  
+  /* Điều chỉnh kích thước cột để phù hợp với không gian có sẵn */
+  .custom-schedule .day-column {
+    min-width: 0 !important; /* Bỏ min-width */
+    flex: 1 !important; /* Chia đều không gian khả dụng */
+  }
+  
+  /* Điều chỉnh cột giờ để cố định kích thước */
+  .custom-schedule .time-column {
+    width: 60px !important;
+    flex-shrink: 0 !important;
+  }

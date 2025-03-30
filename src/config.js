@@ -15,7 +15,8 @@ export const API_CONFIG = {
   export const TABLE_IDS = {
     STUDENT: "muavbrdc7f1epco",  // Bảng data_main
     RESERVATION: "mbzjxhps0pfgw75",  // Bảng form_giu_cho
-    CLASS: "mdtxnu17rxx23iq"  // Bảng data_class_total
+    CLASS: "mdtxnu17rxx23iq",  // Bảng data_class_total
+    STUDENT_INFO: "student_info_table_id" // Bảng student_info (thay thế ID thực tế)
   };
   
   // Field mappings between tables
@@ -42,6 +43,8 @@ export const API_CONFIG = {
       START_DATE: "ngayKhaiGiangDuKien",
       STATUS: "trangThaiChonLop",
       LOCATION: "diaChi",
+      ZALO_PHONE: "soDienThoaiDangKyZalo", // Trường thông tin SĐT Zalo
+      MA_THEO_DOI: "maTheoDoi", // Mã theo dõi học viên
     },
     
     // Class table field mappings
@@ -68,6 +71,13 @@ export const API_CONFIG = {
       ORDER_CODE: "ma_order",
       CLASS_CODE: "ma_lop",
       IS_VALID: "checkHopLe"
+    },
+    
+    // Student Info table field mappings
+    STUDENT_INFO: {
+      ID: "Id",
+      STUDENT_ID: "maHocVien",
+      SCHEDULE_BITMAP: "scheduleBitmap"
     }
   };
   
