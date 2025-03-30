@@ -241,3 +241,145 @@ import {
       time: `${item.startTime}-${item.endTime}`
     }));
   };
+  
+  /**
+   * Merge adjacent time slots within the same day to reduce the total number of slots
+   * This is particularly useful when there are many individual slot selections
+   * 
+   * @param {Object} schedule - Schedule bitmap object
+   * @returns {Object} - Optimized schedule bitmap
+   */
+  export const optimizeBitmap = (schedule) => {
+    if (!schedule) return schedule;
+    
+    const optimized = {};
+    
+    // Process each day
+    Object.keys(schedule).forEach(dayIndex => {
+      const dayBitmap = schedule[dayIndex];
+      const optimizedDay = [...dayBitmap];
+      
+      // Find consecutive 1s and merge them (fill gaps of up to 1 slot)
+      let inSequence = false;
+      let sequenceStart = -1;
+      
+      for (let i = 0; i < dayBitmap.length; i++) {
+        if (dayBitmap[i] === 1) {
+          if (!inSequence) {
+            // Start new sequence
+            inSequence = true;
+            sequenceStart = i;
+          }
+          // Continue sequence
+        } else {
+          if (inSequence) {
+            // Check if the gap is just 1 slot and there's another 1 after it
+            if (i < dayBitmap.length - 1 && dayBitmap[i + 1] === 1) {
+              // Fill the gap
+              optimizedDay[i] = 1;
+            } else {
+              // End sequence
+              inSequence = false;
+            }
+          }
+        }
+      }
+      
+      optimized[dayIndex] = optimizedDay;
+    });
+    
+    return optimized;
+  };
+  
+  /**
+   * Prioritize schedules by importance when we need to truncate
+   * This ensures the most important slots are kept when truncating
+   * 
+   * @param {Array} scheduleList - Array of schedule objects from getScheduleList()
+   * @param {Number} maxSlots - Maximum number of slots to keep
+   * @returns {Array} - Prioritized schedule list
+   */
+  export const prioritizeSchedules = (scheduleList, maxSlots = 8) => {
+    if (!scheduleList || !Array.isArray(scheduleList)) return [];
+    if (scheduleList.length <= maxSlots) return scheduleList;
+    
+    // Clone to avoid modifying original
+    const slots = [...scheduleList];
+    
+    // Sort by priority criteria
+    const prioritized = slots.sort((a, b) => {
+      // Priority 1: Weekdays (Mon-Fri) over weekend
+      const aIsWeekend = a.dayIndex > 4;
+      const bIsWeekend = b.dayIndex > 4;
+      if (aIsWeekend !== bIsWeekend) return aIsWeekend ? 1 : -1;
+      
+      // Priority 2: Earlier days in week
+      if (a.dayIndex !== b.dayIndex) return a.dayIndex - b.dayIndex;
+      
+      // Priority 3: Morning/afternoon slots over evening
+      const aIsEvening = a.start >= 20; // After ~5pm
+      const bIsEvening = b.start >= 20;
+      if (aIsEvening !== bIsEvening) return aIsEvening ? 1 : -1;
+      
+      // Priority 4: Longer duration slots
+      const aDuration = a.end - a.start + 1;
+      const bDuration = b.end - b.start + 1;
+      return bDuration - aDuration;
+    });
+    
+    // Return only the top slots
+    return prioritized.slice(0, maxSlots);
+  };
+  
+  /**
+   * Create a compact string representation of the schedule
+   * Useful when we need to minimize the string length for API calls
+   * 
+   * @param {Array} scheduleList - Array of schedule objects
+   * @returns {String} - Compact schedule string
+   */
+  export const createCompactScheduleString = (scheduleList) => {
+    if (!scheduleList || !Array.isArray(scheduleList) || scheduleList.length === 0) {
+      return '';
+    }
+    
+    // Use short day names and compact time format
+    const dayMap = {
+      'Thứ 2': 'T2',
+      'Thứ 3': 'T3',
+      'Thứ 4': 'T4',
+      'Thứ 5': 'T5',
+      'Thứ 6': 'T6',
+      'Thứ 7': 'T7',
+      'Chủ nhật': 'CN'
+    };
+    
+    // Format each entry in the shortest possible way
+    return scheduleList.map(slot => {
+      const day = dayMap[slot.day] || slot.day;
+      
+      // Simplify time format (remove leading zeros and trailing zeros in minutes)
+      let startTime = slot.startTime.replace(/^0/, '');
+      if (startTime.endsWith(':00')) startTime = startTime.replace(':00', '');
+      
+      let endTime = slot.endTime.replace(/^0/, '');
+      if (endTime.endsWith(':00')) endTime = endTime.replace(':00', '');
+      
+      return `${day}:${startTime}-${endTime}`;
+    }).join('/');
+  };
+  
+  /**
+   * Calculate the estimated string length for a schedule list
+   * Useful for determining if we need to truncate before formatting
+   * 
+   * @param {Array} scheduleList - Array of schedule objects
+   * @returns {Number} - Estimated string length
+   */
+  export const estimateScheduleStringLength = (scheduleList) => {
+    if (!scheduleList || !Array.isArray(scheduleList)) return 0;
+    
+    // Average length per entry: "Thu X - XX:XX : XX:XX / "
+    const avgEntryLength = 25;
+    return scheduleList.length * avgEntryLength;
+  };

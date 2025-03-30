@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Spin, Result, Button, message } from 'antd';
+import { Spin, Result, Button, message, Modal } from 'antd';
 import { fetchStudentData, checkReservation, fetchAvailableClasses, updateStudentClass, updateClassRegistration } from './api';
 import { formatSchedule, validateScheduleSelection, validateClassSelection } from './utils';
 import ReservationConfirmation from './ReservationConfirmation';
@@ -279,9 +279,9 @@ const ClassRegistration = () => {
   };
 
   /**
-   * Handle custom schedule submission
-   * @param {Array} selectedSchedules - Array of selected schedule objects
-   */
+ * Handle custom schedule submission
+ * @param {Array} selectedSchedules - Array of selected schedule objects
+ */
   const handleCustomScheduleSubmit = async (selectedSchedules) => {
     if (!studentData || !studentData.Id) {
       message.error(MESSAGES.MISSING_STUDENT_INFO);
@@ -297,38 +297,53 @@ const ClassRegistration = () => {
     
     setProcessingAction(true);
     
+    // Format the schedule string
+    const formattedSchedule = formatSchedule(selectedSchedules);
+    
+    if (!formattedSchedule) {
+      setProcessingAction(false);
+      message.error(MESSAGES.INVALID_SCHEDULE);
+      return;
+    }
+    
     try {
-      // Format the schedule string
-      const formattedSchedule = formatSchedule(selectedSchedules);
-      
-      if (!formattedSchedule) {
-        throw new Error(MESSAGES.INVALID_SCHEDULE);
-      }
-      
-      // Update student data
-      await updateStudentClass(studentData.Id, {
-        [STUDENT_FIELDS.SCHEDULE]: formattedSchedule,
-        [STUDENT_FIELDS.STATUS]: "Đăng ký lịch ngoài"
-      });
-      
-      // Update local state
+      // IMPORTANT: Cập nhật state local trước
+      // Điều này giúp đảm bảo dữ liệu được hiển thị đúng trong Success Screen
       setStudentData(prev => ({
         ...prev,
         [STUDENT_FIELDS.SCHEDULE]: formattedSchedule,
-        [STUDENT_FIELDS.STATUS]: "Đăng ký lịch ngoài"
+        [STUDENT_FIELDS.STATUS]: "HV Chọn lịch ngoài"
       }));
       
-      // Show success screen
+      // CRITICAL: Chuyển đến màn hình thành công
+      // Ngay cả khi API có thể thất bại, người dùng vẫn được chuyển đến màn hình thành công
       setCurrentScreen('success');
-      message.success(MESSAGES.CUSTOM_SCHEDULE_SUCCESS);
+      
+      // Sau đó, cố gắng lưu dữ liệu vào database
+      try {
+        await updateStudentClass(studentData.Id, {
+          [STUDENT_FIELDS.SCHEDULE]: formattedSchedule,
+          [STUDENT_FIELDS.STATUS]: "HV Chọn lịch ngoài"
+        });
+        
+        console.log('Database updated successfully');
+        message.success(MESSAGES.CUSTOM_SCHEDULE_SUCCESS);
+      } catch (apiError) {
+        // Ghi log lỗi nhưng không ảnh hưởng đến UI
+        console.error('Error updating database, but flow continues:', apiError);
+        // Hiển thị thông báo nhẹ nhàng
+        message.warning('Dữ liệu hiển thị có thể chưa được lưu trữ đầy đủ');
+      }
     } catch (error) {
-      console.error('Error updating custom schedule:', error);
-      message.error(error.message || MESSAGES.CUSTOM_SCHEDULE_FAILED.replace('{error}', ''));
+      // Hiếm khi xảy ra lỗi ở đây vì chúng ta đã xử lý lỗi API bên trong
+      console.error('Unexpected error:', error);
+      message.error(MESSAGES.CUSTOM_SCHEDULE_FAILED.replace('{error}', error.message));
+      setProcessingAction(false);
     } finally {
+      // Đảm bảo reset trạng thái xử lý
       setProcessingAction(false);
     }
   };
-
   /**
    * Refresh class list data from API
    */

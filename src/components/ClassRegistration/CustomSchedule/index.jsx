@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { 
   Card, 
@@ -10,7 +9,8 @@ import {
   Tooltip,
   Skeleton,
   FloatButton,
-  message
+  message,
+  Modal
 } from 'antd';
 import { 
   ExclamationCircleOutlined,
@@ -24,15 +24,25 @@ import ScheduleGrid from './ScheduleGrid';
 import SelectedSlots from './SelectedSlots';
 import MobileDrawer from './MobileDrawer';
 import ConfirmDialog from './ConfirmDialog';
-import { updateStudentSchedule, saveScheduleBitmap } from './api';
 import { 
-  createEmptySchedule,
+  createEmptySchedule, 
   getScheduleList,
   getGroupedSchedule,
   hasSelectedSlots as checkHasSelectedSlots,
   formatSchedulesForSubmit,
-  positionToSlot
+  positionToSlot,
+  // New utility functions
+  optimizeBitmap,
+  prioritizeSchedules,
+  createCompactScheduleString,
+  estimateScheduleStringLength
 } from './utils';
+import { 
+  updateStudentSchedule, 
+  saveScheduleBitmap 
+} from './api';
+// Import from parent directory for updateStudentClass
+import { updateStudentClass } from '../api';
 import './CustomScheduleStyles.css';
 import './LayoutAdjustments.css';
 
@@ -62,6 +72,8 @@ const CustomSchedule = ({
   const [resetConfirmVisible, setResetConfirmVisible] = useState(false);
   const [drawerVisible, setDrawerVisible] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  // Thêm state localLoading trong component chính
+  const [localLoading, setLocalLoading] = useState(false);
 
   // Monitor window resize for mobile detection
   useEffect(() => {
@@ -240,12 +252,10 @@ const CustomSchedule = ({
     setResetConfirmVisible(false);
   };
   
-  // Thêm state localLoading trong component chính
-  const [localLoading, setLocalLoading] = useState(false);
-  
-  // Handle submit
+  // Handle submit with improved error handling and optimization
   const handleSubmit = async () => {
     try {
+      // Get schedule list from current bitmap
       const scheduleList = getScheduleList(schedule);
       
       if (scheduleList.length === 0) {
@@ -253,79 +263,68 @@ const CustomSchedule = ({
         return;
       }
       
-      // Sử dụng state nội bộ cho loading
+      // Set loading state
       setLocalLoading(true);
       
-      // 1. Tạo lịch học dạng văn bản rõ ràng
+      // Format the full schedule without optimization
       const scheduleText = scheduleList.map(slot => {
         return `${slot.day} - ${slot.startTime} : ${slot.endTime}`;
       }).join(' / ');
       
-      // Log thông tin lịch học ra console theo yêu cầu
+      // Log schedule data
       console.log('Schedule bitmap:', schedule);
       console.log('Schedule list:', scheduleList);
       console.log('Schedule text:', scheduleText);
       
-      let success = true;
-      let errorMessage = '';
-      
       try {
-        // Lấy mã học viên từ dữ liệu học viên
+        // Get student information
         const studentId = studentData.Id;
         const maHocVien = studentData[STUDENT_FIELDS.MA_THEO_DOI] || 
-                          studentData.maTheoDoi || 
-                          studentData[STUDENT_FIELDS.BILL_ITEM_ID] || 
-                          studentData.billItemId;
+                        studentData.maTheoDoi || 
+                        studentData[STUDENT_FIELDS.BILL_ITEM_ID] || 
+                        studentData.billItemId;
         
         if (!studentId) {
           throw new Error('Không tìm thấy ID học viên');
         }
         
-        // 2. Cập nhật lịch học văn bản vào bảng student
-        try {
-          await updateStudentSchedule(
-            studentId, 
-            scheduleText, 
-            "HV Chọn lịch ngoài" // Trạng thái khi đăng ký lịch tùy chỉnh
-          );
-        } catch (studentUpdateError) {
-          success = false;
-          errorMessage = `Lỗi khi cập nhật lịch học: ${studentUpdateError.message}`;
-          console.error('Error updating student schedule:', studentUpdateError);
-        }
+        // Update student record with full schedule
+        await updateStudentClass(
+          studentId, 
+          {
+            [STUDENT_FIELDS.SCHEDULE]: scheduleText,
+            [STUDENT_FIELDS.STATUS]: "HV Chọn lịch ngoài"
+          }
+        );
         
-        // 3. Lưu bitmap lịch học vào bảng student_info nếu có mã học viên
-        // Chỉ thực hiện nếu cập nhật student thành công
-        if (success && maHocVien) {
+        console.log('Successfully updated student record with schedule');
+        
+        // Try to save bitmap, but don't block the flow
+        if (maHocVien) {
           try {
             await saveScheduleBitmap(maHocVien, schedule);
+            console.log('Bitmap saved successfully');
           } catch (bitmapError) {
-            // Không coi lưu bitmap là trọng yếu, chỉ log lỗi
-            console.warn('Error saving schedule bitmap, but continuing:', bitmapError);
+            console.warn('Error saving bitmap, but continuing flow:', bitmapError);
           }
-        } else if (!maHocVien) {
-          console.warn('Không tìm thấy mã theo dõi học viên, không thể lưu bitmap lịch học');
         }
         
-        // 4. Nếu thành công, chuyển đến màn hình thành công
-        if (success) {
-          // Gọi callback để chuyển đến màn hình thành công
-          onSubmit(scheduleList.map(item => ({
-            weekday: item.day,
-            time: `${item.startTime}-${item.endTime}`
-          })));
-          
-          message.success('Đăng ký lịch học thành công!');
-        } else {
-          setFormErrors(errorMessage);
-          message.error('Đăng ký lịch học thất bại!');
-        }
+        // IMPORTANT: Create formatted data for onSubmit
+        const formattedSchedules = scheduleList.map(item => ({
+          weekday: item.day,
+          time: `${item.startTime}-${item.endTime}`
+        }));
+        
+        // CRITICAL: Call onSubmit to navigate to success screen
+        // This will call handleCustomScheduleSubmit in ClassRegistration.jsx
+        message.success('Đăng ký lịch học thành công!');
+        onSubmit(formattedSchedules);
+        
       } catch (error) {
-        console.error('Error in schedule submission process:', error);
-        setFormErrors(`Lỗi xử lý: ${error.message}`);
-        message.error('Đăng ký lịch học thất bại!');
-      } finally {
-        setLocalLoading(false);
+        console.error('Error in API operations:', error);
+        setFormErrors(error.message);
+        message.error('Đăng ký lịch học thất bại: ' + error.message);
+        setLocalLoading(false); // Reset loading here
       }
     } catch (error) {
       console.error('Error in form submission:', error);
@@ -495,7 +494,7 @@ const CustomSchedule = ({
       />
       
       <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '20px' }}>
-        <Button onClick={onCancel} disabled={loading}>
+        <Button onClick={onCancel} disabled={loading || localLoading}>
           Quay lại
         </Button>
         <Button 

@@ -16,7 +16,7 @@ export const API_CONFIG = {
     STUDENT: "muavbrdc7f1epco",  // Bảng data_main
     RESERVATION: "mbzjxhps0pfgw75",  // Bảng form_giu_cho
     CLASS: "mdtxnu17rxx23iq",  // Bảng data_class_total
-    STUDENT_INFO: "student_info_table_id" // Bảng student_info (thay thế ID thực tế)
+    STUDENT_INFO: "m0vtbagwhupkzar" // Bảng student_info (thay thế ID thực tế)
   };
   
   // Field mappings between tables

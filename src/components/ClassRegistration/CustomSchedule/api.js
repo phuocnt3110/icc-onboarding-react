@@ -80,11 +80,14 @@ export const updateStudentSchedule = async (studentId, scheduleText, status) => 
  */
 export const saveScheduleBitmap = async (maHocVien, scheduleBitmap) => {
   if (!maHocVien) {
-    throw new Error('Thiếu mã học viên');
+    console.warn('Missing student ID, cannot save bitmap');
+    return { success: false, message: 'Missing student ID' };
   }
 
+  let existingRecords = [];
+
   try {
-    // Chuẩn bị dữ liệu bitmap dưới dạng chuỗi JSON
+    // Convert bitmap to string for storage
     const bitmapString = JSON.stringify(scheduleBitmap);
     
     console.log('Saving schedule bitmap with data:', {
@@ -93,44 +96,93 @@ export const saveScheduleBitmap = async (maHocVien, scheduleBitmap) => {
       MaHocVien: maHocVien
     });
     
-    // Tạm thời chỉ log thông tin để debug, không thực hiện lưu bitmap
-    console.log('Would save bitmap:', bitmapString);
-    
-    // Return mock data để không ảnh hưởng đến flow
-    return { success: true, message: 'Bitmap logging only for now' };
-    
-    /* Uncomment khi đã có table_id đúng và đã kiểm tra các field name
-    // Kiểm tra xem đã có bản ghi cho học viên này chưa
+    // First check if record exists for this student
     const checkResponse = await apiClient.get(`/tables/${STUDENT_INFO}/records`, {
       params: {
         where: `(${STUDENT_INFO_FIELDS.STUDENT_ID},eq,${maHocVien})`
       }
     });
-
+    
     const existingRecords = checkResponse.data?.list || [];
     
     if (existingRecords.length > 0) {
-      // Cập nhật bản ghi hiện có
+      // Update existing record
       const recordId = existingRecords[0].Id;
-      const response = await apiClient.patch(`/tables/${STUDENT_INFO}/records`, {
+      console.log(`Found existing student_info record (ID: ${recordId}), updating...`);
+      
+      const updateResponse = await apiClient.patch(`/tables/${STUDENT_INFO}/records`, {
         Id: recordId,
         [STUDENT_INFO_FIELDS.SCHEDULE_BITMAP]: bitmapString
       });
-      return response.data;
+      
+      console.log('Bitmap update successful');
+      return updateResponse.data;
     } else {
-      // Tạo bản ghi mới
-      const response = await apiClient.post(`/tables/${STUDENT_INFO}/records`, {
+      // Create new record
+      console.log('No existing student_info record, creating new one...');
+      
+      const createResponse = await apiClient.post(`/tables/${STUDENT_INFO}/records`, {
         [STUDENT_INFO_FIELDS.STUDENT_ID]: maHocVien,
         [STUDENT_INFO_FIELDS.SCHEDULE_BITMAP]: bitmapString
       });
-      return response.data;
+      
+      console.log('Bitmap creation successful');
+      return createResponse.data;
     }
-    */
   } catch (error) {
     console.error('Error saving schedule bitmap:', error);
-    // Không throw error để flow tiếp tục
-    console.warn('Failed to save bitmap, but continuing:', error.message);
-    return { success: false, error: error.message };
+    
+    // Examine error details
+    if (error.response) {
+      console.error('Server response:', error.response.status, error.response.data);
+      
+      // If it's a 400 Bad Request, the bitmap string might be too large
+      if (error.response.status === 400) {
+        console.warn('Attempting to save compressed bitmap...');
+        
+        try {
+          // Create a simplified bitmap with only day indexes that have selections
+          const simplifiedBitmap = {};
+          Object.keys(scheduleBitmap).forEach(dayIndex => {
+            if (scheduleBitmap[dayIndex].some(val => val === 1)) {
+              simplifiedBitmap[dayIndex] = scheduleBitmap[dayIndex];
+            }
+          });
+          
+          const simplifiedString = JSON.stringify(simplifiedBitmap);
+          console.log('Simplified bitmap size:', simplifiedString.length, 'chars');
+          
+          // Try to save the simplified bitmap
+          if (existingRecords && existingRecords.length > 0) {
+            const recordId = existingRecords[0].Id;
+            const updateResponse = await apiClient.patch(`/tables/${STUDENT_INFO}/records`, {
+              Id: recordId,
+              [STUDENT_INFO_FIELDS.SCHEDULE_BITMAP]: simplifiedString
+            });
+            
+            console.log('Simplified bitmap update successful');
+            return updateResponse.data;
+          } else {
+            const createResponse = await apiClient.post(`/tables/${STUDENT_INFO}/records`, {
+              [STUDENT_INFO_FIELDS.STUDENT_ID]: maHocVien,
+              [STUDENT_INFO_FIELDS.SCHEDULE_BITMAP]: simplifiedString
+            });
+            
+            console.log('Simplified bitmap creation successful');
+            return createResponse.data;
+          }
+        } catch (simplifiedError) {
+          console.error('Even simplified bitmap save failed:', simplifiedError);
+        }
+      }
+    }
+    
+    // Return error status but don't throw to avoid disrupting the main flow
+    return { 
+      success: false, 
+      error: true,
+      message: error.message || 'Unknown error saving bitmap'
+    };
   }
 };
 

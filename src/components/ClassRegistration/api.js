@@ -373,7 +373,7 @@ export const fetchAvailableClasses = async (filters) => {
 };
 
 /**
- * Update student class information
+ * Update student class information with improved error handling
  * @param {string} studentId - Student ID
  * @param {Object} updateData - Data to update
  * @returns {Promise<Object>} - Updated student data
@@ -389,19 +389,91 @@ export const updateStudentClass = async (studentId, updateData) => {
   }
   
   try {
-    const response = await apiClient.patch(`/tables/${STUDENT}/records`, {
-      Id: studentId,
-      ...updateData
-    });
+    // Loại bỏ việc kiểm tra và cắt bớt độ dài chuỗi lịch học
     
-    if (response.data) {
-      return response.data;
+    // Create clean request object with only needed fields
+    const requestData = {
+      Id: studentId
+    };
+    
+    // Only add defined fields with values
+    if (STUDENT_FIELDS.SCHEDULE && updateData[STUDENT_FIELDS.SCHEDULE]) {
+      requestData[STUDENT_FIELDS.SCHEDULE] = updateData[STUDENT_FIELDS.SCHEDULE];
     }
     
-    throw new Error('Không nhận được phản hồi khi cập nhật dữ liệu');
+    if (STUDENT_FIELDS.STATUS && updateData[STUDENT_FIELDS.STATUS]) {
+      requestData[STUDENT_FIELDS.STATUS] = updateData[STUDENT_FIELDS.STATUS];
+    }
+    
+    if (STUDENT_FIELDS.CLASS_CODE && updateData[STUDENT_FIELDS.CLASS_CODE]) {
+      requestData[STUDENT_FIELDS.CLASS_CODE] = updateData[STUDENT_FIELDS.CLASS_CODE];
+    }
+    
+    if (STUDENT_FIELDS.START_DATE && updateData[STUDENT_FIELDS.START_DATE]) {
+      requestData[STUDENT_FIELDS.START_DATE] = updateData[STUDENT_FIELDS.START_DATE];
+    }
+    
+    // Log what we're sending
+    console.log('Sending update to API:', requestData);
+    
+    // Giữ nguyên logic thử lại, nhưng không thay đổi dữ liệu khi thử lại
+    let attempts = 0;
+    const maxAttempts = 2;
+    let lastError = null;
+    
+    while (attempts <= maxAttempts) {
+      try {
+        // Add delay for retries
+        if (attempts > 0) {
+          await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, attempts)));
+          console.log(`Retry attempt ${attempts}/${maxAttempts}`);
+        }
+        
+        // Send the request
+        const response = await apiClient.patch(`/tables/${STUDENT}/records`, requestData);
+        
+        console.log('Update successful:', response.data);
+        return response.data;
+      } catch (attemptError) {
+        lastError = attemptError;
+        console.error(`Update attempt ${attempts + 1} failed:`, attemptError);
+        
+        attempts++;
+        
+        // If this was the last attempt, or it's clearly a permissions issue, stop retrying
+        if (attempts > maxAttempts || 
+           (attemptError.response && 
+            (attemptError.response.status === 401 || 
+             attemptError.response.status === 403))) {
+          break;
+        }
+      }
+    }
+    
+    // All attempts failed
+    console.error('All update attempts failed');
+    
+    // Format error message based on response type
+    if (lastError.response) {
+      const status = lastError.response.status;
+      
+      if (status === 400) {
+        console.error('Bad Request details:', lastError.response.data);
+        throw new Error('Dữ liệu không hợp lệ. Vui lòng kiểm tra lại thông tin lịch học.');
+      } else if (status === 401 || status === 403) {
+        throw new Error('Bạn không có quyền thực hiện thao tác này. Vui lòng đăng nhập lại.');
+      } else if (status === 404) {
+        throw new Error(`Không tìm thấy học viên với ID ${studentId}`);
+      } else if (status >= 500) {
+        throw new Error('Lỗi máy chủ. Vui lòng thử lại sau.');
+      }
+    }
+    
+    // Default error message if we couldn't categorize it better
+    throw new Error(`Lỗi khi cập nhật thông tin lớp học: ${lastError.message}`);
   } catch (error) {
     console.error('Error updating student class:', error);
-    throw error.originalError ? error : new Error(`Lỗi khi cập nhật thông tin lớp học: ${error.message}`);
+    throw error;
   }
 };
 
