@@ -161,7 +161,7 @@ const SuccessScreen = ({
     >
       <Result
         status="success"
-        title={<div style={{ fontWeight: "bold", fontSize: "24px" }}>{resultTitle}</div>}
+        title={<div style={{ fontWeight: "bold", fontSize: "24px", color: "#52c41a" }}>{resultTitle}</div>}
         subTitle={<div style={{ fontWeight: "600", fontSize: "16px" }}>{resultSubtitle}</div>}
         icon={<CheckCircleOutlined style={{ color: '#52c41a' }} />}
       />
