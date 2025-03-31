@@ -1,0 +1,70 @@
+/* CSS điều chỉnh để mở rộng danh sách chọn lớp */
+
+/* Mở rộng container chính */
+.form-container {
+    max-width: 1000px !important; /* Tăng từ 700px lên 1000px */
+    width: 95% !important;
+  }
+  
+  /* Mở rộng card chứa bảng lớp học */
+  .form-container .ant-card {
+    max-width: 100% !important; /* Đảm bảo card sử dụng toàn bộ chiều rộng của container */
+  }
+  
+  /* Điều chỉnh padding của card cho các màn hình lớn */
+  @media (min-width: 992px) {
+    .form-container .ant-card-body {
+      padding: 16px 24px !important;
+    }
+  }
+  
+  /* Đảm bảo bảng sử dụng toàn bộ chiều rộng của container */
+  .form-container .ant-table {
+    width: 100%;
+    overflow-x: visible !important;
+  }
+  
+  /* Điều chỉnh chiều rộng các cột để phù hợp với nội dung */
+  .form-container .ant-table-cell {
+    white-space: normal;
+    word-break: break-word;
+  }
+  
+  /* Tối ưu chiều rộng cột thao tác */
+  .form-container .ant-table-cell:last-child {
+    width: 100px;
+    min-width: 100px;
+  }
+  
+  /* Tối ưu chiều rộng cột mã lớp */
+  .form-container .ant-table-cell:first-child {
+    width: 120px;
+    min-width: 120px;
+  }
+  
+  /* Tối ưu chiều rộng cột sĩ số */
+  .form-container .ant-table-cell:nth-child(3) {
+    width: 100px;
+    min-width: 100px;
+  }
+  
+  /* Tối ưu chiều rộng cột ngày khai giảng */
+  .form-container .ant-table-cell:nth-child(4) {
+    width: 130px;
+    min-width: 130px;
+  }
+  
+  /* Cho phép cột lịch học mở rộng để lấp đầy không gian còn lại */
+  .form-container .ant-table-cell:nth-child(2) {
+    min-width: 300px; /* Đảm bảo có đủ không gian cho các tag */
+  }
+  
+  /* Đảm bảo scroll chỉ xuất hiện khi thực sự cần thiết */
+  .form-container .ant-table-body {
+    overflow-x: auto !important;
+  }
+  
+  /* Thêm max-height để tránh bảng quá dài khi có nhiều lớp */
+  .form-container .ant-table-body {
+    max-height: 600px;
+  }

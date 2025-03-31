@@ -127,25 +127,35 @@ export const fetchStudentData = async (id) => {
 
 /**
  * Check reservation in form_giu_cho
- * @param {string} maLopBanGiao - Reservation code
+ * @param {string} maLop - Reservation code
  * @returns {Promise<Object|null>} - Reservation data or null if not found
  * @throws {Error} - If API error
  */
-export const checkReservation = async (maLopBanGiao) => {
-  if (!maLopBanGiao) {
+export const checkReservation = async (maLop) => {
+  console.log('🔍 checkReservation - Start with class code (maLop):', maLop);
+  
+  if (!maLop) {
+    console.log('⚠️ checkReservation - Empty class code provided, returning null');
     return null;
   }
   
   try {
-    const response = await apiClient.get(`/tables/${RESERVATION}/records?where=(${RESERVATION_FIELDS.ORDER_CODE},allof,${maLopBanGiao})`);
+    console.log(`🔎 checkReservation - Searching in table ${RESERVATION} where ${RESERVATION_FIELDS.ORDER_CODE} (ma_order) = ${maLop}`);
+    const response = await apiClient.get(`/tables/${RESERVATION}/records?where=(${RESERVATION_FIELDS.ORDER_CODE},allof,${maLop})`);
+    
+    console.log('📊 checkReservation - API response:', response.data);
     
     if (response.data && response.data.list && response.data.list.length > 0) {
-      return response.data.list[0];
+      const result = response.data.list[0];
+      console.log('✅ checkReservation - Reservation found with ma_order matching maLop:', result);
+      console.log('🔑 checkReservation - IS_VALID field value:', result[RESERVATION_FIELDS.IS_VALID]);
+      return result;
     }
     
+    console.log('❌ checkReservation - No reservation found with this class code in ma_order field');
     return null;
   } catch (error) {
-    console.error('Error checking reservation:', error);
+    console.error('❌ checkReservation - Error checking reservation:', error);
     // Don't throw error if reservation not found, just return null
     return null;
   }

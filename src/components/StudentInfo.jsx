@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, Form, Input, Button, Typography, Row, Col, Divider, message, Spin, Alert } from 'antd';
 import axios from 'axios';
 import { API_CONFIG, TABLE_IDS, FIELD_MAPPINGS, MESSAGES, ROUTES } from '../config';
+import './StudentInfoStyles.css';
 
 const { Title, Text } = Typography;
 
@@ -150,10 +151,29 @@ const StudentInfo = () => {
   // Function to proceed to step two
   const proceedToStepTwo = () => {
     const id = studentData[STUDENT_FIELDS.BILL_ITEM_ID];
-    if (id) {
-      window.location.href = `${ROUTES.STEP_TWO}?id=${id}`;
-    } else {
+    
+    if (!id) {
       setSubmitError('Không tìm thấy ID để chuyển trang');
+      return;
+    }
+    
+    // Kiểm tra trạng thái chọn lớp
+    const currentStatus = studentData[STUDENT_FIELDS.STATUS];
+    console.log('Trạng thái chọn lớp hiện tại:', currentStatus);
+    
+    // Kiểm tra chính xác chuỗi so sánh và thêm log để debug
+    if (currentStatus) {
+      console.log(`So sánh: "${currentStatus}" vs "HV Chưa chọn lịch"`);
+    }
+    
+    // Nếu đã có trạng thái và KHÁC "HV Chưa chọn lịch", chuyển đến success screen
+    if (currentStatus && currentStatus !== "HV Chưa chọn lịch" && currentStatus.trim() !== "HV Chưa chọn lịch") {
+      console.log('Trạng thái khác "HV Chưa chọn lịch", chuyển đến success screen');
+      window.location.href = `${ROUTES.STEP_TWO}?id=${id}&direct_success=true`;
+    } else {
+      // Nếu là "HV Chưa chọn lịch" hoặc không có trạng thái, tiếp tục flow thông thường
+      console.log('Trạng thái là "HV Chưa chọn lịch" hoặc chưa có trạng thái, tiếp tục quy trình thông thường');
+      window.location.href = `${ROUTES.STEP_TWO}?id=${id}`;
     }
   };
   

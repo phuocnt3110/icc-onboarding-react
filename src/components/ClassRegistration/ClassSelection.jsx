@@ -29,6 +29,7 @@ import {
 import { formatDate, validateClassSelection } from './utils';
 import { FIELD_MAPPINGS } from '../../config';
 import _ from 'lodash';
+import './ClassSelectionStyle.css';
 
 const { Title, Text, Paragraph } = Typography;
 const { Search } = Input;
@@ -469,7 +470,7 @@ const ClassSelection = ({
       
       <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '20px' }}>
         <Button onClick={onSwitchToCustomSchedule} disabled={loading}>
-          Chọn lịch khác
+          Tôi không thấy lịch học phù hợp
         </Button>
       </div>
       

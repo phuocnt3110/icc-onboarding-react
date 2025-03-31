@@ -27,18 +27,58 @@ const ClassRegistration = () => {
   const [processingAction, setProcessingAction] = useState(false);
 
   useEffect(() => {
-    // Get ID from URL
+    // Get ID and direct_success from URL
     const queryParams = new URLSearchParams(window.location.search);
     const id = queryParams.get('id');
+    const directSuccess = queryParams.get('direct_success');
+    
+    console.log('URL params:', {id, directSuccess});
     
     if (id) {
-      loadStudentData(id);
+      // Nếu có tham số direct_success=true, chuyển thẳng đến Success Screen
+      if (directSuccess === 'true') {
+        console.log('direct_success=true, chuyển thẳng đến Success Screen');
+        loadStudentDataForSuccess(id);
+      } else {
+        // Flow bình thường
+        console.log('Không có direct_success hoặc không bằng true, thực hiện flow bình thường');
+        loadStudentData(id);
+      }
     } else {
       setLoading(false);
       setErrorMessage(MESSAGES.NO_ID_IN_URL);
       setCurrentScreen('error');
     }
   }, []);
+
+  /**
+   * Load student data and go directly to success screen
+   * @param {string} id - Bill Item ID from URL
+   */
+  const loadStudentDataForSuccess = async (id) => {
+    try {
+      setLoading(true);
+      
+      console.log('🔍 loadStudentDataForSuccess - Loading data for direct success screen:', id);
+      
+      // Fetch student data with billItemId
+      const data = await fetchStudentData(id);
+      setStudentData(data);
+      
+      console.log('📋 Student data loaded, proceeding directly to success screen');
+      
+      // Go directly to success screen
+      setCurrentScreen('success');
+      
+    } catch (error) {
+      console.error('❌ Error loading student data for success screen:', error);
+      setLoading(false);
+      setErrorMessage(error.message || MESSAGES.STUDENT_DATA_LOAD_ERROR);
+      setCurrentScreen('error');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   /**
    * Main function to load student data and determine the case
@@ -48,25 +88,35 @@ const ClassRegistration = () => {
     try {
       setLoading(true);
       
+      console.log('🔍 loadStudentData - Start with ID:', id);
+      
       // Fetch student data with billItemId
       const data = await fetchStudentData(id);
       setStudentData(data);
       
-      console.log('Student data:', data);
+      console.log('📋 loadStudentData - Student data received:', data);
+      console.log('🔑 loadStudentData - Checking for class code (maLop):', data[STUDENT_FIELDS.CLASS_CODE]);
       
-      // Check if student has class reservation code
-      if (data[STUDENT_FIELDS.CLASS_RESERVATION]) {
-        // Look for reservation in form_giu_cho
-        const reservation = await checkReservation(data[STUDENT_FIELDS.CLASS_RESERVATION]);
+      // Check if student has class code (maLop)
+      if (data[STUDENT_FIELDS.CLASS_CODE]) {
+        // Look for reservation in form_giu_cho where ma_order matches maLop
+        console.log('🔎 loadStudentData - Searching for reservation with ma_order:', data[STUDENT_FIELDS.CLASS_CODE]);
+        const reservation = await checkReservation(data[STUDENT_FIELDS.CLASS_CODE]);
+        
+        console.log('🎫 loadStudentData - Reservation check result:', reservation);
         
         if (reservation) {
-          if (reservation[FIELD_MAPPINGS.RESERVATION.IS_VALID] === true) {
+          console.log('✅ loadStudentData - Reservation found, checking if valid. IS_VALID field:', reservation[FIELD_MAPPINGS.RESERVATION.IS_VALID]);
+          
+          if (reservation[FIELD_MAPPINGS.RESERVATION.IS_VALID] === "Hợp lệ") {
             // Case 1: Valid reservation
+            console.log('🟢 loadStudentData - CASE 1: Valid reservation detected, will show ReservationConfirmation screen');
             setReservationData(reservation);
             setCurrentCase(1);
             setCurrentScreen('reservation');
           } else {
             // Case 2: Invalid reservation
+            console.log('🟠 loadStudentData - CASE 2: Invalid reservation detected (IS_VALID is false)');
             setReservationData(reservation);
             setCurrentCase(2);
             // Proceed to Case 3 with warning
@@ -74,16 +124,18 @@ const ClassRegistration = () => {
           }
         } else {
           // Case 2: Reservation not found
+          console.log('🔴 loadStudentData - CASE 2: Reservation not found despite having a class code');
           setCurrentCase(2);
           // Proceed to Case 3 with warning
           handleCase3(data, true);
         }
       } else {
         // Case 3: No reservation
+        console.log('ℹ️ loadStudentData - CASE 3: No class code found, proceeding to normal class selection');
         handleCase3(data);
       }
     } catch (error) {
-      console.error('Error loading student data:', error);
+      console.error('❌ loadStudentData - Error:', error);
       setLoading(false);
       setErrorMessage(error.message || MESSAGES.STUDENT_DATA_LOAD_ERROR);
       setCurrentScreen('error');
@@ -148,7 +200,7 @@ const ClassRegistration = () => {
     if (showWarning) {
       message.warning(MESSAGES.RESERVATION_NOT_FOUND.replace(
         '{code}', 
-        data[STUDENT_FIELDS.CLASS_RESERVATION] || MESSAGES.CLASS_CODE
+        data[STUDENT_FIELDS.CLASS_CODE] || MESSAGES.CLASS_CODE
       ));
     }
   };
@@ -247,6 +299,7 @@ const ClassRegistration = () => {
   /**
    * Confirm reservation
    */
+  // Cập nhật hàm handleConfirmReservation trong ClassRegistration.jsx với đầy đủ thông tin
   const handleConfirmReservation = async () => {
     if (!studentData || !studentData.Id || !reservationData) {
       message.error(MESSAGES.MISSING_RESERVATION_INFO);
@@ -256,15 +309,26 @@ const ClassRegistration = () => {
     setProcessingAction(true);
     
     try {
-      // Update student data to confirm reservation
+      // Lấy các thông tin quan trọng từ reservationData
+      const classCode = reservationData[FIELD_MAPPINGS.RESERVATION.CLASS_CODE];
+      const schedule = reservationData.lichHoc;
+      const startDate = reservationData.ngayKhaiGiangDuKien;
+      
+      // Update student data with complete information
       await updateStudentClass(studentData.Id, {
-        [STUDENT_FIELDS.STATUS]: "Đã xác nhận lịch được giữ"
+        [STUDENT_FIELDS.CLASS_CODE]: classCode,
+        [STUDENT_FIELDS.SCHEDULE]: schedule,
+        [STUDENT_FIELDS.START_DATE]: startDate,
+        [STUDENT_FIELDS.STATUS]: "HV Xác nhận lịch được giữ"
       });
       
       // Update local state
       setStudentData(prev => ({
         ...prev,
-        [STUDENT_FIELDS.STATUS]: "Đã xác nhận lịch được giữ"
+        [STUDENT_FIELDS.CLASS_CODE]: classCode,
+        [STUDENT_FIELDS.SCHEDULE]: schedule,
+        [STUDENT_FIELDS.START_DATE]: startDate,
+        [STUDENT_FIELDS.STATUS]: "HV Xác nhận lịch được giữ"
       }));
       
       // Show success screen
@@ -404,8 +468,12 @@ const ClassRegistration = () => {
    * Render different screens based on current state
    */
   const renderContent = () => {
+    console.log('🖥️ renderContent - Current screen:', currentScreen);
+    console.log('🔢 renderContent - Current case:', currentCase);
+
     switch (currentScreen) {
       case 'loading':
+        console.log('⏳ renderContent - Showing loading screen');
         return (
           <div style={{ display: 'flex', justifyContent: 'center', padding: '50px' }}>
             <Spin size="large" tip="Đang tải thông tin..." />
@@ -430,6 +498,11 @@ const ClassRegistration = () => {
         );
       
       case 'reservation':
+        console.log('🎫 renderContent - Showing ReservationConfirmation screen');
+        console.log('👤 Student Data:', studentData);
+        console.log('🎟️ Reservation Data:', reservationData);
+        console.log('🔑 Class Code (maLop):', studentData[STUDENT_FIELDS.CLASS_CODE]);
+        console.log('🔑 Reservation ma_order:', reservationData ? reservationData[FIELD_MAPPINGS.RESERVATION.ORDER_CODE] : 'N/A');
         return (
           <ReservationConfirmation
             studentData={studentData}
@@ -439,7 +512,6 @@ const ClassRegistration = () => {
             loading={processingAction}
           />
         );
-      
       case 'classList':
         return (
           <ClassSelection

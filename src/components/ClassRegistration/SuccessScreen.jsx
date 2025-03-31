@@ -20,6 +20,7 @@ import {
 } from '@ant-design/icons';
 import { formatDate } from './utils';
 import { FIELD_MAPPINGS } from '../../config';
+import './SuccessScreenStyles.css';
 
 const { Title, Text } = Typography;
 
@@ -149,16 +150,17 @@ const SuccessScreen = ({
     studentData.sanPham || 
     studentData[STUDENT_FIELDS.PRODUCT] || 
     'của bạn'
-  }". Hãy kiểm tra lại thông tin một lần nữa và vui lòng giữ lại thông tin để đối chiếu sau này.`;
+  }". Hãy kiểm tra lại một lần nữa và vui lòng lưu lại thông tin để đối chiếu sau này.`;
   
   return (
-    <Card 
-      style={{ 
-        borderRadius: '8px', 
-        marginBottom: '20px',
-        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)'
-      }}
-    >
+      <Card 
+        className="success-screen-container" // Thay đổi class này
+        style={{ 
+          borderRadius: '8px', 
+          marginBottom: '20px',
+          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)'
+        }}
+      >
       <Result
         status="success"
         title={<div style={{ fontWeight: "bold", fontSize: "24px", color: "#52c41a" }}>{resultTitle}</div>}
@@ -352,16 +354,6 @@ const SuccessScreen = ({
             </Space>
           </Col>
         </Row>
-      </div>
-      
-      <div style={{ marginTop: '24px', textAlign: 'center' }}>
-        <Button 
-          onClick={onChooseAgain}
-          icon={<CalendarOutlined />}
-          size="large"
-        >
-          Chọn lại lịch
-        </Button>
       </div>
       
       <style jsx>{`
