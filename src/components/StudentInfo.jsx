@@ -38,20 +38,11 @@ const StudentInfo = () => {
     const queryParams = new URLSearchParams(window.location.search);
     const id = queryParams.get('id');
     
-    if (id) {
+    if (id && !studentData && !loading) {
       console.log('Fetching data for billItemId:', id);
-      
-      // Chỉ gọi fetchStudentData khi không đang loading và chưa có studentData
-      if (!loading && !studentData) {
-        fetchStudentData(id);
-      } else {
-        console.log('No ID found in URL or already loading/loaded');
-      }
-    } else {
-      console.log('No ID found in URL');
-      message.error(MESSAGES.NO_ID_IN_URL);
+      fetchStudentData(id);
     }
-  }, [fetchStudentData, loading, studentData]);
+  }, []); // Empty dependency array
 
   // Set form fields when student data is loaded
   useEffect(() => {

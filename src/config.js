@@ -45,7 +45,7 @@ export const API_CONFIG = {
       CURRICULUM: "loTrinh",             // thay đổi từ LEVEL - trinhDO
       BILL_ITEM_ID: "billItemId",   // không thay đổi
       SESSIONS: "soBuoi",           // không thay đổi
-      PRICE: "TongTien",            // không thay đổi
+      PRICE: "tongTien",            // không thay đổi
       CLASS_CODE: "maLopChot",      // thay đổi từ maLop
       SCHEDULE: "lichHoc",          // không thay đổi
       START_DATE: "ngayKhaiGiangDuKien", // không thay đổi

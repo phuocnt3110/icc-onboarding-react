@@ -78,67 +78,95 @@ export const ClassProvider = ({ children }) => {
     setError(null);
     
     try {
-      // Build API filter conditions
-      const apiConditions = [];
+      console.log('Tìm lớp với các bộ lọc:', filters);
       
-      if (filters.sanPham) {
-        apiConditions.push(`(${FIELD_MAPPINGS.CLASS.PRODUCT},eq,${filters.sanPham})`);
-      }
+      // Phương pháp 1: Xử lý query string cẩn thận hơn
+      let classes = [];
+      let hasError = false;
       
-      if (filters.sizeLop) {
-        apiConditions.push(`(${FIELD_MAPPINGS.CLASS.SIZE},eq,${filters.sizeLop})`);
-      }
-      
-      if (filters.goiMua) {
-        apiConditions.push(`(${FIELD_MAPPINGS.CLASS.LEVEL},eq,${filters.goiMua})`);
-      }
-      
-      const whereClause = apiConditions.join('~and');
-      
-      // API parameters
-      const params = { 
-        limit: 100 
-      };
-      
-      if (whereClause) {
-        params.where = whereClause;
-      }
-      
-      // Call API
-      const response = await apiClient.get(`/tables/${TABLE_IDS.CLASS}/records`, { params });
-      
-      if (!response.data || !response.data.list) {
-        setClassList([]);
-        setLoading(false);
-        return [];
-      }
-      
-      const classes = response.data.list;
-      
-      // Apply client-side filters
-      const filteredClasses = classes.filter(classItem => {
-        // Status filter (Vietnamese)
-        if (classItem[FIELD_MAPPINGS.CLASS.STATUS] !== 'Dự kiến khai giảng') {
-          return false;
+      try {
+        // Xây dựng query string an toàn
+        const safeFilters = {};
+        
+        if (filters.sanPham) {
+          safeFilters[FIELD_MAPPINGS.CLASS.PRODUCT] = filters.sanPham;
         }
         
-        // Teacher type filter (Vietnamese)
-        if (filters.loaiGv && classItem[FIELD_MAPPINGS.CLASS.TEACHER_TYPE] !== filters.loaiGv) {
-          return false;
+        if (filters.sizeLop) {
+          safeFilters[FIELD_MAPPINGS.CLASS.SIZE] = filters.sizeLop;
         }
         
-        // Available slots filter (formula field)
-        if (classItem[FIELD_MAPPINGS.CLASS.SLOTS_LEFT] !== undefined && 
-            classItem[FIELD_MAPPINGS.CLASS.SLOTS_LEFT] <= 0) {
-          return false;
+        if (filters.goiMua) {
+          safeFilters[FIELD_MAPPINGS.CLASS.LEVEL] = filters.goiMua;
         }
         
-        // All conditions passed
-        return true;
-      });
+        // Sử dụng phương thức POST để tránh vấn đề với URL encoding
+        const response = await apiClient.post(`/tables/${TABLE_IDS.CLASS}/records/list`, {
+          where: safeFilters,
+          limit: 100
+        });
+        
+        if (response.data && response.data.list) {
+          classes = response.data.list;
+        }
+      } catch (error) {
+        console.warn('Lỗi khi dùng phương pháp 1, chuyển sang phương pháp dự phòng:', error);
+        hasError = true;
+      }
       
-      // Enhance class data with schedules for display
-      const enhancedClasses = filteredClasses.map(classItem => {
+      // Phương pháp 2: Fallback - Lấy tất cả dữ liệu và lọc phía client
+      if (hasError || classes.length === 0) {
+        try {
+          console.log('Sử dụng phương pháp dự phòng: Lấy tất cả lớp và lọc phía client');
+          const response = await apiClient.get(`/tables/${TABLE_IDS.CLASS}/records?limit=100`);
+          
+          if (response.data && response.data.list) {
+            // Lọc ở phía client
+            classes = response.data.list.filter(classItem => {
+              // Lọc theo trạng thái lớp
+              if (classItem[FIELD_MAPPINGS.CLASS.STATUS] !== 'Dự kiến khai giảng') {
+                return false;
+              }
+              
+              // Lọc theo sản phẩm
+              if (filters.sanPham && classItem[FIELD_MAPPINGS.CLASS.PRODUCT] !== filters.sanPham) {
+                return false;
+              }
+              
+              // Lọc theo size lớp
+              if (filters.sizeLop && classItem[FIELD_MAPPINGS.CLASS.SIZE] !== filters.sizeLop) {
+                return false;
+              }
+              
+              // Lọc theo level
+              if (filters.goiMua && classItem[FIELD_MAPPINGS.CLASS.LEVEL] !== filters.goiMua) {
+                return false;
+              }
+              
+              // Lọc theo loại giáo viên
+              if (filters.loaiGv && classItem[FIELD_MAPPINGS.CLASS.TEACHER_TYPE] !== filters.loaiGv) {
+                return false;
+              }
+              
+              // Lọc theo số slot còn lại
+              if (classItem[FIELD_MAPPINGS.CLASS.SLOTS_LEFT] !== undefined && 
+                  classItem[FIELD_MAPPINGS.CLASS.SLOTS_LEFT] <= 0) {
+                return false;
+              }
+              
+              return true;
+            });
+          }
+        } catch (fallbackError) {
+          console.error('Ngay cả phương pháp dự phòng cũng thất bại:', fallbackError);
+          throw fallbackError;
+        }
+      }
+      
+      console.log(`Tìm thấy ${classes.length} lớp phù hợp`);
+      
+      // Xử lý dữ liệu trả về
+      const enhancedClasses = classes.map(classItem => {
         return {
           ...classItem,
           schedules: [{
@@ -148,9 +176,9 @@ export const ClassProvider = ({ children }) => {
         };
       });
       
-      // Sort by start date and other criteria
+      // Sắp xếp lớp học
       const sortedClasses = enhancedClasses.sort((a, b) => {
-        // Sort by start date
+        // Sắp xếp theo ngày khai giảng
         const dateA = a[FIELD_MAPPINGS.CLASS.START_DATE] ? new Date(a[FIELD_MAPPINGS.CLASS.START_DATE]) : new Date();
         const dateB = b[FIELD_MAPPINGS.CLASS.START_DATE] ? new Date(b[FIELD_MAPPINGS.CLASS.START_DATE]) : new Date();
         
@@ -164,6 +192,9 @@ export const ClassProvider = ({ children }) => {
       console.error('Error fetching available classes:', error);
       setError(error.message || MESSAGES.CLASS_FETCH_ERROR);
       setLoading(false);
+      
+      // Trả về mảng rỗng để tránh lỗi trong các component sử dụng kết quả
+      setClassList([]);
       return [];
     }
   };

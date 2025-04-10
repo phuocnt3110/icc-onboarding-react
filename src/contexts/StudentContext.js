@@ -29,7 +29,7 @@ export const StudentProvider = ({ children }) => {
       return null;
     }
     
-    // Thêm điều kiện kiểm tra để tránh vòng lặp vô hạn
+    // Nếu đang loading, bỏ qua request mới
     if (loading) {
       console.log("Đang loading, bỏ qua fetchStudentData");
       return null;
@@ -46,16 +46,31 @@ export const StudentProvider = ({ children }) => {
         setLoading(false);
         return null;
       }
-
+  
       // Tìm học viên theo billItemId
       const response = await apiClient.get(
         `/tables/${TABLE_IDS.STUDENT}/records?where=(${FIELD_MAPPINGS.STUDENT.BILL_ITEM_ID},eq,${id})`
       );
       
-      // Xử lý dữ liệu...
-
       console.log('API response:', response.data);
       
+      if (!response.data || !response.data.list || response.data.list.length === 0) {
+        setError('Không tìm thấy thông tin học viên');
+        setLoading(false);
+        return null;
+      }
+      
+      // Lấy dữ liệu học viên từ kết quả
+      const studentRecord = response.data.list[0];
+      
+      // QUAN TRỌNG: Cập nhật state studentData
+      setStudentData(studentRecord);
+      console.log('studentData đã được cập nhật:', studentRecord);
+      
+      setLoading(false);
+      
+      // Trả về dữ liệu trực tiếp để người gọi có thể sử dụng ngay
+      return studentRecord;
     } catch (error) {
       console.error('Error fetching student data:', error);
       setError(error.message || MESSAGES.STUDENT_DATA_LOAD_ERROR);
