@@ -3,20 +3,28 @@
  * Contains all API tokens, table IDs, and other configurations
  */
 
+console.log('Environment variables:', {
+  STUDENT: process.env.REACT_APP_TABLE_STUDENT,
+  RESERVATION: process.env.REACT_APP_TABLE_RESERVATION, 
+  CLASS: process.env.REACT_APP_TABLE_CLASS,
+  STUDENT_INFO: process.env.REACT_APP_TABLE_STUDENT_INFO
+});
+
 // API configurations
 export const API_CONFIG = {
-    TOKEN: "wAGe0JmrHKwn7KcOFn8TLrYFW7scyHhAwMiin4Qx",
-    BASE_URL: "https://noco-erp.com/api/v2",
+    // Sử dụng biến môi trường, với fallback nếu không tìm thấy
+    TOKEN: process.env.REACT_APP_API_TOKEN,
+    BASE_URL: process.env.REACT_APP_API_BASE_URL,
     TIMEOUT: 10000,
     MAX_RETRIES: 2
   };
   
   // Table IDs
   export const TABLE_IDS = {
-    STUDENT: "muavbrdc7f1epco",  // Bảng data_main
-    RESERVATION: "mbzjxhps0pfgw75",  // Bảng form_giu_cho
-    CLASS: "mdtxnu17rxx23iq",  // Bảng data_class_total
-    STUDENT_INFO: "m0vtbagwhupkzar" // Bảng student_info (thay thế ID thực tế)
+    STUDENT: process.env.REACT_APP_TABLE_STUDENT,
+    RESERVATION: process.env.REACT_APP_TABLE_RESERVATION,
+    CLASS: process.env.REACT_APP_TABLE_CLASS,
+    STUDENT_INFO: process.env.REACT_APP_TABLE_STUDENT_INFO
   };
   
   // Field mappings between tables
@@ -24,53 +32,53 @@ export const API_CONFIG = {
     // Student table field mappings
     STUDENT: {
       ID: "Id",
-      NAME: "tenHocVien",
-      PHONE: "soDienThoaiHocVien",
-      EMAIL: "emailHocVien",
-      GUARDIAN_NAME: "tenNguoiDaiDien",
-      GUARDIAN_PHONE: "sdtNguoiDaiDien",
-      GUARDIAN_EMAIL: "mailNguoiDaiDien",
-      PRODUCT: "sanPham",
-      PACKAGE: "goiMua",
-      CLASS_SIZE: "sizeLop",
-      TEACHER_TYPE: "loaiGv",
-      LEVEL: "trinhDo",
-      BILL_ITEM_ID: "billItemId",
-      SESSIONS: "soBuoi",
-      PRICE: "TongTien",
-      CLASS_CODE: "maLop",
-      SCHEDULE: "lichHoc",
-      START_DATE: "ngayKhaiGiangDuKien",
-      STATUS: "trangThaiChonLop",
-      LOCATION: "diaChi",
-      ZALO_PHONE: "soDienThoaiDangKyZalo", // Trường thông tin SĐT Zalo
-      MA_THEO_DOI: "maTheoDoi", // Mã theo dõi học viên
+      NAME: "tenHocVien",           // không thay đổi
+      PHONE: "soDienThoaiHocVien",  // không thay đổi
+      EMAIL: "emailHocVien",        // không thay đổi
+      GUARDIAN_NAME: "tenNguoiDaiDien", // không thay đổi
+      GUARDIAN_PHONE: "sdtNguoiDaiDien", // không thay đổi
+      GUARDIAN_EMAIL: "mailNguoiDaiDien", // không thay đổi
+      PRODUCT: "sanPham",           // không thay đổi
+      LEVEL: "trinhDo",           // thay đổi từ PACKAGE - goiMua
+      CLASS_SIZE: "loaiLop",        // thay đổi từ sizeLop
+      TEACHER_TYPE: "loaiGV",       // thay đổi từ loaiGv (chỉ thay đổi chữ cái hoa)
+      CURRICULUM: "loTrinh",             // thay đổi từ LEVEL - trinhDO
+      BILL_ITEM_ID: "billItemId",   // không thay đổi
+      SESSIONS: "soBuoi",           // không thay đổi
+      PRICE: "TongTien",            // không thay đổi
+      CLASS_CODE: "maLopChot",      // thay đổi từ maLop
+      SCHEDULE: "lichHoc",          // không thay đổi
+      START_DATE: "ngayKhaiGiangDuKien", // không thay đổi
+      STATUS: "trangThaiChonLop",   // không thay đổi
+      LOCATION: "diaChi",           // không thay đổi
+      ZALO_PHONE: "soDienThoaiDangKyZalo", // không thay đổi
+      MA_THEO_DOI: "maTheoDoiHV",   // thay đổi từ maTheoDoi
     },
     
     // Class table field mappings
     CLASS: {
       ID: "Id",
-      CODE: "classCode",
-      PRODUCT: "product",
-      SIZE: "size",
-      TEACHER_TYPE: "teacherType",
-      LEVEL: "trinhDo",
-      STATUS: "status",
-      START_DATE: "ngayKhaiGiangDuKien",
-      SLOTS_LEFT: "soSlotConLai",
-      TOTAL_SLOTS: "siSo",
-      REGISTERED: "soDaDangKy",
-      WEEKDAY: "ngayHoc",
-      START_TIME: "gioBatDau",
-      END_TIME: "gioKetThuc",
+      CODE: "maLop",             // thay đổi từ classCode
+      PRODUCT: "sanPham",        // thay đổi từ product
+      SIZE: "loaiLop",           // thay đổi từ size
+      TEACHER_TYPE: "loaiGV",    // thay đổi từ teacherType
+      LEVEL: "trinhDo",          // không thay đổi
+      STATUS: "trangThaiLop",    // thay đổi từ status
+      START_DATE: "ngayKhaiGiangDuKien", // không thay đổi
+      SLOTS_LEFT: "soSlotConLai", // không thay đổi
+      TOTAL_SLOTS: "siSo",       // không thay đổi
+      REGISTERED: "soDaDangKy",  // không thay đổi
+      WEEKDAY: "ngayHoc",        // không thay đổi
+      START_TIME: "gioBatDau",   // không thay đổi
+      END_TIME: "gioKetThuc",    // không thay đổi
     },
     
     // Reservation table field mappings
     RESERVATION: {
       ID: "Id",
-      ORDER_CODE: "ma_order",
-      CLASS_CODE: "ma_lop",
-      IS_VALID: "checkHopLe"
+      ORDER_CODE: "maGiuCho",    // thay đổi từ ma_order
+      CLASS_CODE: "maLop",       // thay đổi từ ma_lop
+      IS_VALID: "checkHopLe"     // không thay đổi
     },
     
     // Student Info table field mappings
@@ -164,3 +172,9 @@ export const API_CONFIG = {
     MESSAGES,
     THEME
   };
+
+  console.log('Config loaded:', {
+    API_CONFIG,
+    TABLE_IDS,
+    FIELD_MAPPINGS
+  });

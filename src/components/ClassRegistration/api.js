@@ -94,7 +94,7 @@ export const fetchStudentData = async (id) => {
     const studentData = response.data.list[0];
     
     // Validate required fields
-    if (!studentData[STUDENT_FIELDS.PRODUCT] && !studentData[STUDENT_FIELDS.PACKAGE]) {
+    if (!studentData[STUDENT_FIELDS.PRODUCT] && !studentData[STUDENT_FIELDS.LEVEL]) {
       console.warn('Missing product info for student ID:', id);
     }
     
@@ -102,7 +102,7 @@ export const fetchStudentData = async (id) => {
     return {
       ...studentData,
       // Add legacy field mappings for backward compatibility
-      tenSanPham: studentData[STUDENT_FIELDS.PACKAGE] || studentData[STUDENT_FIELDS.PRODUCT],
+      tenSanPham: studentData[STUDENT_FIELDS.LEVEL] || studentData[STUDENT_FIELDS.PRODUCT],
       size: studentData[STUDENT_FIELDS.CLASS_SIZE],
       loaiGiaoVien: studentData[STUDENT_FIELDS.TEACHER_TYPE],
       trinhDo: studentData[STUDENT_FIELDS.LEVEL] || 'Beginner', // Default if missing

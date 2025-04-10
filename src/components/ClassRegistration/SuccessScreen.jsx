@@ -214,7 +214,7 @@ const SuccessScreen = ({
                   <Col span={16}>
                     <div className="info-value">
                       {studentData.goiMua || 
-                       studentData[STUDENT_FIELDS.PACKAGE] || 
+                       studentData[STUDENT_FIELDS.LEVEL] || 
                        'Không có thông tin'}
                     </div>
                   </Col>

@@ -147,7 +147,7 @@ export const validateClassSelection = (studentData, classInfo) => {
   }
   
   // Check for required student data using field mappings
-  const studentProduct = studentData[STUDENT_FIELDS.PRODUCT] || studentData[STUDENT_FIELDS.PACKAGE];
+  const studentProduct = studentData[STUDENT_FIELDS.PRODUCT] || studentData[STUDENT_FIELDS.LEVEL];
   if (!studentProduct) {
     return { 
       valid: false, 
