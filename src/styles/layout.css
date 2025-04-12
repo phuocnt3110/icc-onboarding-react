@@ -1,0 +1,55 @@
+/* Layout Styles */
+.layout-container {
+  min-height: 100vh;
+  background: transparent;
+}
+
+.layout-content {
+  padding: 24px;
+  background: transparent;
+}
+
+.form-container {
+  width: 35%;
+  max-width: 400px;
+  margin: 0 auto;
+  padding: 1rem;
+  position: relative;
+  z-index: 2;
+  background: transparent;
+}
+
+/* Card styles */
+.ant-card {
+  background-color: rgba(255, 255, 255, 0.9);
+  border-radius: 8px;
+}
+
+.ant-card-body {
+  background-color: transparent;
+}
+
+/* Progress steps */
+.progress-steps {
+  background: transparent;
+  margin-bottom: 24px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .layout-content {
+    padding: 16px;
+  }
+  
+  .form-container {
+    width: 90%;
+    max-width: 100%;
+    padding: 0.5rem;
+  }
+}
+
+@media (min-width: 1600px) {
+  .form-container {
+    max-width: 400px;
+  }
+} 

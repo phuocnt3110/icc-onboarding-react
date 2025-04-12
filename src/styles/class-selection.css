@@ -1,0 +1,67 @@
+/* ClassSelection Styles */
+.class-selection-container {
+  width: 100%;
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+.class-selection-card {
+  background: rgba(255, 255, 255, 0.9);
+  padding: 1.5rem;
+  border-radius: 8px;
+}
+
+.class-selection-table {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.class-selection-table .ant-table {
+  width: 100%;
+}
+
+.class-selection-table .ant-table-cell {
+  white-space: normal;
+  word-break: break-word;
+}
+
+/* Column widths */
+.class-selection-table .ant-table-cell:first-child {
+  width: 120px;
+  min-width: 120px;
+}
+
+.class-selection-table .ant-table-cell:nth-child(2) {
+  min-width: 300px;
+}
+
+.class-selection-table .ant-table-cell:nth-child(3) {
+  width: 100px;
+  min-width: 100px;
+}
+
+.class-selection-table .ant-table-cell:nth-child(4) {
+  width: 130px;
+  min-width: 130px;
+}
+
+.class-selection-table .ant-table-cell:last-child {
+  width: 100px;
+  min-width: 100px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .class-selection-container {
+    padding: 0.5rem;
+  }
+  
+  .class-selection-card {
+    padding: 1rem;
+  }
+  
+  .class-selection-table .ant-table-cell {
+    white-space: normal;
+  }
+} 

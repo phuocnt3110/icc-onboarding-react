@@ -4,22 +4,35 @@ import {
   Typography, 
   Button, 
   Divider, 
-  Alert, 
+  Table, 
+  Tag, 
   Space, 
-  Tooltip,
+  Alert, 
+  Empty, 
   Skeleton,
-  FloatButton,
+  Input,
+  Row,
+  Col,
+  Tooltip,
+  Modal,
   message,
-  Modal
+  Spin,
+  FloatButton
 } from 'antd';
 import { 
+  CalendarOutlined, 
+  ClockCircleOutlined, 
+  UserOutlined, 
+  CheckCircleOutlined,
+  SearchOutlined,
   ExclamationCircleOutlined,
-  InfoCircleOutlined,
-  CalendarOutlined,
+  QuestionCircleOutlined,
+  TeamOutlined,
   ReloadOutlined,
+  InfoCircleOutlined,
   MenuOutlined
 } from '@ant-design/icons';
-import { FIELD_MAPPINGS } from '../../../config';
+import { FIELD_MAPPINGS, MESSAGES } from '../../../config';
 import ScheduleGrid from './ScheduleGrid';
 import SelectedSlots from './SelectedSlots';
 import MobileDrawer from './MobileDrawer';
@@ -31,7 +44,6 @@ import {
   hasSelectedSlots as checkHasSelectedSlots,
   formatSchedulesForSubmit,
   positionToSlot,
-  // New utility functions
   optimizeBitmap,
   prioritizeSchedules,
   createCompactScheduleString,
@@ -41,10 +53,11 @@ import {
   updateStudentSchedule, 
   saveScheduleBitmap 
 } from './api';
-// Import from parent directory for updateStudentClass
-import { updateStudentClass } from '../api';
-import './CustomScheduleStyles.css';
-import './LayoutAdjustments.css';
+import { updateClassRegistration, validateScheduleSelection } from '../../../services/api/class';
+import '../../../styles/custom-schedule.css';
+import '../../../styles/index.css';
+import { useClass } from '../../../contexts/ClassContext';
+import { useStudent } from '../../../contexts/StudentContext';
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -289,7 +302,7 @@ const CustomSchedule = ({
         }
         
         // Update student record with full schedule
-        await updateStudentClass(
+        await updateClassRegistration(
           studentId, 
           {
             [STUDENT_FIELDS.SCHEDULE]: scheduleText,

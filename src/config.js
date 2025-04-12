@@ -63,7 +63,7 @@ export const API_CONFIG = {
       SIZE: "loaiLop",           // thay đổi từ size
       TEACHER_TYPE: "loaiGV",    // thay đổi từ teacherType
       LEVEL: "trinhDo",          // không thay đổi
-      STATUS: "trangThaiLop",    // thay đổi từ status
+      STATUS: "trangThaiLop",    // sửa lại về đúng tên trangThaiLop
       START_DATE: "ngayKhaiGiangDuKien", // không thay đổi
       SLOTS_LEFT: "soSlotConLai", // không thay đổi
       TOTAL_SLOTS: "siSo",       // không thay đổi

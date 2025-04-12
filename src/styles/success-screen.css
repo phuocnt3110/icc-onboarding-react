@@ -1,0 +1,88 @@
+/* SuccessScreen Styles */
+.success-screen-container {
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+.success-screen-card {
+  background: rgba(255, 255, 255, 0.9);
+  padding: 1.5rem;
+  border-radius: 8px;
+}
+
+.success-screen-header {
+  min-width: 200px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 15px;
+  padding: 12px 20px;
+}
+
+.success-screen-label {
+  min-width: 140px;
+  white-space: nowrap;
+  padding-right: 15px;
+}
+
+.success-screen-column {
+  min-width: 180px;
+}
+
+.success-screen-weekday {
+  min-width: 100px;
+  width: 120px;
+  white-space: nowrap;
+}
+
+.success-screen-result {
+  padding: 20px 0 0;
+  margin-bottom: 0;
+}
+
+.success-screen-subtitle {
+  margin-top: 4px;
+  margin-bottom: 10px;
+}
+
+.success-screen-title {
+  margin-top: 50px;
+  margin-bottom: 16px;
+}
+
+.success-screen-info {
+  margin-top: 10px;
+}
+
+/* Responsive adjustments */
+@media (min-width: 992px) {
+  .success-screen-header {
+    font-size: 16px;
+    padding: 12px 24px;
+  }
+}
+
+@media (max-width: 768px) {
+  .success-screen-container {
+    padding: 0.5rem;
+  }
+  
+  .success-screen-card {
+    padding: 1rem;
+  }
+  
+  .success-screen-header {
+    min-width: auto;
+    font-size: 14px;
+  }
+  
+  .success-screen-label {
+    min-width: 100px;
+  }
+  
+  .success-screen-column {
+    white-space: normal;
+  }
+} 

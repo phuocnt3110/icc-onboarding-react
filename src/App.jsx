@@ -2,10 +2,11 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Layout, ConfigProvider } from 'antd';
 import viVN from 'antd/lib/locale/vi_VN';
-import StudentInfo from './components/StudentInfo';
-import ClassRegistration from './components/ClassRegistration';
+import StudentInfo from './components/StudentInfo/StudentInfo';
+import ClassRegistration from './components/ClassRegistration/ClassRegistration';
 import { StudentProvider } from './contexts/StudentContext';
 import { ClassProvider } from './contexts/ClassContext';
+import { ROUTES } from './config';
 import './index.css';
 
 const { Header, Content, Footer } = Layout;

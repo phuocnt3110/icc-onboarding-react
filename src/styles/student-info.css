@@ -1,0 +1,381 @@
+/* StudentInfo Styles */
+.student-info-container {
+  width: 55% !important;
+  max-width: 800px !important;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  text-align: center;
+}
+
+.loading-container p {
+  margin-top: 1rem;
+  font-size: 1.2rem;
+  color: #666;
+}
+
+.student-info-form {
+  background: rgba(255, 255, 255, 0.9);
+  padding: 1.5rem;
+  border-radius: 8px;
+}
+
+.student-info-form .ant-form-item {
+  margin-bottom: 1rem;
+}
+
+.student-info-form .ant-input,
+.student-info-form .ant-select-selector,
+.student-info-form .ant-picker {
+  border: 1px solid #d9d9d9;
+  border-radius: 4px;
+  transition: all 0.3s;
+}
+
+.student-info-form .ant-input:hover,
+.student-info-form .ant-select-selector:hover,
+.student-info-form .ant-picker:hover {
+  border-color: #40a9ff;
+}
+
+.student-info-form .ant-input:focus,
+.student-info-form .ant-select-selector:focus,
+.student-info-form .ant-picker-focused {
+  border-color: #1890ff;
+  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+}
+
+/* Confirmation Section Styles */
+.confirmation-item {
+  margin-bottom: 16px;
+}
+
+.confirmation-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: -8px;
+  margin-left: 0;
+}
+
+.confirmation-select-item {
+  margin-bottom: 0;
+}
+
+.confirmation-select {
+  width: 100%;
+}
+
+.confirmation-select .ant-select-selector {
+  border: 1px solid #d9d9d9;
+  border-radius: 4px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+}
+
+.confirmation-select .ant-select-selector:hover {
+  border-color: #40a9ff;
+}
+
+.confirmation-select .ant-select-selector:focus {
+  border-color: #1890ff;
+  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+}
+
+.confirmation-select .ant-select-selection-item {
+  line-height: 32px;
+}
+
+/* New Phone Container Styles */
+.new-phone-container {
+  margin-left: 0;
+  width: 100%;
+}
+
+.new-phone-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.new-phone-label {
+  font-size: 14px;
+  color: #333;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.new-phone-form-item {
+  margin-bottom: 0;
+}
+
+.new-phone-form-item .ant-form-item-control {
+  width: 100%;
+}
+
+.new-phone-input {
+  border: none !important;
+  border-bottom: 1px solid #d9d9d9 !important;
+  border-radius: 0 !important;
+  padding: 4px 0 !important;
+  height: 32px !important;
+  width: 100%;
+  background: transparent;
+  transition: all 0.3s;
+  box-shadow: none !important;
+}
+
+.new-phone-input:hover {
+  border-bottom-color: #40a9ff !important;
+}
+
+.new-phone-input:focus {
+  border-bottom-color: #1890ff !important;
+  box-shadow: none !important;
+}
+
+.new-phone-input::placeholder {
+  color: #bfbfbf;
+  padding-left: 0;
+}
+
+/* Gender Select Styles */
+.gender-select {
+  width: 100%;
+}
+
+.gender-select .ant-select-selector {
+  border: 1px solid #d9d9d9;
+  border-radius: 4px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+}
+
+.gender-select .ant-select-selector:hover {
+  border-color: #40a9ff;
+}
+
+.gender-select .ant-select-selector:focus {
+  border-color: #1890ff;
+  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+}
+
+.gender-select .ant-select-selection-item {
+  line-height: 36px;
+}
+
+/* Card Styles */
+.info-card {
+  margin-bottom: 16px;
+  border-radius: 6px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.info-card .ant-card-body {
+  padding: 0 !important;
+}
+
+.card-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 12px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.info-row {
+  margin-top: 16px !important;
+}
+
+.card-divider {
+  display: none !important;
+}
+
+/* Guardian Note Styles */
+.guardian-note {
+  margin-top: 16px;
+}
+
+.guardian-note .ant-typography {
+  font-size: 14px;
+  color: #666;
+}
+
+/* Phone Input Container Styles */
+.phone-input-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .student-info-container {
+    padding: 0.5rem;
+  }
+  
+  .student-info-form {
+    padding: 1rem;
+  }
+
+  .confirmation-container {
+    gap: 12px;
+  }
+
+  .confirmation-text {
+    font-size: 13px;
+  }
+
+  .new-phone-container {
+    margin-left: 24px;
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 576px) {
+  .confirmation-text {
+    font-size: 13px;
+  }
+
+  .new-phone-container {
+    margin-left: 24px;
+  }
+
+  .new-phone-label {
+    font-size: 13px;
+  }
+
+  .gender-select .ant-select-selector {
+    height: 32px;
+  }
+
+  .gender-select .ant-select-selection-item {
+    line-height: 32px;
+  }
+}
+
+.form-item {
+  margin-bottom: 12px;
+}
+
+.form-row {
+  margin-bottom: 4px;
+}
+
+.form-item .ant-form-item-label > label {
+  font-size: 13px;
+  color: #666;
+  font-weight: 500;
+}
+
+.form-item .ant-input,
+.form-item .ant-select-selector {
+  font-size: 14px;
+  color: #333;
+  border-radius: 4px;
+}
+
+.confirmation-section {
+  margin: 16px 0;
+  padding: 12px;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+}
+
+.confirmation-text {
+  font-size: 13px;
+  color: #666;
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+
+.confirmation-select-item {
+  margin-bottom: 8px;
+}
+
+.confirmation-select-item .ant-select {
+  width: 100%;
+}
+
+.guardian-note-content {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.guardian-note-icon {
+  font-size: 14px;
+  color: #1890ff;
+}
+
+.guardian-note-text {
+  font-size: 13px;
+  color: #666;
+  line-height: 1.4;
+}
+
+.guardian-note-alert {
+  padding: 8px 12px;
+  background-color: #e6f7ff;
+  border: 1px solid #91d5ff;
+  border-radius: 4px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 576px) {
+  .course-info-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  
+  .course-info-item {
+    padding: 6px;
+  }
+  
+  .form-item {
+    margin-bottom: 8px;
+  }
+  
+  .confirmation-section {
+    margin: 12px 0;
+    padding: 8px;
+  }
+}
+
+.course-info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 12px;
+  padding: 8px 0;
+}
+
+.course-info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+}
+
+.course-info-label {
+  font-size: 13px;
+  color: #666;
+  font-weight: 500;
+}
+
+.course-info-value {
+  font-size: 14px;
+  color: #333;
+  font-weight: 400;
+} 

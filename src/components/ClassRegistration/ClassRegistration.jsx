@@ -4,10 +4,10 @@ import { Spin, Result, Button, message, Modal } from 'antd';
 import { useStudent } from '../../contexts/StudentContext';
 import { useClass } from '../../contexts/ClassContext';
 import { validateScheduleSelection, validateClassSelection } from './utils';
-import ReservationConfirmation from './ReservationConfirmation';
-import ClassSelection from './ClassSelection';
+import ReservationConfirmation from '../Confirmation/ReservationConfirmation';
+import ClassSelection from './ClassSelection/ClassSelection';
 import CustomSchedule from './CustomSchedule/index';
-import SuccessScreen from './SuccessScreen';
+import SuccessScreen from '../Confirmation/SuccessScreen';
 import { MESSAGES, FIELD_MAPPINGS, ROUTES } from '../../config';
 
 // Extract field mappings for easier access
@@ -64,6 +64,18 @@ const ClassRegistration = () => {
     if (directSuccess === 'true') {
       console.log('direct_success=true, chuyển thẳng đến Success Screen');
       setCurrentScreen('success');
+      // Nếu không có studentData, cần fetch lại
+      if (!studentData) {
+        (async () => {
+          try {
+            await fetchStudentData(id);
+          } catch (error) {
+            console.error('Lỗi khi tải dữ liệu học viên:', error);
+            setErrorMessage(error.message || 'Không thể tải thông tin học viên');
+            setCurrentScreen('error');
+          }
+        })();
+      }
     } else {
       // Flow bình thường
       console.log('Không có direct_success hoặc không bằng true, thực hiện flow bình thường');
@@ -594,7 +606,7 @@ const ClassRegistration = () => {
   };
 
   return (
-    <div className="form-container" style={{ maxWidth: '800px', margin: '0 auto' }}>
+    <div className="form-container">
       {renderContent()}
     </div>
   );

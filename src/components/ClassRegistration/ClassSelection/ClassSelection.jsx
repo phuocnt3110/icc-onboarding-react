@@ -15,7 +15,8 @@ import {
   Col,
   Tooltip,
   Modal,
-  message
+  message,
+  Spin
 } from 'antd';
 import { 
   CalendarOutlined, 
@@ -24,12 +25,17 @@ import {
   CheckCircleOutlined,
   SearchOutlined,
   ExclamationCircleOutlined,
-  QuestionCircleOutlined
+  QuestionCircleOutlined,
+  TeamOutlined
 } from '@ant-design/icons';
-import { formatDate, validateClassSelection } from './utils';
-import { FIELD_MAPPINGS } from '../../config';
+import { FIELD_MAPPINGS, MESSAGES } from '../../../config';
 import _ from 'lodash';
-import './ClassSelectionStyle.css';
+import '../../../styles/class-selection.css';
+import { useClass } from '../../../contexts/ClassContext';
+import { useStudent } from '../../../contexts/StudentContext';
+import '../../../styles/index.css';
+import { checkClassAvailability, fetchAvailableClasses, updateClassRegistration } from '../../../services/api/class';
+import { formatDate, validateClassSelection, processClassList, formatSchedule } from '../../../services/utils/class-registration';
 
 const { Title, Text, Paragraph } = Typography;
 const { Search } = Input;

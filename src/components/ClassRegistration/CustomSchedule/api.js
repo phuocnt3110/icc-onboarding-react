@@ -53,7 +53,7 @@ export const updateStudentSchedule = async (studentId, scheduleText, status) => 
     }
 
     // Send only defined fields to the API
-    const response = await apiClient.patch(`/tables/${STUDENT}/records`, updateData);
+    const response = await apiClient.patch(`/db/data/v1/${STUDENT}/${studentId}`, updateData);
     return response.data;
   } catch (error) {
     console.error('Error updating student schedule:', error);
@@ -97,7 +97,7 @@ export const saveScheduleBitmap = async (maHocVien, scheduleBitmap) => {
     });
     
     // First check if record exists for this student
-    const checkResponse = await apiClient.get(`/tables/${STUDENT_INFO}/records`, {
+    const checkResponse = await apiClient.get(`/db/data/v1/${STUDENT_INFO}`, {
       params: {
         where: `(${STUDENT_INFO_FIELDS.STUDENT_ID},eq,${maHocVien})`
       }
@@ -110,8 +110,7 @@ export const saveScheduleBitmap = async (maHocVien, scheduleBitmap) => {
       const recordId = existingRecords[0].Id;
       console.log(`Found existing student_info record (ID: ${recordId}), updating...`);
       
-      const updateResponse = await apiClient.patch(`/tables/${STUDENT_INFO}/records`, {
-        Id: recordId,
+      const updateResponse = await apiClient.patch(`/db/data/v1/${STUDENT_INFO}/${recordId}`, {
         [STUDENT_INFO_FIELDS.SCHEDULE_BITMAP]: bitmapString
       });
       
@@ -121,7 +120,7 @@ export const saveScheduleBitmap = async (maHocVien, scheduleBitmap) => {
       // Create new record
       console.log('No existing student_info record, creating new one...');
       
-      const createResponse = await apiClient.post(`/tables/${STUDENT_INFO}/records`, {
+      const createResponse = await apiClient.post(`/db/data/v1/${STUDENT_INFO}`, {
         [STUDENT_INFO_FIELDS.STUDENT_ID]: maHocVien,
         [STUDENT_INFO_FIELDS.SCHEDULE_BITMAP]: bitmapString
       });
@@ -155,15 +154,14 @@ export const saveScheduleBitmap = async (maHocVien, scheduleBitmap) => {
           // Try to save the simplified bitmap
           if (existingRecords && existingRecords.length > 0) {
             const recordId = existingRecords[0].Id;
-            const updateResponse = await apiClient.patch(`/tables/${STUDENT_INFO}/records`, {
-              Id: recordId,
+            const updateResponse = await apiClient.patch(`/db/data/v1/${STUDENT_INFO}/${recordId}`, {
               [STUDENT_INFO_FIELDS.SCHEDULE_BITMAP]: simplifiedString
             });
             
             console.log('Simplified bitmap update successful');
             return updateResponse.data;
           } else {
-            const createResponse = await apiClient.post(`/tables/${STUDENT_INFO}/records`, {
+            const createResponse = await apiClient.post(`/db/data/v1/${STUDENT_INFO}`, {
               [STUDENT_INFO_FIELDS.STUDENT_ID]: maHocVien,
               [STUDENT_INFO_FIELDS.SCHEDULE_BITMAP]: simplifiedString
             });
