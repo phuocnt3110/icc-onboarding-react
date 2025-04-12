@@ -19,70 +19,62 @@ export const StudentProvider = ({ children }) => {
   const [student, setStudent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isInitialized, setIsInitialized] = useState(false);
 
-  useEffect(() => {
-    const loadStudentData = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        
-        // Get billItemId from URL
-        const urlParams = new URLSearchParams(window.location.search);
-        const billItemId = urlParams.get('id');
-        
-        if (!billItemId) {
-          console.error('Missing billItemId in URL');
-          throw new Error(MESSAGES.MISSING_BILL_ITEM_ID);
-        }
-        
-        console.log('Loading student data with billItemId:', billItemId);
-        const data = await fetchStudentData(billItemId);
-        
-        if (!data) {
-          console.error('No student data returned');
-          throw new Error(MESSAGES.STUDENT_NOT_FOUND);
-        }
-        
-        console.log('Student data loaded successfully:', data);
-        setStudent(data);
-      } catch (err) {
-        console.error('Error loading student data:', err);
-        setError(err.message || MESSAGES.STUDENT_DATA_LOAD_ERROR);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadStudentData();
-  }, []);
-
-  const updateStudent = async (newData) => {
+  // Load student data function
+  const loadStudentData = async (id) => {
     try {
       setLoading(true);
       setError(null);
       
-      if (!student || !student[FIELD_MAPPINGS.STUDENT.BILL_ITEM_ID]) {
-        throw new Error('Missing student data or BILL_ITEM_ID');
+      console.log('[DEBUG] Fetching student data for ID:', id);
+      const data = await fetchStudentData(id);
+      
+      if (!data) {
+        throw new Error('No student data returned');
       }
       
-      // Add billItemId to update data
-      const updateData = {
-        ...newData,
-        [FIELD_MAPPINGS.STUDENT.BILL_ITEM_ID]: student[FIELD_MAPPINGS.STUDENT.BILL_ITEM_ID]
+      console.log('[DEBUG] Successfully fetched student data:', data);
+      setStudent(data);
+      return data; // Return data for immediate use
+    } catch (err) {
+      console.error('[DEBUG] Error loading student data:', err);
+      setError(err.message || 'Failed to load student data');
+      return null;
+    } finally {
+      setLoading(false);
+      setIsInitialized(true);
+    }
+  };
+
+  // Update student data
+  const updateStudent = async (updateData) => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      if (!student || !student.Id) {
+        throw new Error('Missing student data or ID');
+      }
+      
+      // Ensure ID is included
+      const dataToUpdate = {
+        ...updateData,
+        Id: student.Id
       };
       
-      console.log('Updating student data:', updateData);
-      const updatedData = await updateStudentClass(updateData);
+      console.log('[DEBUG] Updating student data:', dataToUpdate);
+      const updatedData = await updateStudentClass(dataToUpdate);
       
       if (!updatedData) {
         throw new Error('No data returned from update');
       }
       
-      console.log('Student data updated successfully:', updatedData);
+      console.log('[DEBUG] Student data updated successfully:', updatedData);
       setStudent(updatedData);
       return updatedData;
     } catch (err) {
-      console.error('Error updating student data:', err);
+      console.error('[DEBUG] Error updating student data:', err);
       setError(err.message || MESSAGES.UPDATE_FAILED.replace('{error}', err.message));
       throw err;
     } finally {
@@ -90,11 +82,27 @@ export const StudentProvider = ({ children }) => {
     }
   };
 
+  // Initial load
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const billItemId = urlParams.get('id');
+    
+    if (billItemId) {
+      loadStudentData(billItemId);
+    } else {
+      setLoading(false);
+      setIsInitialized(true);
+      setError('Missing billItemId in URL');
+    }
+  }, []);
+
   return (
     <StudentContext.Provider value={{ 
       student, 
       loading, 
       error, 
+      isInitialized,
+      loadStudentData,
       updateStudent 
     }}>
       {children}

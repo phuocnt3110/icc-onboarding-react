@@ -53,6 +53,10 @@ export const API_CONFIG = {
       LOCATION: "diaChi",           // không thay đổi
       ZALO_PHONE: "soDienThoaiDangKyZalo", // không thay đổi
       MA_THEO_DOI: "maTheoDoiHV",   // thay đổi từ maTheoDoi
+      GENDER: "gioiTinh",
+      DOB: "ngaySinh",
+      LOCATION: "tinhThanh",
+      GUARDIAN_RELATION: "moiQuanHe",
     },
     
     // Class table field mappings
@@ -116,6 +120,40 @@ export const API_CONFIG = {
     'Chủ nhật'
   ];
   
+  // Country codes for phone input
+  export const COUNTRY_CODES = [
+    { code: '+84', country: 'Việt Nam' },
+    { code: '+1', country: 'USA/Canada' },
+    { code: '+44', country: 'United Kingdom' },
+    { code: '+86', country: 'China' },
+    { code: '+81', country: 'Japan' },
+    { code: '+82', country: 'South Korea' },
+    { code: '+61', country: 'Australia' },
+    { code: '+33', country: 'France' },
+    { code: '+49', country: 'Germany' },
+    { code: '+65', country: 'Singapore' },
+    { code: '+66', country: 'Thailand' },
+    { code: '+60', country: 'Malaysia' },
+    { code: '+62', country: 'Indonesia' },
+    { code: '+63', country: 'Philippines' },
+    { code: '+7', country: 'Russia' },
+    { code: '+39', country: 'Italy' },
+    { code: '+34', country: 'Spain' },
+    { code: '+55', country: 'Brazil' },
+    { code: '+91', country: 'India' },
+    { code: '+52', country: 'Mexico' },
+    { code: '+31', country: 'Netherlands' },
+    { code: '+46', country: 'Sweden' },
+    { code: '+47', country: 'Norway' },
+    { code: '+358', country: 'Finland' },
+    { code: '+48', country: 'Poland' },
+    { code: '+351', country: 'Portugal' },
+    { code: '+43', country: 'Austria' },
+    { code: '+41', country: 'Switzerland' },
+    { code: '+36', country: 'Hungary' },
+    { code: '+30', country: 'Greece' }
+  ];
+  
   // Message configurations
   export const MESSAGES = {
     // Common messages
@@ -159,7 +197,29 @@ export const API_CONFIG = {
   export const THEME = {
     PRIMARY_COLOR: '#00509f',
     HEADER_HEIGHT: '64px',
-    FOOTER_HEIGHT: '50px'
+    FOOTER_HEIGHT: '50px',
+    // Thêm các màu và spacing
+    TITLE_COLOR: '#00509f',
+    TEXT_COLOR: '#333333',
+    LABEL_COLOR: '#666666',
+    BORDER_COLOR: '#d9d9d9',
+    SPACING: {
+      SMALL: '8px',
+      MEDIUM: '16px',
+      LARGE: '24px'
+    },
+    BORDER_RADIUS: '6px',
+    SHADOW: '0 1px 2px rgba(0, 0, 0, 0.1)'
+  };
+  
+  // Section titles
+  export const SECTION_TITLES = {
+    COURSE_INFO: "Thông tin khóa học",
+    STUDENT_INFO: "Thông tin học viên",
+    GUARDIAN_INFO: "Thông tin người đại diện",
+    CLASS_SELECTION: "Chọn lớp học",
+    SCHEDULE_SELECTION: "Chọn lịch học",
+    CONFIRMATION: "Xác nhận đăng ký"
   };
   
   export default {
@@ -169,8 +229,10 @@ export const API_CONFIG = {
     ROUTES,
     TIME_SLOTS,
     WEEKDAYS,
+    COUNTRY_CODES,
     MESSAGES,
-    THEME
+    THEME,
+    SECTION_TITLES
   };
 
   console.log('Config loaded:', {

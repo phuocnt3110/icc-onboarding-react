@@ -4,6 +4,14 @@
   max-width: 800px !important;
   margin: 0 auto;
   padding: 1rem;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.3s ease-in, transform 0.3s ease-in;
+}
+
+.student-info-container.loaded {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .loading-container {
@@ -11,8 +19,9 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 100vh;
+  min-height: 400px;
   text-align: center;
+  transition: opacity 0.3s ease;
 }
 
 .loading-container p {
@@ -21,52 +30,164 @@
   color: #666;
 }
 
+/* Các card styles */
+.info-card {
+  margin-bottom: 24px;
+  border-radius: 6px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.info-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.info-card .ant-card-body {
+  padding: 20px 24px !important;
+}
+
+/* Modern Section Title Styles */
+.section-title-container {
+  display: flex;
+  align-items: baseline;
+  margin-bottom: 20px;
+  position: relative;
+}
+
+.section-letter {
+  font-size: 18px;
+  font-weight: 700;
+  color: #00509f;
+  margin-right: 8px;
+  line-height: 1;
+}
+
+.section-text {
+  font-size: 18px;
+  font-weight: 500;
+  color: #00509f;
+  padding-bottom: 6px;
+  position: relative;
+}
+
+/* Legacy Section Title styles - keep for backward compatibility */
+.section-title {
+  color: #00509f;
+  font-size: 18px;
+  font-weight: 500;
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  width: auto;
+  display: inline-block;
+}
+
+.section-title:hover {
+  color: #00509f;
+}
+
+/* Thông tin khóa học - Hiển thị như input không border, không edit */
+.course-info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 16px;
+  padding: 0 0 16px 0;
+}
+
+.course-info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 0 8px 0 8px;
+  background-color: transparent;
+  border-radius: 4px;
+}
+
+.course-info-label {
+  font-size: 13px;
+  color: #666;
+  font-weight: 500;
+}
+
+.course-info-value {
+  font-size: 14px;
+  color: #333;
+  font-weight: 400;
+  background-color: #fafafa;
+  padding: 8px 12px;
+  border-radius: 4px;
+  position: relative;
+  min-height: 36px;
+  box-shadow: 0 1.5px 0 rgba(0, 0, 0, 0.08);
+}
+
+/* Form styles - đồng bộ các input fields, bỏ hiệu ứng */
 .student-info-form {
   background: rgba(255, 255, 255, 0.9);
   padding: 1.5rem;
   border-radius: 8px;
 }
 
-.student-info-form .ant-form-item {
-  margin-bottom: 1rem;
+.form-row {
+  margin-bottom: 0 !important;
 }
 
-.student-info-form .ant-input,
-.student-info-form .ant-select-selector,
-.student-info-form .ant-picker {
-  border: 1px solid #d9d9d9;
+.form-item {
+  margin-bottom: 16px !important;
+}
+
+.form-item .ant-form-item-label > label {
+  font-size: 13px;
+  color: #666;
+  font-weight: 500;
+  height: 22px;
+  margin-bottom: 6px;
+}
+
+.form-item .ant-input,
+.form-item .ant-select-selector,
+.form-item .ant-picker {
+  height: 36px !important;
+  font-size: 14px;
+  color: #333;
   border-radius: 4px;
-  transition: all 0.3s;
 }
 
-.student-info-form .ant-input:hover,
-.student-info-form .ant-select-selector:hover,
-.student-info-form .ant-picker:hover {
-  border-color: #40a9ff;
-}
-
-.student-info-form .ant-input:focus,
-.student-info-form .ant-select-selector:focus,
-.student-info-form .ant-picker-focused {
-  border-color: #1890ff;
-  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
-}
-
-/* Confirmation Section Styles */
-.confirmation-item {
-  margin-bottom: 16px;
-}
-
-.confirmation-container {
+/* Form actions */
+.form-actions {
   display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-top: -8px;
-  margin-left: 0;
+  justify-content: center;
+  margin-top: 24px;
+}
+
+.form-actions .ant-btn-primary {
+  min-width: 200px;
+  height: 40px;
+  font-size: 16px;
+}
+
+/* Xác nhận phones */
+.confirmation-section {
+  margin: 16px 0;
+  padding: 16px;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+}
+
+.confirmation-text {
+  font-size: 13px;
+  color: #666;
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+
+/* Required mark for confirmation */
+.confirmation-text.required:after {
+  content: ' *';
+  color: #ff4d4f;
 }
 
 .confirmation-select-item {
-  margin-bottom: 0;
+  margin-bottom: 8px;
 }
 
 .confirmation-select {
@@ -94,23 +215,16 @@
   line-height: 32px;
 }
 
-/* New Phone Container Styles */
+/* Container for new phone input */
 .new-phone-container {
-  margin-left: 0;
+  margin-top: 12px;
   width: 100%;
+  animation: fadeIn 0.3s;
 }
 
-.new-phone-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.new-phone-label {
-  font-size: 14px;
-  color: #333;
-  font-weight: 500;
-  white-space: nowrap;
+.new-phone-container .ant-form-item-explain-error {
+  margin-top: 4px;
+  font-size: 12px;
 }
 
 .new-phone-form-item {
@@ -121,190 +235,9 @@
   width: 100%;
 }
 
-.new-phone-input {
-  border: none !important;
-  border-bottom: 1px solid #d9d9d9 !important;
-  border-radius: 0 !important;
-  padding: 4px 0 !important;
-  height: 32px !important;
-  width: 100%;
-  background: transparent;
-  transition: all 0.3s;
-  box-shadow: none !important;
-}
-
-.new-phone-input:hover {
-  border-bottom-color: #40a9ff !important;
-}
-
-.new-phone-input:focus {
-  border-bottom-color: #1890ff !important;
-  box-shadow: none !important;
-}
-
-.new-phone-input::placeholder {
-  color: #bfbfbf;
-  padding-left: 0;
-}
-
-/* Gender Select Styles */
-.gender-select {
-  width: 100%;
-}
-
-.gender-select .ant-select-selector {
-  border: 1px solid #d9d9d9;
-  border-radius: 4px;
-  height: 36px;
-  display: flex;
-  align-items: center;
-}
-
-.gender-select .ant-select-selector:hover {
-  border-color: #40a9ff;
-}
-
-.gender-select .ant-select-selector:focus {
-  border-color: #1890ff;
-  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
-}
-
-.gender-select .ant-select-selection-item {
-  line-height: 36px;
-}
-
-/* Card Styles */
-.info-card {
-  margin-bottom: 16px;
-  border-radius: 6px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-}
-
-.info-card .ant-card-body {
-  padding: 0 !important;
-}
-
-.card-title {
-  font-size: 15px;
-  font-weight: 600;
-  color: #333;
-  margin-bottom: 12px;
-  padding-bottom: 4px;
-  border-bottom: 1px solid #f0f0f0;
-}
-
-.info-row {
-  margin-top: 16px !important;
-}
-
-.card-divider {
-  display: none !important;
-}
-
-/* Guardian Note Styles */
+/* Guardian note */
 .guardian-note {
   margin-top: 16px;
-}
-
-.guardian-note .ant-typography {
-  font-size: 14px;
-  color: #666;
-}
-
-/* Phone Input Container Styles */
-.phone-input-container {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-  .student-info-container {
-    padding: 0.5rem;
-  }
-  
-  .student-info-form {
-    padding: 1rem;
-  }
-
-  .confirmation-container {
-    gap: 12px;
-  }
-
-  .confirmation-text {
-    font-size: 13px;
-  }
-
-  .new-phone-container {
-    margin-left: 24px;
-    max-width: 100%;
-  }
-}
-
-@media (max-width: 576px) {
-  .confirmation-text {
-    font-size: 13px;
-  }
-
-  .new-phone-container {
-    margin-left: 24px;
-  }
-
-  .new-phone-label {
-    font-size: 13px;
-  }
-
-  .gender-select .ant-select-selector {
-    height: 32px;
-  }
-
-  .gender-select .ant-select-selection-item {
-    line-height: 32px;
-  }
-}
-
-.form-item {
-  margin-bottom: 12px;
-}
-
-.form-row {
-  margin-bottom: 4px;
-}
-
-.form-item .ant-form-item-label > label {
-  font-size: 13px;
-  color: #666;
-  font-weight: 500;
-}
-
-.form-item .ant-input,
-.form-item .ant-select-selector {
-  font-size: 14px;
-  color: #333;
-  border-radius: 4px;
-}
-
-.confirmation-section {
-  margin: 16px 0;
-  padding: 12px;
-  background-color: #f8f9fa;
-  border-radius: 4px;
-}
-
-.confirmation-text {
-  font-size: 13px;
-  color: #666;
-  font-weight: 500;
-  margin-bottom: 8px;
-}
-
-.confirmation-select-item {
-  margin-bottom: 8px;
-}
-
-.confirmation-select-item .ant-select {
-  width: 100%;
 }
 
 .guardian-note-content {
@@ -331,51 +264,362 @@
   border-radius: 4px;
 }
 
+/* Inline editing styles - form input không viền với nút edit khi hover */
+.editable-field {
+  position: relative;
+}
+
+.editable-field .display-value {
+  padding: 8px 12px;
+  border-radius: 4px;
+  background-color: #fafafa;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border: none;
+  min-height: 36px;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.08);
+}
+
+.editable-field .display-value:hover {
+  background-color: #f0f0f0;
+}
+
+.editable-field .edit-icon {
+  opacity: 0;
+  color: #00509f;
+  font-size: 14px;
+}
+
+.editable-field:hover .edit-icon {
+  opacity: 1;
+}
+
+.edit-field-container {
+  position: relative;
+  width: 100%;
+}
+
+.input-with-actions {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  position: relative;
+}
+
+.input-with-actions .ant-input,
+.input-with-actions .ant-select {
+  width: calc(100% - 60px);
+  height: 36px;
+}
+
+.inline-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  margin-left: 8px;
+  min-width: 52px;
+}
+
+.action-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 14px;
+  margin-left: 2px;
+  transition: background-color 0.2s;
+}
+
+.action-icon.check {
+  background-color: #f0f9ff;
+  color: #00509f;
+}
+
+.action-icon.close {
+  background-color: #fff0f0;
+  color: #ff4d4f;
+}
+
+.action-icon:hover {
+  filter: brightness(0.95);
+}
+
+.hint-text {
+  font-size: 11px;
+  color: #999;
+  display: block;
+  margin-top: 4px;
+  text-align: left;
+  padding-left: 2px;
+  width: 100%;
+}
+
+/* For phone input hint text specifically */
+.edit-field-container .hint-text {
+  width: calc(100% - 60px);
+}
+
 /* Responsive adjustments */
-@media (max-width: 576px) {
+@media (max-width: 768px) {
+  .student-info-container {
+    width: 90% !important;
+    padding: 0.5rem;
+  }
+  
+  .info-card .ant-card-body {
+    padding: 16px !important;
+  }
+  
   .course-info-grid {
     grid-template-columns: 1fr;
-    gap: 8px;
+    gap: 12px;
   }
   
-  .course-info-item {
-    padding: 6px;
+  .form-row {
+    margin-bottom: 0 !important;
   }
-  
+
   .form-item {
-    margin-bottom: 8px;
+    margin-bottom: 12px !important;
   }
   
   .confirmation-section {
-    margin: 12px 0;
-    padding: 8px;
+    padding: 12px;
+  }
+  
+  .confirmation-text {
+    font-size: 12px;
+  }
+  
+  .inline-actions {
+    right: 4px;
+  }
+  
+  .action-icon {
+    width: 24px;
+    height: 24px;
+  }
+  
+  .editable-field .display-value {
+    padding: 10px 8px;
+  }
+  
+  .hint-text {
+    font-size: 11px;
   }
 }
 
-.course-info-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 12px;
-  padding: 8px 0;
+@media (max-width: 576px) {
+  .confirmation-text {
+    font-size: 12px;
+  }
+
+  .section-title {
+    font-size: 15px;
+  }
+  
+  .action-icon {
+    width: 28px; /* Nút lớn hơn để dễ nhấn trên mobile */
+    height: 28px;
+    font-size: 14px;
+  }
+  
+  .inline-actions {
+    gap: 12px; /* Khoảng cách lớn hơn giữa các nút */
+  }
+  
+  .editable-field .display-value {
+    padding: 12px 10px; /* Vùng nhấn lớn hơn */
+    min-height: 44px;
+  }
 }
 
-.course-info-item {
+/* Skeleton loading animation */
+.skeleton-loading {
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.6;
+  }
+}
+
+/* Error state styles */
+.error-container {
+  animation: shake 0.5s;
+}
+
+@keyframes shake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-5px);
+  }
+  75% {
+    transform: translateX(5px);
+  }
+}
+
+/* Success state styles */
+.success-message {
+  animation: fadeIn 0.5s;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Phone Input Styling */
+.phone-input-container {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  padding: 8px;
-  background-color: #f8f9fa;
-  border-radius: 4px;
+  width: 100%;
+  position: relative;
 }
 
-.course-info-label {
-  font-size: 13px;
-  color: #666;
+.phone-input-container .input-with-actions {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 8px;
+  width: 100%;
+}
+
+.country-code-select {
+  width: 75px !important;
+  min-width: 75px !important;
+  flex-shrink: 0;
+}
+
+.phone-number-input {
+  flex-grow: 1;
+}
+
+.country-dropdown {
+  min-width: 250px !important;
+}
+
+/* Custom dropdown menu with flag and country name for the phone input */
+.country-code-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+  white-space: nowrap;
+}
+
+.country-code {
   font-weight: 500;
+  min-width: 60px;
+  display: inline-block;
 }
 
-.course-info-value {
-  font-size: 14px;
-  color: #333;
-  font-weight: 400;
-} 
+.country-name {
+  color: #666;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Ensure the country name is hidden in the select box, but visible in dropdown */
+.ant-select-selector .country-name {
+  display: none !important;
+}
+
+/* The dropdown should show both code and country name */
+.ant-select-dropdown .country-name {
+  display: inline-block !important;
+}
+
+/* Hint text for phone inputs */
+.phone-input-hint {
+  font-size: 11px;
+  color: #999;
+  display: block;
+  margin-top: 4px;
+  text-align: left;
+  width: 100%;
+}
+
+/* Phone Input within Form Structure */
+.input-with-actions .phone-input-container {
+  width: calc(100% - 60px);
+  margin-right: 0;
+}
+
+.input-with-actions .phone-input-container .input-with-actions {
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+  width: 100%;
+}
+
+/* Ensure the input elements don't get too narrow */
+.input-with-actions .country-code-select {
+  width: 75px !important;
+  min-width: 75px !important;
+}
+
+.input-with-actions .phone-number-input {
+  flex-grow: 1;
+}
+
+.input-with-actions .phone-input-hint {
+  position: absolute;
+  bottom: -20px;
+  left: 0;
+  font-size: 11px;
+  color: #999;
+}
+
+/* Remove conflicting styles */
+.ant-select-selection-item .country-name,
+.ant-select-selection-item div .country-name {
+  display: none !important;
+}
+
+/* Make hint text more visible when field is in focus */
+.phone-input-container:focus-within .phone-input-hint,
+.input-with-actions:focus-within .phone-input-hint {
+  color: #666;
+}
+
+/* Responsive styling for smaller screens */
+@media (max-width: 576px) {
+  .phone-input-container .input-with-actions {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .country-code-select {
+    width: 100% !important;
+  }
+  
+  .input-with-actions .phone-input-container {
+    width: calc(100% - 60px);
+  }
+  
+  .input-with-actions .phone-input-hint {
+    position: static;
+    margin-top: 4px;
+  }
+}
