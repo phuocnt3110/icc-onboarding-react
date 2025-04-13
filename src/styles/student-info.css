@@ -120,6 +120,22 @@
   box-shadow: 0 1.5px 0 rgba(0, 0, 0, 0.08);
 }
 
+.display-value {
+  padding: 8px 12px;
+  border-radius: 4px;
+  background-color: #fafafa;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  min-height: 36px;
+  transition: all 0.2s;
+}
+
+.display-value:hover {
+  background-color: #f0f0f0;
+}
+
 /* Form styles - đồng bộ các input fields, bỏ hiệu ứng */
 .student-info-form {
   background: rgba(255, 255, 255, 0.9);
@@ -280,25 +296,41 @@
   border: none;
   min-height: 36px;
   box-shadow: 0 1px 0 rgba(0, 0, 0, 0.08);
+  transition: all 0.2s;
 }
 
 .editable-field .display-value:hover {
   background-color: #f0f0f0;
+  box-shadow: 0 2px 0 rgba(0, 80, 159, 0.2);
 }
 
+/* Làm rõ biểu tượng chỉnh sửa */
 .editable-field .edit-icon {
   opacity: 0;
   color: #00509f;
   font-size: 14px;
+  transition: opacity 0.2s;
 }
 
 .editable-field:hover .edit-icon {
   opacity: 1;
 }
 
+/* Thêm hiệu ứng khi đang chỉnh sửa */
+/* Đảm bảo input không chồng lấn với các phần tử khác */
 .edit-field-container {
   position: relative;
   width: 100%;
+  z-index: 1;
+}
+
+/* Khi không ở chế độ edit, giảm z-index */
+.edit-field-container.editing-done {
+  z-index: 0;
+}
+
+.edit-field-container:focus-within {
+  box-shadow: 0 0 0 2px rgba(0, 80, 159, 0.2);
 }
 
 .input-with-actions {
@@ -357,6 +389,51 @@
   text-align: left;
   padding-left: 2px;
   width: 100%;
+}
+
+/* CSS để làm đẹp date select container */
+.date-select-container {
+  width: 100%;
+  position: relative;
+  border: 1px solid #d9d9d9;
+  border-radius: 2px;
+  padding: 4px;
+  transition: all 0.3s;
+}
+
+.date-select-container:hover {
+  border-color: #40a9ff;
+}
+
+.date-select-container:focus-within {
+  border-color: #40a9ff;
+  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+}
+
+.date-select-group {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+}
+
+/* Loại bỏ border cho selects bên trong */
+.date-select-group .ant-select .ant-select-selector {
+  border: none !important;
+  box-shadow: none !important;
+  padding-left: 8px;
+  padding-right: 8px;
+  height: 32px !important;
+}
+
+/* Làm rõ phần được chọn trong select */
+.date-select-group .ant-select-focused .ant-select-selector {
+  background-color: #f5f5f5;
+}
+
+.date-error {
+  color: #ff4d4f;
+  font-size: 12px;
+  margin-top: 4px;
 }
 
 /* For phone input hint text specifically */
@@ -490,6 +567,7 @@
 }
 
 /* Phone Input Styling */
+/* Đảm bảo container của PhoneInput bắt được sự kiện blur */
 .phone-input-container {
   display: flex;
   flex-direction: column;
@@ -558,6 +636,73 @@
   margin-top: 4px;
   text-align: left;
   width: 100%;
+}
+
+/* Styling for province selector */
+.province-display {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.province-value {
+  display: flex;
+  align-items: center;
+}
+
+.ant-select-dropdown-menu-item {
+  padding: 10px 12px;
+}
+
+.ant-select-dropdown-menu-item-active {
+  background-color: #e6f7ff;
+}
+
+/* Highlight matching text in dropdown */
+.ant-select-dropdown .ant-select-item-option-content mark {
+  color: #00509f;
+  background-color: #f0f7ff;
+  padding: 0 2px;
+  font-weight: 500;
+}
+
+/* Province dropdown specific styles */
+.province-dropdown .ant-select-item {
+  padding: 8px 12px;
+}
+
+.province-dropdown .ant-select-item-option-selected {
+  background-color: #e6f7ff;
+  font-weight: 500;
+}
+
+.province-dropdown .ant-select-item:hover {
+  background-color: #f5f5f5;
+}
+
+/* Province option styling */
+.province-option {
+  display: flex;
+  align-items: center;
+  line-height: 1.4;
+}
+
+/* OptGroup styling for regions */
+.ant-select-item-group {
+  color: #00509f;
+  font-weight: 500;
+  padding: 8px 12px;
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #eee;
+}
+
+/* Highlight matched text */
+.province-option span.highlight {
+  color: #00509f;
+  background-color: rgba(0, 80, 159, 0.1);
+  padding: 0 2px;
+  border-radius: 2px;
+  font-weight: 500;
 }
 
 /* Phone Input within Form Structure */

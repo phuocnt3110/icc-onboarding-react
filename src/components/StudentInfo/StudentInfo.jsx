@@ -1,18 +1,22 @@
 import React, { useState, useEffect, useRef, useReducer, memo } from 'react';
-import { Card, Form, Input, Button, Typography, Row, Col, Divider, message, Spin, Alert, Result, Radio, Select, Checkbox } from 'antd';
+import { Card, Form, Input, Button, Typography, Row, Col, Divider, message, Spin, Alert, Result, Radio, Select, Checkbox, DatePicker } from 'antd';
+import moment from 'moment';
 import { useNavigate } from 'react-router-dom';
-import { EditOutlined, CheckOutlined, CloseOutlined, ReloadOutlined } from '@ant-design/icons';
+import { EditOutlined, CheckOutlined, CloseOutlined, ReloadOutlined, EnvironmentOutlined } from '@ant-design/icons';
 import { useStudent } from '../../contexts/StudentContext';
-import { FIELD_MAPPINGS, MESSAGES, ROUTES, THEME, SECTION_TITLES, COUNTRY_CODES } from '../../config';
+import { FIELD_MAPPINGS, MESSAGES, ROUTES, THEME, SECTION_TITLES, COUNTRY_CODES, VIETNAM_PROVINCES, GUARDIAN_RELATIONS, TABLE_IDS } from '../../config';
+import { ProvinceSelector } from '../common';
 import StudentInfoSkeleton from './StudentInfoSkeleton';
 import '../../styles/student-info.css';
 import '../../styles/index.css';
+import apiClient from '../../services/api/client';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
 
 // PhoneInput component for phone numbers
-const PhoneInput = ({ value = "", onChange, autoFocus, disabled, placeholder, hint }) => {
+// Sửa lại component PhoneInput
+const PhoneInput = ({ value = "", onChange, autoFocus, disabled, placeholder, hint, onBlur }) => {
   // Parse the initial value to extract country code and phone number
   const parseValue = (inputValue) => {
     if (!inputValue) return { countryCode: '+84', phoneNumber: '' };
@@ -53,19 +57,16 @@ const PhoneInput = ({ value = "", onChange, autoFocus, disabled, placeholder, hi
     setInputPhoneNumber(e.target.value);
   };
   
-  // For debuging purposes only
-  const renderCountryNames = () => {
-    return (
-      <div style={{ display: 'none' }}>
-        {COUNTRY_CODES.map(item => (
-          <div key={item.code}>{item.code} - {item.country}</div>
-        ))}
-      </div>
-    );
+  // Handle container blur
+  const handleContainerBlur = (e) => {
+    // Chỉ gọi onBlur nếu click ra ngoài container và onBlur được định nghĩa
+    if (!e.currentTarget.contains(e.relatedTarget) && onBlur) {
+      onBlur();
+    }
   };
   
   return (
-    <div className="phone-input-container">
+    <div className="phone-input-container" onBlur={handleContainerBlur}>
       <div className="input-with-actions">
         <Select
           className="country-code-select"
@@ -98,12 +99,25 @@ const PhoneInput = ({ value = "", onChange, autoFocus, disabled, placeholder, hi
           placeholder={placeholder || "Số điện thoại"}
           autoFocus={autoFocus}
           disabled={disabled}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && onBlur) {
+              onBlur();
+            }
+          }}
         />
       </div>
       
       {hint && <div className="phone-input-hint">{hint}</div>}
-      {renderCountryNames()}
     </div>
+  );
+};
+
+const getValidYears = () => {
+  const currentYear = new Date().getFullYear();
+  // Tạo mảng năm từ 1900 đến năm hiện tại
+  return Array.from(
+    { length: currentYear - 1900 + 1 }, 
+    (_, i) => currentYear - i
   );
 };
 
@@ -143,6 +157,58 @@ const formatPhoneNumber = (phoneValue) => {
   return val;
 };
 
+/**
+ * Chuyển đổi giá trị giới tính từ tiếng Anh sang tiếng Việt
+ * @param {string} gender Giá trị giới tính
+ * @returns {string} Giá trị đã được chuyển đổi
+ */
+const mapGender = (gender) => {
+  if (!gender) return '';
+  
+  // Chuyển thành chữ thường để dễ so sánh
+  const normalizedGender = gender.toLowerCase().trim();
+  
+  if (normalizedGender === 'male') {
+    return 'Nam';
+  } else if (normalizedGender === 'female') {
+    return 'Nữ';
+  } else if (normalizedGender === 'nam' || normalizedGender === 'nữ') {
+    // Nếu đã là tiếng Việt, giữ nguyên nhưng chuẩn hóa chữ hoa/thường
+    return normalizedGender === 'nam' ? 'Nam' : 'Nữ';
+  }
+  
+  // Trường hợp khác, trả về chuỗi rỗng
+  return '';
+};
+
+// Hàm chuyển đổi định dạng ngày tháng
+// Hàm cải tiến để xử lý và kiểm tra chặt chẽ hơn
+const formatDateString = (dateString) => {
+  if (!dateString) return null;
+  
+  console.log("Formatting date string:", dateString);
+  
+  // Xử lý cho định dạng DD/MM/YYYY (định dạng phổ biến tại Việt Nam)
+  if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(dateString)) {
+    const [day, month, year] = dateString.split('/').map(Number);
+    // Tháng trong JS bắt đầu từ 0
+    return moment(new Date(year, month - 1, day));
+  }
+  
+  // Thử các định dạng khác
+  const formats = ['DD/MM/YYYY', 'YYYY-MM-DD', 'MM/DD/YYYY'];
+  for (const format of formats) {
+    const parsed = moment(dateString, format, true);
+    if (parsed.isValid()) {
+      return parsed;
+    }
+  }
+  
+  // Nếu không parse được, trả về null
+  console.error("Could not parse date:", dateString);
+  return null;
+};
+
 // Extract field mappings for easier access
 const { STUDENT: STUDENT_FIELDS } = FIELD_MAPPINGS;
 
@@ -163,9 +229,12 @@ const StudentInfo = () => {
   const navigate = useNavigate();
   const formRef = useRef(null);
   const [form] = Form.useForm();
+  const { STUDENT: STUDENT_FIELDS, STUDENT_INFO: STUDENT_INFO_FIELDS } = FIELD_MAPPINGS;
   
   // Add loaded state
   const [isLoaded, setIsLoaded] = useState(false);
+  const [dateValues, setDateValues] = useState({ day: null, month: null, year: null });
+  const [dateError, setDateError] = useState(null);
   
   // Optimize state management
   const [state, dispatch] = useReducer(reducer, initialState);
@@ -193,23 +262,11 @@ const StudentInfo = () => {
   // Optimize form initialization
   useEffect(() => {
     if (student && !formInitialized) {
-      // Disable console logging to reduce render issues
-      /*
-      console.log('[DEBUG] Initializing form with student data:', {
-        studentId: contextStudent.Id,
-        name: contextStudent[STUDENT_FIELDS.NAME],
-        phone: contextStudent[STUDENT_FIELDS.PHONE],
-        time: new Date().toISOString()
-      });
-      */
-      
-      // For debugging - re-enable a specific log
-      console.log('[DEBUG] Phone number from API:', student.soDienThoaiHocVien);
-      
-      // Khởi tạo trạng thái form values trước
+      // Khởi tạo trạng thái form values
       const values = {
         hoTenHocVien: student.tenHocVien || '',
-        gioiTinh: student.gioiTinh || '',
+        // Chuyển đổi giá trị giới tính
+        gioiTinh: mapGender(student.gioiTinh),
         ngaySinh: student.ngaySinh || '',
         sdtHocVien: formatPhoneNumber(student.soDienThoaiHocVien || ''),
         emailHocVien: student.emailHocVien || '',
@@ -220,12 +277,6 @@ const StudentInfo = () => {
         emailDaiDien: student.mailNguoiDaiDien || ''
       };
       
-      // For debugging
-      console.log('[DEBUG] Form value for phone:', values.sdtHocVien);
-      
-      // Kiểm tra trước khi set
-      // console.log('[DEBUG] Form values before initialization:', form.getFieldsValue());
-      
       // Đặt timeout nhỏ để đảm bảo form đã mount
       setTimeout(() => {
         try {
@@ -235,9 +286,6 @@ const StudentInfo = () => {
           // Initialize form with student data
           form.setFieldsValue(values);
           
-          // Kiểm tra sau khi set
-          // console.log('[DEBUG] Form values after initialization:', form.getFieldsValue());
-          
           dispatch({ type: 'SET_FORM_VALUES', payload: values });
           dispatch({ type: 'INIT_FORM' });
         } catch (error) {
@@ -245,7 +293,7 @@ const StudentInfo = () => {
         }
       }, 50);
     }
-  }, [student, form, formInitialized]);
+  }, [student, form, formInitialized]);  
 
   // Handle loading state
   useEffect(() => {
@@ -359,8 +407,6 @@ const StudentInfo = () => {
       // Kiểm tra sau 50ms để đảm bảo form đã cập nhật UI
       const timer = setTimeout(() => {
         const currentValues = form.getFieldsValue();
-        // Disable console logging to reduce render issues
-        // console.log('[DEBUG] Form values after initialization completed:', currentValues);
         
         // Kiểm tra nếu giá trị form không khớp với student data
         if (currentValues.hoTenHocVien !== contextStudent[STUDENT_FIELDS.NAME] || 
@@ -370,7 +416,8 @@ const StudentInfo = () => {
           // Reinitialize form nếu giá trị không khớp
           const values = {
             hoTenHocVien: contextStudent[STUDENT_FIELDS.NAME] || '',
-            gioiTinh: contextStudent[STUDENT_FIELDS.GENDER] || '',
+            // Chuyển đổi giá trị giới tính
+            gioiTinh: mapGender(contextStudent[STUDENT_FIELDS.GENDER]),
             ngaySinh: contextStudent[STUDENT_FIELDS.DOB] || '',
             sdtHocVien: formatPhoneNumber(contextStudent[STUDENT_FIELDS.PHONE] || ''),
             emailHocVien: contextStudent[STUDENT_FIELDS.EMAIL] || '',
@@ -397,14 +444,32 @@ const StudentInfo = () => {
 
   // Cập nhật formValues khi form thay đổi
   const handleValuesChange = (changedValues, allValues) => {
-    // Only update if values actually changed to prevent unnecessary re-renders
-    const hasChanged = Object.keys(changedValues).some(key => 
-      formValues[key] !== changedValues[key]
-    );
+    // Cập nhật formValues
+    const updatedValues = { ...formValues, ...changedValues };
     
-    if (hasChanged) {
-      dispatch({ type: 'SET_FORM_VALUES', payload: { ...formValues, ...changedValues } });
+    // Xử lý logic ẩn/hiện trường số điện thoại mới dựa trên xác nhận
+    if ('confirmStudentInfo' in changedValues) {
+      const confirmValue = changedValues.confirmStudentInfo;
+      
+      // Nếu chọn "Có", xóa giá trị số điện thoại mới (nếu có)
+      if (confirmValue === 'yes') {
+        form.setFieldsValue({ sdtHocVienMoi: undefined });
+        updatedValues.sdtHocVienMoi = undefined;
+      }
     }
+    
+    // Xử lý tương tự cho confirmGuardianInfo
+    if ('confirmGuardianInfo' in changedValues) {
+      const confirmValue = changedValues.confirmGuardianInfo;
+      
+      if (confirmValue === 'yes') {
+        form.setFieldsValue({ newGuardianPhone: undefined });
+        updatedValues.newGuardianPhone = undefined;
+      }
+    }
+    
+    // Cập nhật state
+    dispatch({ type: 'SET_FORM_VALUES', payload: updatedValues });
   };
 
   // Cải tiến: Thêm function để reload data
@@ -440,22 +505,30 @@ const StudentInfo = () => {
     // Get current value from formValues or student data
     const currentValue = formValues[field] || 
       (student ? student[mapFieldToStudentData(field)] : '');
-      
+    
+    console.log(`Editing field ${field} with current value:`, currentValue);
+    
     // Special handling for phone fields
     if (field === 'sdtHocVien' || field === 'sdtDaiDien' || field === 'sdtHocVienMoi') {
-      console.log(`Setting initial value for ${field}:`, currentValue);
-      // Ensure form has the latest value for the phone field
       form.setFieldsValue({ [field]: formatPhoneNumber(currentValue) });
     }
     
-    // Disable console logging to reduce render issues
-    /*
-    console.log('[DEBUG] Started editing field:', {
-      field,
-      currentValue,
-      studentValue: student ? student[mapFieldToStudentData(field)] : null
-    });
-    */
+    // Special handling for tinhThanh field
+    if (field === 'tinhThanh') {
+      form.setFieldsValue({ [field]: currentValue });
+    }
+    
+    // Xử lý đặc biệt cho ngày sinh
+    if (field === 'ngaySinh') {
+      // Parse ngày tháng từ chuỗi định dạng DD/MM/YYYY
+      if (currentValue && /^\d{1,2}\/\d{1,2}\/\d{4}$/.test(currentValue)) {
+        const [day, month, year] = currentValue.split('/').map(Number);
+        setDateValues({ day, month, year });
+      } else {
+        // Reset date values nếu không đúng định dạng
+        setDateValues({ day: null, month: null, year: null });
+      }
+    }
   };
 
   const cancelEditField = (field) => {
@@ -482,49 +555,99 @@ const StudentInfo = () => {
     }
   };
 
+  // Hàm xử lý khi thay đổi giá trị ngày tháng năm
+  const handleDateChange = (type, value) => {
+    setDateError(null);
+    
+    // Cập nhật giá trị ngày tháng năm
+    const newDateValues = { ...dateValues, [type]: value };
+    setDateValues(newDateValues);
+    
+    // Kiểm tra nếu đã chọn đủ ngày tháng năm
+    if (newDateValues.day && newDateValues.month && newDateValues.year) {
+      try {
+        // Kiểm tra tính hợp lệ của ngày
+        const date = new Date(newDateValues.year, newDateValues.month - 1, newDateValues.day);
+        if (
+          date.getFullYear() === newDateValues.year &&
+          date.getMonth() === newDateValues.month - 1 &&
+          date.getDate() === newDateValues.day
+        ) {
+          // Định dạng ngày tháng thành chuỗi DD/MM/YYYY
+          const formattedDate = `${newDateValues.day.toString().padStart(2, '0')}/${newDateValues.month.toString().padStart(2, '0')}/${newDateValues.year}`;
+          
+          // Cập nhật vào form
+          form.setFieldsValue({ ngaySinh: formattedDate });
+        } else {
+          // Ngày không hợp lệ
+          setDateError('Ngày không hợp lệ');
+        }
+      } catch (error) {
+        setDateError('Ngày không hợp lệ');
+      }
+    }
+  };
+
+  // Thêm handler onBlur chung cho container date select
+  const handleDateSelectBlur = (e) => {
+    // Chỉ lưu khi click ra ngoài container
+    if (!e.currentTarget.contains(e.relatedTarget)) {
+      saveField('ngaySinh');
+    }
+  };
+
   // Lưu field vào state local, không gửi API
   const saveField = async (field) => {
     try {
       // Validate field
       await form.validateFields([field]);
       
-      // Add to saving state
-      setSavingFields(prev => [...prev, field]);
-      
       // Get updated value
       let value = form.getFieldValue(field);
       
       // Special handling for phone fields
-      if (field === 'sdtHocVien' || field === 'sdtDaiDien' || field === 'sdtHocVienMoi') {
+      if (field === 'sdtHocVien' || field === 'sdtDaiDien' || field === 'sdtHocVienMoi' || field === 'newGuardianPhone') {
         value = formatPhoneNumber(value);
         // Update form field with formatted value
         form.setFieldsValue({ [field]: value });
       }
+
+      // Xử lý đặc biệt cho ngày sinh
+      if (field === 'ngaySinh') {
+        // Kiểm tra nếu đã có giá trị ngày hợp lệ
+        if (!value || dateError) {
+          // Nếu không có giá trị hợp lệ, có thể sử dụng giá trị cũ hoặc để trống
+          value = formValues[field] || '';
+        }
+      }
       
-      // Disable console logging to reduce render issues
-      /*
-      console.log('[DEBUG] Saving field to local state:', {
-        field,
-        newValue: value,
-        oldValue: student ? student[mapFieldToStudentData(field)] : null
-      });
-      */
+      // Special handling for date fields
+      if (field === 'ngaySinh' && value) {
+        // Đảm bảo ngày được định dạng nhất quán
+        if (value._isAMomentObject) {
+          // Nếu là moment object từ DatePicker
+          value = value.format('DD/MM/YYYY');
+        }
+        form.setFieldsValue({ [field]: value });
+      }
       
-      // Cập nhật local formValues
-      dispatch({ type: 'SET_FORM_VALUES', payload: { ...formValues, [field]: value } });
-      
-      // Đóng chế độ edit
+      // Đảm bảo thoát khỏi chế độ edit
       setEditingFields(prev => prev.filter(f => f !== field));
       
-      message.success(`Đã cập nhật ${getFieldLabel(field)} (chưa lưu)`);
+      // Cập nhật formValues
+      dispatch({ type: 'SET_FORM_VALUES', payload: { ...formValues, [field]: value } });
+      
+      // Có thể tùy chọn thông báo hoặc không
+      if (value !== formValues[field]) {
+        message.success(`Đã cập nhật ${getFieldLabel(field)} (chưa lưu)`, 0.5);
+      }
     } catch (error) {
-      console.error('[DEBUG] Error validating field:', {
-        field, 
-        error: error.message
-      });
+      console.error('Error validating field:', error);
+      
+      // Vẫn thoát khỏi chế độ edit ngay cả khi có lỗi
+      setEditingFields(prev => prev.filter(f => f !== field));
+      
       message.error(`Lỗi cập nhật: ${error.message}`);
-    } finally {
-      setSavingFields(prev => prev.filter(f => f !== field));
     }
   };
 
@@ -582,44 +705,132 @@ const StudentInfo = () => {
   };
 
   // Proceed to next step with batch save
+  // Cập nhật hàm proceedToStepTwo
   const proceedToStepTwo = async () => {
     try {
-      // Validate the entire form
-      await form.validateFields();
-      
-      // Set loading state
+      // Bắt đầu loading state
       setLocalLoading(true);
       
-      // Prepare update data
-      const updatedData = {
-        Id: student.Id
-      };
+      // Validate toàn bộ form
+      await form.validateFields();
       
-      // Map all changed fields from formValues to API fields
-      Object.keys(formValues).forEach(field => {
-        const apiField = mapFieldToStudentData(field);
-        if (apiField && student && formValues[field] !== student[apiField]) {
-          updatedData[apiField] = formValues[field];
-        }
-      });
+      // Lấy ID học viên và billItemId
+      const studentId = student?.Id;
+      const billItemId = student?.[STUDENT_FIELDS.BILL_ITEM_ID];
       
-      // Only send update if there are changes
-      if (Object.keys(updatedData).length > 1) { // > 1 because Id is always included
-        console.log('[DEBUG] Saving all changes to API:', updatedData);
-        
-        // Send update to API
-        await updateStudent(updatedData);
-        message.success('Đã lưu tất cả thông tin');
-      } else {
-        console.log('[DEBUG] No changes to save');
+      if (!studentId) {
+        throw new Error('Không tìm thấy ID học viên');
       }
       
-      // Navigate to next step
+      if (!billItemId) {
+        throw new Error('Không tìm thấy mã đơn hàng');
+      }
+      
+      // Chuẩn bị dữ liệu cập nhật cho bảng Student
+      const studentUpdateData = {
+        Id: studentId,
+        [STUDENT_FIELDS.BILL_ITEM_ID]: billItemId, // Thêm trường BILL_ITEM_ID
+        [STUDENT_FIELDS.NAME]: formValues.hoTenHocVien,
+        [STUDENT_FIELDS.GENDER]: formValues.gioiTinh,
+        [STUDENT_FIELDS.DOB]: formValues.ngaySinh,
+        [STUDENT_FIELDS.PHONE]: formValues.sdtHocVien,
+        [STUDENT_FIELDS.EMAIL]: formValues.emailHocVien,
+        [STUDENT_FIELDS.LOCATION]: formValues.tinhThanh,
+        [STUDENT_FIELDS.GUARDIAN_NAME]: formValues.hoTenDaiDien,
+        [STUDENT_FIELDS.GUARDIAN_RELATION]: formValues.moiQuanHe,
+        [STUDENT_FIELDS.GUARDIAN_PHONE]: formValues.sdtDaiDien,
+        [STUDENT_FIELDS.GUARDIAN_EMAIL]: formValues.emailDaiDien
+      };
+      
+      // Nếu người dùng chọn số điện thoại khác
+      if (confirmStudentInfo === 'no' && formValues.sdtHocVienMoi) {
+        studentUpdateData[STUDENT_FIELDS.ZALO_PHONE] = formValues.sdtHocVienMoi;
+      }
+      
+      // Nếu người đại diện sử dụng số điện thoại Zalo khác
+      if (confirmGuardianInfo === 'no' && formValues.newGuardianPhone) {
+        studentUpdateData.soDienThoaiDangKyZalo = formValues.newGuardianPhone;
+      }
+      
+      console.log('Cập nhật dữ liệu Student:', studentUpdateData);
+      
+      // Gọi API cập nhật thông tin học viên
+      const updatedStudent = await updateStudent(studentUpdateData);
+      
+      if (!updatedStudent) {
+        throw new Error('Không thể cập nhật thông tin học viên');
+      }
+      
+      // Nếu cần, cập nhật bảng Student Info
+      const maTheoDoiHV = student[STUDENT_FIELDS.MA_THEO_DOI];
+      if (maTheoDoiHV) {
+        try {
+          // Kiểm tra xem đã có record trong bảng Student Info chưa
+          const checkResponse = await apiClient.get(`/db/data/v1/${TABLE_IDS.STUDENT_INFO}`, {
+            params: {
+              where: `(${FIELD_MAPPINGS.STUDENT_INFO.STUDENT_ID},eq,${maTheoDoiHV})`
+            }
+          });
+          
+          const existingRecords = checkResponse.data?.list || [];
+          
+          if (existingRecords.length > 0) {
+            // Cập nhật record hiện có
+            const recordId = existingRecords[0].Id;
+            console.log(`Cập nhật thông tin Student Info với ID: ${recordId}`);
+            
+            await apiClient.patch(`/db/data/v1/${TABLE_IDS.STUDENT_INFO}/${recordId}`, {
+              // Các trường cần cập nhật trong Student Info
+              // Ví dụ: Thông tin bổ sung nếu có
+            });
+          } else {
+            // Tạo record mới
+            console.log(`Tạo mới thông tin Student Info cho học viên: ${maTheoDoiHV}`);
+            
+            await apiClient.post(`/db/data/v1/${TABLE_IDS.STUDENT_INFO}`, {
+              [FIELD_MAPPINGS.STUDENT_INFO.STUDENT_ID]: maTheoDoiHV,
+              // Các trường khác cần thiết
+            });
+          }
+        } catch (infoError) {
+          console.error('Lỗi khi cập nhật Student Info:', infoError);
+          // Không throw lỗi để tiếp tục quy trình ngay cả khi Student Info gặp vấn đề
+        }
+      }
+      
+      // Cập nhật thành công, thông báo
+      message.success('Đã cập nhật thông tin thành công');
+      
+      // Chuyển sang Bước 2
       navigate(ROUTES.CLASS_SELECTION);
     } catch (error) {
-      console.error('[DEBUG] Error saving form data:', error);
-      message.error(`Lỗi lưu dữ liệu: ${error.message}`);
-      setSubmitError(error.message);
+      console.error('Error saving form data:', error);
+      
+      // Hiển thị lỗi từ API response hoặc validation
+      let errorMessage = error.message;
+      
+      // Kiểm tra lỗi từ form validation
+      if (error.errorFields && error.errorFields.length > 0) {
+        // Lấy danh sách lỗi
+        const fieldErrors = error.errorFields.map(field => {
+          const fieldName = getFieldLabel(field.name[0]) || field.name[0];
+          return `${fieldName}: ${field.errors.join(', ')}`;
+        });
+        
+        errorMessage = `Vui lòng kiểm tra lại các trường sau:\n${fieldErrors.join('\n')}`;
+        
+        // Highlight các trường lỗi bằng cách tự động mở chế độ edit
+        error.errorFields.forEach(field => {
+          const fieldName = field.name[0];
+          if (!isFieldEditing(fieldName)) {
+            handleEditField(fieldName);
+          }
+        });
+      }
+      
+      // Hiển thị lỗi
+      message.error(`Lỗi lưu dữ liệu: ${errorMessage}`);
+      setSubmitError(errorMessage);
     } finally {
       setLocalLoading(false);
     }
@@ -683,11 +894,16 @@ const StudentInfo = () => {
 
       {submitError && (
         <Alert
-          message="Lỗi"
+          message="Lỗi xác nhận thông tin"
           description={submitError}
           type="error"
           showIcon
           style={{ marginBottom: '20px' }}
+          action={
+            <Button size="small" danger onClick={() => setSubmitError(null)}>
+              Đóng
+            </Button>
+          }
         />
       )}
 
@@ -754,27 +970,23 @@ const StudentInfo = () => {
                 label={<RequiredLabel text="Họ và tên học viên" />}
                 rules={[{ required: true, message: 'Vui lòng nhập họ tên học viên' }]}
                 className="form-item editable-field"
+                data-field="hoTenHocVien"
               >
                 {isFieldEditing('hoTenHocVien') ? (
                   <div className="edit-field-container">
-                    <div className="input-with-actions">
-                      <Input 
-                        autoFocus
-                        defaultValue={formValues.hoTenHocVien || ''}
-                        onKeyDown={(e) => handleKeyDown(e, 'hoTenHocVien')}
-                        disabled={readOnly}
-                      />
-                      <div className="inline-actions">
-                        {isFieldSaving('hoTenHocVien') ? (
-                          <Spin size="small" />
-                        ) : (
-                          <>
-                            <span className="action-icon check" onClick={() => saveField('hoTenHocVien')}>✓</span>
-                            <span className="action-icon close" onClick={() => cancelEditField('hoTenHocVien')}>✕</span>
-                          </>
-                        )}
-                      </div>
-                    </div>
+                    <Input 
+                      autoFocus
+                      defaultValue={formValues.hoTenHocVien || ''}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          saveField('hoTenHocVien');
+                        } else if (e.key === 'Escape') {
+                          cancelEditField('hoTenHocVien');
+                        }
+                      }}
+                      onBlur={() => saveField('hoTenHocVien')}
+                      disabled={readOnly}
+                    />
                   </div>
                 ) : (
                   <div 
@@ -787,39 +999,39 @@ const StudentInfo = () => {
                 )}
               </Form.Item>
             </Col>
-
+ 
             <Col xs={24} sm={12}>
               <Form.Item
                 name="gioiTinh"
                 label={<RequiredLabel text="Giới tính" />}
                 rules={[{ required: true, message: 'Vui lòng chọn giới tính' }]}
                 className="form-item editable-field"
+                data-field="gioiTinh"
               >
                 {isFieldEditing('gioiTinh') ? (
                   <div className="edit-field-container">
-                    <div className="input-with-actions">
-                      <Select
-                        style={{ width: '100%' }}
-                        autoFocus
-                        defaultValue={formValues.gioiTinh || ''}
-                        options={[
-                          { value: 'Nam', label: 'Nam' },
-                          { value: 'Nữ', label: 'Nữ' },
-                        ]}
-                        onKeyDown={(e) => handleKeyDown(e, 'gioiTinh')}
-                        disabled={readOnly}
-                      />
-                      <div className="inline-actions">
-                        {isFieldSaving('gioiTinh') ? (
-                          <Spin size="small" />
-                        ) : (
-                          <>
-                            <span className="action-icon check" onClick={() => saveField('gioiTinh')}>✓</span>
-                            <span className="action-icon close" onClick={() => cancelEditField('gioiTinh')}>✕</span>
-                          </>
-                        )}
-                      </div>
-                    </div>
+                    <Select
+                      style={{ width: '100%' }}
+                      autoFocus
+                      defaultValue={formValues.gioiTinh || ''}
+                      options={[
+                        { value: 'Nam', label: 'Nam' },
+                        { value: 'Nữ', label: 'Nữ' },
+                      ]}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Escape') {
+                          cancelEditField('gioiTinh');
+                        }
+                      }}
+                      onChange={(value) => {
+                        form.setFieldsValue({ gioiTinh: value });
+                        // Tự động lưu khi có sự thay đổi
+                        saveField('gioiTinh');
+                      }}
+                      onBlur={() => saveField('gioiTinh')}
+                      disabled={readOnly}
+                      open={true} // Tự động mở dropdown
+                    />
                   </div>
                 ) : (
                   <div 
@@ -832,48 +1044,82 @@ const StudentInfo = () => {
                 )}
               </Form.Item>
             </Col>
-
+ 
             <Col xs={24} sm={12}>
-              <Form.Item
-                name="ngaySinh"
-                label={<RequiredLabel text="Ngày sinh" />}
-                rules={[{ required: true, message: 'Vui lòng nhập ngày sinh' }]}
-                className="form-item editable-field"
-              >
-                {isFieldEditing('ngaySinh') ? (
-                  <div className="edit-field-container">
-                    <div className="input-with-actions">
-                      <Input 
-                        autoFocus
-                        defaultValue={formValues.ngaySinh || ''}
-                        onKeyDown={(e) => handleKeyDown(e, 'ngaySinh')}
-                        disabled={readOnly}
-                        placeholder="DD/MM/YYYY"
-                      />
-                      <div className="inline-actions">
-                        {isFieldSaving('ngaySinh') ? (
-                          <Spin size="small" />
-                        ) : (
-                          <>
-                            <span className="action-icon check" onClick={() => saveField('ngaySinh')}>✓</span>
-                            <span className="action-icon close" onClick={() => cancelEditField('ngaySinh')}>✕</span>
-                          </>
-                        )}
-                      </div>
-                    </div>
+            <Form.Item
+              name="ngaySinh"
+              label={<RequiredLabel text="Ngày sinh" />}
+              rules={[{ required: true, message: 'Vui lòng chọn ngày sinh' }]}
+              className="form-item editable-field"
+              data-field="ngaySinh"
+            >
+              {isFieldEditing('ngaySinh') ? (
+                <div 
+                  className="edit-field-container date-select-container"
+                  onBlur={handleDateSelectBlur} // Thêm onBlur ở đây
+                >
+                  <div className="date-select-group">
+                    {/* Select cho ngày */}
+                    <Select
+                      autoFocus
+                      style={{ width: '32%' }}
+                      placeholder="Ngày"
+                      onChange={(value) => handleDateChange('day', value)}
+                      value={dateValues.day}
+                      popupMatchSelectWidth={false}
+                    >
+                      {Array.from({ length: 31 }, (_, i) => i + 1).map(day => (
+                        <Select.Option key={`day-${day}`} value={day}>
+                          {day}
+                        </Select.Option>
+                      ))}
+                    </Select>
+                    
+                    {/* Select cho tháng */}
+                    <Select
+                      style={{ width: '36%' }}
+                      placeholder="Tháng"
+                      onChange={(value) => handleDateChange('month', value)}
+                      value={dateValues.month}
+                      popupMatchSelectWidth={false}
+                    >
+                      {Array.from({ length: 12 }, (_, i) => i + 1).map(month => (
+                        <Select.Option key={`month-${month}`} value={month}>
+                          {month}
+                        </Select.Option>
+                      ))}
+                    </Select>
+                    
+                    {/* Select cho năm */}
+                    <Select
+                      style={{ width: '32%' }}
+                      placeholder="Năm"
+                      onChange={(value) => handleDateChange('year', value)}
+                      value={dateValues.year}
+                      popupMatchSelectWidth={false}
+                    >
+                      {getValidYears().map(year => (
+                        <Select.Option key={`year-${year}`} value={year}>
+                          {year}
+                        </Select.Option>
+                      ))}
+                    </Select>
                   </div>
-                ) : (
-                  <div 
-                    className="display-value" 
-                    onClick={() => !readOnly && handleEditField('ngaySinh')}
-                  >
-                    {formValues.ngaySinh || '-'}
-                    {!readOnly && <span className="edit-icon">✏️</span>}
-                  </div>
-                )}
-              </Form.Item>
+                  
+                  {dateError && <div className="date-error">{dateError}</div>}
+                </div>
+              ) : (
+                <div 
+                  className="display-value" 
+                  onClick={() => !readOnly && handleEditField('ngaySinh')}
+                >
+                  {formValues.ngaySinh || '-'}
+                  {!readOnly && <span className="edit-icon">✏️</span>}
+                </div>
+              )}
+            </Form.Item>
             </Col>
-
+ 
             <Col xs={24} sm={12}>
               <Form.Item
                 name="sdtHocVien"
@@ -939,31 +1185,31 @@ const StudentInfo = () => {
                   }
                 ]}
                 className="form-item editable-field"
+                data-field="sdtHocVien"
               >
                 {isFieldEditing('sdtHocVien') ? (
                   <div className="edit-field-container">
-                    <div className="input-with-actions">
-                      <PhoneInput
-                        autoFocus
-                        value={form.getFieldValue('sdtHocVien') || ''}
-                        onChange={(value) => {
-                          console.log('Phone input onChange:', value);
-                          form.setFieldsValue({ sdtHocVien: value });
-                        }}
-                        disabled={readOnly}
-                        hint="Nhấn Enter để lưu hoặc Esc để hủy"
-                      />
-                      <div className="inline-actions">
-                        {isFieldSaving('sdtHocVien') ? (
-                          <Spin size="small" />
-                        ) : (
-                          <>
-                            <span className="action-icon check" onClick={() => saveField('sdtHocVien')}>✓</span>
-                            <span className="action-icon close" onClick={() => cancelEditField('sdtHocVien')}>✕</span>
-                          </>
-                        )}
-                      </div>
-                    </div>
+                    <PhoneInput
+                      autoFocus
+                      value={form.getFieldValue('sdtHocVien') || ''}
+                      onChange={(value) => {
+                        form.setFieldsValue({ sdtHocVien: value });
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          saveField('sdtHocVien');
+                        } else if (e.key === 'Escape') {
+                          cancelEditField('sdtHocVien');
+                        }
+                      }}
+                      // QUAN TRỌNG: Đảm bảo onBlur gọi saveField
+                      onBlur={() => {
+                        console.log("PhoneInput onBlur triggered");
+                        saveField('sdtHocVien');
+                      }}
+                      disabled={readOnly}
+                      placeholder="Số điện thoại"
+                    />
                   </div>
                 ) : (
                   <div 
@@ -976,7 +1222,7 @@ const StudentInfo = () => {
                 )}
               </Form.Item>
             </Col>
-
+ 
             <Col xs={24} sm={12}>
               <Form.Item
                 name="emailHocVien"
@@ -986,27 +1232,23 @@ const StudentInfo = () => {
                   { type: 'email', message: 'Email không hợp lệ' }
                 ]}
                 className="form-item editable-field"
+                data-field="emailHocVien"
               >
                 {isFieldEditing('emailHocVien') ? (
                   <div className="edit-field-container">
-                    <div className="input-with-actions">
-                      <Input 
-                        autoFocus
-                        defaultValue={formValues.emailHocVien || ''}
-                        onKeyDown={(e) => handleKeyDown(e, 'emailHocVien')}
-                        disabled={readOnly}
-                      />
-                      <div className="inline-actions">
-                        {isFieldSaving('emailHocVien') ? (
-                          <Spin size="small" />
-                        ) : (
-                          <>
-                            <span className="action-icon check" onClick={() => saveField('emailHocVien')}>✓</span>
-                            <span className="action-icon close" onClick={() => cancelEditField('emailHocVien')}>✕</span>
-                          </>
-                        )}
-                      </div>
-                    </div>
+                    <Input 
+                      autoFocus
+                      defaultValue={formValues.emailHocVien || ''}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          saveField('emailHocVien');
+                        } else if (e.key === 'Escape') {
+                          cancelEditField('emailHocVien');
+                        }
+                      }}
+                      onBlur={() => saveField('emailHocVien')}
+                      disabled={readOnly}
+                    />
                   </div>
                 ) : (
                   <div 
@@ -1019,47 +1261,55 @@ const StudentInfo = () => {
                 )}
               </Form.Item>
             </Col>
-
+ 
             <Col xs={24} sm={12}>
               <Form.Item
                 name="tinhThanh"
                 label={<RequiredLabel text="Tỉnh/Thành" />}
-                rules={[{ required: true, message: 'Vui lòng nhập tỉnh/thành' }]}
+                rules={[{ required: true, message: 'Vui lòng chọn tỉnh/thành' }]}
                 className="form-item editable-field"
+                data-field="tinhThanh"
               >
                 {isFieldEditing('tinhThanh') ? (
                   <div className="edit-field-container">
-                    <div className="input-with-actions">
-                      <Input 
-                        autoFocus
-                        defaultValue={formValues.tinhThanh || ''}
-                        onKeyDown={(e) => handleKeyDown(e, 'tinhThanh')}
-                        disabled={readOnly}
-                      />
-                      <div className="inline-actions">
-                        {isFieldSaving('tinhThanh') ? (
-                          <Spin size="small" />
-                        ) : (
-                          <>
-                            <span className="action-icon check" onClick={() => saveField('tinhThanh')}>✓</span>
-                            <span className="action-icon close" onClick={() => cancelEditField('tinhThanh')}>✕</span>
-                          </>
-                        )}
-                      </div>
-                    </div>
+                    <ProvinceSelector
+                      autoFocus
+                      placeholder="Chọn tỉnh/thành phố"
+                      value={form.getFieldValue('tinhThanh')}
+                      onChange={(value) => {
+                        console.log("Province selected in StudentInfo:", value);
+                        
+                        // Cập nhật giá trị trong form
+                        form.setFieldsValue({ tinhThanh: value });
+                        
+                        // Tự động lưu khi chọn
+                        saveField('tinhThanh');
+                      }}
+                      onBlur={() => {
+                        // Nếu không chọn gì, sẽ giữ nguyên giá trị cũ
+                        saveField('tinhThanh');
+                      }}
+                      disabled={readOnly}
+                      showRegionGroups={true}
+                    />
                   </div>
                 ) : (
                   <div 
-                    className="display-value" 
+                    className="display-value province-display" 
                     onClick={() => !readOnly && handleEditField('tinhThanh')}
                   >
-                    {formValues.tinhThanh || '-'}
+                    {formValues.tinhThanh ? (
+                      <span className="province-value">
+                        <EnvironmentOutlined style={{ marginRight: '5px', color: '#00509f' }} />
+                        {formValues.tinhThanh}
+                      </span>
+                    ) : '-'}
                     {!readOnly && <span className="edit-icon">✏️</span>}
                   </div>
                 )}
               </Form.Item>
             </Col>
-
+ 
             <Col xs={24}>
               <div className="confirmation-section">
                 <div className="confirmation-text required">
@@ -1071,7 +1321,11 @@ const StudentInfo = () => {
                   rules={[{ required: true, message: 'Vui lòng chọn xác nhận' }]}
                 >
                   <Select
-                    onChange={(value) => setConfirmStudentInfo(value)}
+                    onChange={(value) => {
+                      setConfirmStudentInfo(value);
+                      form.setFieldsValue({ confirmStudentInfo: value });
+                      // Có thể tự động lưu nếu cần
+                    }}
                     disabled={readOnly}
                     placeholder="Chọn xác nhận"
                   >
@@ -1079,7 +1333,7 @@ const StudentInfo = () => {
                     <Select.Option value="no">Không</Select.Option>
                   </Select>
                 </Form.Item>
-
+ 
                 {confirmStudentInfo === 'no' && (
                   <div className="new-phone-container">
                     <Form.Item
@@ -1088,9 +1342,12 @@ const StudentInfo = () => {
                         { required: true, message: 'Vui lòng nhập số điện thoại đăng ký mới' },
                         { 
                           validator: (_, value) => {
-                            // Allow empty values - required rule will handle this
-                            if (!value) return Promise.resolve();
+                            // Kiểm tra nếu có giá trị
+                            if (!value) {
+                              return Promise.reject('Số điện thoại mới là bắt buộc');
+                            }
                             
+                            // Parse value
                             const { countryCode, phoneNumber } = (() => {
                               if (!value) return { countryCode: '+84', phoneNumber: '' };
                               
@@ -1104,26 +1361,18 @@ const StudentInfo = () => {
                                 }
                               }
                               
-                              if (value.startsWith('84-')) {
-                                return {
-                                  countryCode: '+84',
-                                  phoneNumber: value.substring(3)
-                                };
-                              }
-                              
                               return {
                                 countryCode: '+84',
                                 phoneNumber: value
                               };
                             })();
                             
+                            // Validate số điện thoại
                             if (countryCode === '+84') {
-                              if (!phoneNumber) return Promise.resolve();
                               if (!/^[0-9]{9,11}$/.test(phoneNumber)) {
                                 return Promise.reject('Số điện thoại Việt Nam cần 9-11 chữ số');
                               }
                             } else {
-                              if (!phoneNumber) return Promise.resolve();
                               if (!/^[0-9]{5,15}$/.test(phoneNumber)) {
                                 return Promise.reject('Số điện thoại không hợp lệ');
                               }
@@ -1134,29 +1383,18 @@ const StudentInfo = () => {
                         }
                       ]}
                       className="form-item editable-field"
+                      dependencies={['confirmStudentInfo']} // Thêm dependencies
                     >
                       {isFieldEditing('sdtHocVienMoi') ? (
                         <div className="edit-field-container">
-                          <div className="input-with-actions">
-                            <PhoneInput
-                              autoFocus
-                              defaultValue={formValues.sdtHocVienMoi || ''}
-                              onChange={(value) => form.setFieldsValue({ sdtHocVienMoi: value })}
-                              disabled={readOnly}
-                              placeholder="Nhập số điện thoại khác"
-                              hint="Nhấn Enter để lưu hoặc Esc để hủy"
-                            />
-                            <div className="inline-actions">
-                              {isFieldSaving('sdtHocVienMoi') ? (
-                                <Spin size="small" />
-                              ) : (
-                                <>
-                                  <span className="action-icon check" onClick={() => saveField('sdtHocVienMoi')}>✓</span>
-                                  <span className="action-icon close" onClick={() => cancelEditField('sdtHocVienMoi')}>✕</span>
-                                </>
-                              )}
-                            </div>
-                          </div>
+                          <PhoneInput
+                            autoFocus
+                            value={form.getFieldValue('sdtHocVienMoi') || ''}
+                            onChange={(value) => form.setFieldsValue({ sdtHocVienMoi: value })}
+                            onBlur={() => saveField('sdtHocVienMoi')}
+                            disabled={readOnly}
+                            placeholder="Nhập số điện thoại khác"
+                          />
                         </div>
                       ) : (
                         <div 
@@ -1186,27 +1424,23 @@ const StudentInfo = () => {
                 label={<RequiredLabel text="Họ và tên người đại diện" />}
                 rules={[{ required: true, message: 'Vui lòng nhập họ tên người đại diện' }]}
                 className="form-item editable-field"
+                data-field="hoTenDaiDien"
               >
                 {isFieldEditing('hoTenDaiDien') ? (
                   <div className="edit-field-container">
-                    <div className="input-with-actions">
-                      <Input 
-                        autoFocus
-                        defaultValue={formValues.hoTenDaiDien || ''}
-                        onKeyDown={(e) => handleKeyDown(e, 'hoTenDaiDien')}
-                        disabled={readOnly}
-                      />
-                      <div className="inline-actions">
-                        {isFieldSaving('hoTenDaiDien') ? (
-                          <Spin size="small" />
-                        ) : (
-                          <>
-                            <span className="action-icon check" onClick={() => saveField('hoTenDaiDien')}>✓</span>
-                            <span className="action-icon close" onClick={() => cancelEditField('hoTenDaiDien')}>✕</span>
-                          </>
-                        )}
-                      </div>
-                    </div>
+                    <Input 
+                      autoFocus
+                      defaultValue={formValues.hoTenDaiDien || ''}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          saveField('hoTenDaiDien');
+                        } else if (e.key === 'Escape') {
+                          cancelEditField('hoTenDaiDien');
+                        }
+                      }}
+                      onBlur={() => saveField('hoTenDaiDien')}
+                      disabled={readOnly}
+                    />
                   </div>
                 ) : (
                   <div 
@@ -1219,110 +1453,210 @@ const StudentInfo = () => {
                 )}
               </Form.Item>
             </Col>
-
+ 
             <Col xs={24} sm={12}>
-              <Form.Item
-                name="moiQuanHe"
-                label={<RequiredLabel text="Mối quan hệ với học viên" />}
-                rules={[{ required: true, message: 'Vui lòng chọn mối quan hệ' }]}
-                className="form-item editable-field"
-              >
-                {isFieldEditing('moiQuanHe') ? (
-                  <div className="edit-field-container">
-                    <div className="input-with-actions">
-                      <Select
-                        style={{ width: '100%' }}
-                        autoFocus
-                        defaultValue={formValues.moiQuanHe || ''}
-                        options={[
-                          { value: 'Cha', label: 'Cha' },
-                          { value: 'Mẹ', label: 'Mẹ' },
-                          { value: 'Anh/Chị', label: 'Anh/Chị' },
-                          { value: 'Người giám hộ', label: 'Người giám hộ' },
-                          { value: 'Khác', label: 'Khác' },
-                        ]}
-                        onKeyDown={(e) => handleKeyDown(e, 'moiQuanHe')}
-                        disabled={readOnly}
-                      />
-                      <div className="inline-actions">
-                        {isFieldSaving('moiQuanHe') ? (
-                          <Spin size="small" />
-                        ) : (
-                          <>
-                            <span className="action-icon check" onClick={() => saveField('moiQuanHe')}>✓</span>
-                            <span className="action-icon close" onClick={() => cancelEditField('moiQuanHe')}>✕</span>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <div 
-                    className="display-value" 
-                    onClick={() => !readOnly && handleEditField('moiQuanHe')}
-                  >
-                    {formValues.moiQuanHe || '-'}
-                    {!readOnly && <span className="edit-icon">✏️</span>}
-                  </div>
-                )}
-              </Form.Item>
-            </Col>
+            <Form.Item
+              name="moiQuanHe"
+              label={<RequiredLabel text="Mối quan hệ với học viên" />}
+              rules={[{ required: true, message: 'Vui lòng chọn mối quan hệ' }]}
+              className="form-item editable-field"
+              data-field="moiQuanHe"
+            >
+              {isFieldEditing('moiQuanHe') ? (
+                <div className="edit-field-container">
+                  <Select
+                    style={{ width: '100%' }}
+                    autoFocus
+                    defaultValue={formValues.moiQuanHe || ''}
+                    options={GUARDIAN_RELATIONS.map(relation => ({
+                      value: relation.name,
+                      label: relation.name
+                    }))}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Escape') {
+                        cancelEditField('moiQuanHe');
+                      }
+                    }}
+                    onChange={(value) => {
+                      form.setFieldsValue({ moiQuanHe: value });
+                      // Tự động lưu khi có sự thay đổi
+                      saveField('moiQuanHe');
+                    }}
+                    onBlur={() => saveField('moiQuanHe')}
+                    disabled={readOnly}
+                    open={true} // Tự động mở dropdown
+                  />
+                </div>
+              ) : (
+                <div 
+                  className="display-value" 
+                  onClick={() => !readOnly && handleEditField('moiQuanHe')}
+                >
+                  {formValues.moiQuanHe || '-'}
+                  {!readOnly && <span className="edit-icon">✏️</span>}
+                </div>
+              )}
+            </Form.Item>
+          </Col>
+ 
+          <Col xs={24} sm={12}>
+            <Form.Item
+              name="emailDaiDien"
+              label={<RequiredLabel text="Email người đại diện" />}
+              rules={[
+                { required: true, message: 'Vui lòng nhập email người đại diện' },
+                { type: 'email', message: 'Email không hợp lệ' }
+              ]}
+              className="form-item editable-field"
+              data-field="emailDaiDien"
+            >
+              {isFieldEditing('emailDaiDien') ? (
+                <div className="edit-field-container">
+                  <Input 
+                    autoFocus
+                    defaultValue={formValues.emailDaiDien || ''}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        saveField('emailDaiDien');
+                      } else if (e.key === 'Escape') {
+                        cancelEditField('emailDaiDien');
+                      }
+                    }}
+                    onBlur={() => saveField('emailDaiDien')}
+                    disabled={readOnly}
+                  />
+                </div>
+              ) : (
+                <div 
+                  className="display-value" 
+                  onClick={() => !readOnly && handleEditField('emailDaiDien')}
+                >
+                  {formValues.emailDaiDien || '-'}
+                  {!readOnly && <span className="edit-icon">✏️</span>}
+                </div>
+              )}
+            </Form.Item>
+          </Col>
+ 
+          <Col xs={24} sm={12}>
+            <Form.Item
+              name="sdtDaiDien"
+              label={<RequiredLabel text="Số điện thoại người đại diện" />}
+              rules={[
+                { required: true, message: 'Vui lòng nhập số điện thoại người đại diện' },
+                { 
+                  validator: (_, value) => {
+                    // Allow empty values - required rule will handle this
+                    if (!value) return Promise.resolve();
+                    
+                    // Parse value
+                    const { countryCode, phoneNumber } = (() => {
+                      if (!value) return { countryCode: '+84', phoneNumber: '' };
+                      
+                      if (value.startsWith('+')) {
+                        const codeObj = COUNTRY_CODES.find(c => value.startsWith(c.code));
+                        if (codeObj) {
+                          return {
+                            countryCode: codeObj.code,
+                            phoneNumber: value.substring(codeObj.code.length).trim()
+                          };
+                        }
+                      }
+                      
+                      if (value.startsWith('84-')) {
+                        return {
+                          countryCode: '+84',
+                          phoneNumber: value.substring(3)
+                        };
+                      }
+                      
+                      return {
+                        countryCode: '+84',
+                        phoneNumber: value
+                      };
+                    })();
+                    
+                    // Validate phone number based on country code
+                    if (countryCode === '+84') {
+                      // Vietnam phone numbers: 10-11 digits
+                      if (!phoneNumber) return Promise.resolve();
+                      if (!/^[0-9]{9,11}$/.test(phoneNumber)) {
+                        return Promise.reject('Số điện thoại Việt Nam cần 9-11 chữ số');
+                      }
+                    } else {
+                      // Other countries: generic validation
+                      if (!phoneNumber) return Promise.resolve();
+                      if (!/^[0-9]{5,15}$/.test(phoneNumber)) {
+                        return Promise.reject('Số điện thoại không hợp lệ');
+                      }
+                    }
+                    
+                    return Promise.resolve();
+                  }
+                }
+              ]}
+              className="form-item editable-field"
+              data-field="sdtDaiDien"
+            >
+              {isFieldEditing('sdtDaiDien') ? (
+                <div className="edit-field-container">
+                  <PhoneInput
+                    autoFocus
+                    value={form.getFieldValue('sdtDaiDien') || ''}
+                    onChange={(value) => {
+                      form.setFieldsValue({ sdtDaiDien: value });
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        saveField('sdtDaiDien');
+                      } else if (e.key === 'Escape') {
+                        cancelEditField('sdtDaiDien');
+                      }
+                    }}
+                    onBlur={() => saveField('sdtDaiDien')}
+                    disabled={readOnly}
+                  />
+                </div>
+              ) : (
+                <div 
+                  className="display-value" 
+                  onClick={() => !readOnly && handleEditField('sdtDaiDien')}
+                >
+                  {formValues.sdtDaiDien || '-'}
+                  {!readOnly && <span className="edit-icon">✏️</span>}
+                </div>
+              )}
+            </Form.Item>
+          </Col>
+        </Row>
+ 
+        <div className="confirmation-section">
+          <div className="confirmation-text required">
+            Xác nhận Số người đại diện có sử dụng Zalo
+          </div>
+          <Form.Item
+            name="confirmGuardianInfo"
+            className="confirmation-select-item"
+            rules={[{ required: true, message: 'Vui lòng chọn xác nhận' }]}
+          >
+            <Select
+              onChange={(value) => setConfirmGuardianInfo(value)}
+              disabled={readOnly}
+              placeholder="Chọn xác nhận"
+            >
+              <Select.Option value="yes">Có</Select.Option>
+              <Select.Option value="no">Không, tôi sử dụng Zalo với số điện thoại khác</Select.Option>
+            </Select>
+          </Form.Item>
 
-            <Col xs={24} sm={12}>
+          {confirmGuardianInfo === 'no' && (
+            <div className="new-phone-container">
               <Form.Item
-                name="emailDaiDien"
-                label={<RequiredLabel text="Email người đại diện" />}
+                name="newGuardianPhone"
                 rules={[
-                  { required: true, message: 'Vui lòng nhập email người đại diện' },
-                  { type: 'email', message: 'Email không hợp lệ' }
-                ]}
-                className="form-item editable-field"
-              >
-                {isFieldEditing('emailDaiDien') ? (
-                  <div className="edit-field-container">
-                    <div className="input-with-actions">
-                      <Input 
-                        autoFocus
-                        defaultValue={formValues.emailDaiDien || ''}
-                        onKeyDown={(e) => handleKeyDown(e, 'emailDaiDien')}
-                        disabled={readOnly}
-                      />
-                      <div className="inline-actions">
-                        {isFieldSaving('emailDaiDien') ? (
-                          <Spin size="small" />
-                        ) : (
-                          <>
-                            <span className="action-icon check" onClick={() => saveField('emailDaiDien')}>✓</span>
-                            <span className="action-icon close" onClick={() => cancelEditField('emailDaiDien')}>✕</span>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <div 
-                    className="display-value" 
-                    onClick={() => !readOnly && handleEditField('emailDaiDien')}
-                  >
-                    {formValues.emailDaiDien || '-'}
-                    {!readOnly && <span className="edit-icon">✏️</span>}
-                  </div>
-                )}
-              </Form.Item>
-            </Col>
-
-            <Col xs={24} sm={12}>
-              <Form.Item
-                name="sdtDaiDien"
-                label={<RequiredLabel text="Số điện thoại người đại diện" />}
-                rules={[
-                  { required: true, message: 'Vui lòng nhập số điện thoại người đại diện' },
+                  { required: true, message: 'Vui lòng nhập số điện thoại đăng ký Zalo' },
                   { 
                     validator: (_, value) => {
-                      // Allow empty values - required rule will handle this
-                      if (!value) return Promise.resolve();
-                      
-                      // Parse value
                       const { countryCode, phoneNumber } = (() => {
                         if (!value) return { countryCode: '+84', phoneNumber: '' };
                         
@@ -1349,15 +1683,12 @@ const StudentInfo = () => {
                         };
                       })();
                       
-                      // Validate phone number based on country code
                       if (countryCode === '+84') {
-                        // Vietnam phone numbers: 10-11 digits
                         if (!phoneNumber) return Promise.resolve();
                         if (!/^[0-9]{9,11}$/.test(phoneNumber)) {
                           return Promise.reject('Số điện thoại Việt Nam cần 9-11 chữ số');
                         }
                       } else {
-                        // Other countries: generic validation
                         if (!phoneNumber) return Promise.resolve();
                         if (!/^[0-9]{5,15}$/.test(phoneNumber)) {
                           return Promise.reject('Số điện thoại không hợp lệ');
@@ -1369,200 +1700,93 @@ const StudentInfo = () => {
                   }
                 ]}
                 className="form-item editable-field"
+                dependencies={['confirmGuardianInfo']}
+                data-field="newGuardianPhone"
               >
-                {isFieldEditing('sdtDaiDien') ? (
+                {isFieldEditing('newGuardianPhone') ? (
                   <div className="edit-field-container">
-                    <div className="input-with-actions">
-                      <PhoneInput
-                        autoFocus
-                        defaultValue={formValues.sdtDaiDien || ''}
-                        onChange={(value) => form.setFieldsValue({ sdtDaiDien: value })}
-                        disabled={readOnly}
-                        hint="Nhấn Enter để lưu hoặc Esc để hủy"
-                      />
-                      <div className="inline-actions">
-                        {isFieldSaving('sdtDaiDien') ? (
-                          <Spin size="small" />
-                        ) : (
-                          <>
-                            <span className="action-icon check" onClick={() => saveField('sdtDaiDien')}>✓</span>
-                            <span className="action-icon close" onClick={() => cancelEditField('sdtDaiDien')}>✕</span>
-                          </>
-                        )}
-                      </div>
-                    </div>
+                    <PhoneInput
+                      autoFocus
+                      value={form.getFieldValue('newGuardianPhone') || ''}
+                      onChange={(value) => {
+                        form.setFieldsValue({ newGuardianPhone: value });
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          saveField('newGuardianPhone');
+                        } else if (e.key === 'Escape') {
+                          cancelEditField('newGuardianPhone');
+                        }
+                      }}
+                      onBlur={() => saveField('newGuardianPhone')}
+                      disabled={readOnly}
+                      placeholder="Nhập số điện thoại đăng ký Zalo"
+                    />
                   </div>
                 ) : (
                   <div 
                     className="display-value" 
-                    onClick={() => !readOnly && handleEditField('sdtDaiDien')}
+                    onClick={() => !readOnly && handleEditField('newGuardianPhone')}
                   >
-                    {formValues.sdtDaiDien || '-'}
+                    {formValues.newGuardianPhone || 'Nhập số điện thoại đăng ký Zalo'}
                     {!readOnly && <span className="edit-icon">✏️</span>}
                   </div>
                 )}
               </Form.Item>
-            </Col>
-          </Row>
-
-          <div className="confirmation-section">
-            <div className="confirmation-text required">
-              Xác nhận Số người đại diện có sử dụng Zalo
             </div>
-            <Form.Item
-              name="confirmGuardianInfo"
-              className="confirmation-select-item"
-              rules={[{ required: true, message: 'Vui lòng chọn xác nhận' }]}
-            >
-              <Select
-                onChange={(value) => setConfirmGuardianInfo(value)}
-                disabled={readOnly}
-                placeholder="Chọn xác nhận"
-              >
-                <Select.Option value="yes">Có</Select.Option>
-                <Select.Option value="no">Không, tôi sử dụng Zalo với số điện thoại khác</Select.Option>
-              </Select>
-            </Form.Item>
-
-            {confirmGuardianInfo === 'no' && (
-              <div className="new-phone-container">
-                <Form.Item
-                  name="newGuardianPhone"
-                  rules={[
-                    { required: true, message: 'Vui lòng nhập số điện thoại mới' },
-                    { 
-                      validator: (_, value) => {
-                        const { countryCode, phoneNumber } = (() => {
-                          if (!value) return { countryCode: '+84', phoneNumber: '' };
-                          
-                          if (value.startsWith('+')) {
-                            const codeObj = COUNTRY_CODES.find(c => value.startsWith(c.code));
-                            if (codeObj) {
-                              return {
-                                countryCode: codeObj.code,
-                                phoneNumber: value.substring(codeObj.code.length).trim()
-                              };
-                            }
-                          }
-                          
-                          if (value.startsWith('84-')) {
-                            return {
-                              countryCode: '+84',
-                              phoneNumber: value.substring(3)
-                            };
-                          }
-                          
-                          return {
-                            countryCode: '+84',
-                            phoneNumber: value
-                          };
-                        })();
-                        
-                        if (countryCode === '+84') {
-                          if (!phoneNumber) return Promise.resolve();
-                          if (!/^[0-9]{9,11}$/.test(phoneNumber)) {
-                            return Promise.reject('Số điện thoại Việt Nam cần 9-11 chữ số');
-                          }
-                        } else {
-                          if (!phoneNumber) return Promise.resolve();
-                          if (!/^[0-9]{5,15}$/.test(phoneNumber)) {
-                            return Promise.reject('Số điện thoại không hợp lệ');
-                          }
-                        }
-                        
-                        return Promise.resolve();
-                      }
-                    }
-                  ]}
-                  className="form-item editable-field"
-                >
-                  {isFieldEditing('newGuardianPhone') ? (
-                    <div className="edit-field-container">
-                      <div className="input-with-actions">
-                        <PhoneInput
-                          autoFocus
-                          defaultValue={formValues.newGuardianPhone || ''}
-                          onChange={(value) => form.setFieldsValue({ newGuardianPhone: value })}
-                          disabled={readOnly}
-                          placeholder="Nhập số điện thoại đăng ký Zalo"
-                          hint="Nhấn Enter để lưu hoặc Esc để hủy"
-                        />
-                        <div className="inline-actions">
-                          {isFieldSaving('newGuardianPhone') ? (
-                            <Spin size="small" />
-                          ) : (
-                            <>
-                              <span className="action-icon check" onClick={() => saveField('newGuardianPhone')}>✓</span>
-                              <span className="action-icon close" onClick={() => cancelEditField('newGuardianPhone')}>✕</span>
-                            </>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <div 
-                      className="display-value" 
-                      onClick={() => !readOnly && handleEditField('newGuardianPhone')}
-                    >
-                      {formValues.newGuardianPhone || 'Nhập số điện thoại đăng ký Zalo'}
-                      {!readOnly && <span className="edit-icon">✏️</span>}
-                    </div>
-                  )}
-                </Form.Item>
-              </div>
-            )}
-          </div>
-
-          <div className="guardian-note">
-            <Alert
-              message={
-                <div className="guardian-note-content">
-                  <span className="guardian-note-icon">ℹ️</span>
-                  <span className="guardian-note-text">
-                    Công ty sẽ trao đổi các thông tin, thông báo và kết quả học tập với Người đại diện của học viên
-                  </span>
-                </div>
-              }
-              type="info"
-              className="guardian-note-alert"
-            />
-          </div>
-        </Card>
-
-        <div className="form-actions">
-          <Button 
-            type="primary" 
-            onClick={proceedToStepTwo}
-          >
-            Xác nhận thông tin đăng ký
-          </Button>
+          )}
         </div>
-      </Form>
-    </div>
-  );
+
+        <div className="guardian-note">
+          <Alert
+            message={
+              <div className="guardian-note-content">
+                <span className="guardian-note-icon">ℹ️</span>
+                <span className="guardian-note-text">
+                  Công ty sẽ trao đổi các thông tin, thông báo và kết quả học tập với Người đại diện của học viên
+                </span>
+              </div>
+            }
+            type="info"
+            className="guardian-note-alert"
+          />
+        </div>
+      </Card>
+
+      <div className="form-actions">
+        <Button 
+          type="primary" 
+          onClick={proceedToStepTwo}
+        >
+          Xác nhận thông tin đăng ký
+        </Button>
+      </div>
+    </Form>
+  </div>
+ );
 };
 
 // Add reducer
 const initialState = {
-  formInitialized: false,
-  isLoading: false,
-  formValues: {},
-  error: null
+ formInitialized: false,
+ isLoading: false,
+ formValues: {},
+ error: null
 };
 
 function reducer(state, action) {
-  switch (action.type) {
-    case 'INIT_FORM':
-      return { ...state, formInitialized: true };
-    case 'SET_LOADING':
-      return { ...state, isLoading: action.payload };
-    case 'SET_FORM_VALUES':
-      return { ...state, formValues: action.payload };
-    case 'SET_ERROR':
-      return { ...state, error: action.payload };
-    default:
-      return state;
-  }
+ switch (action.type) {
+   case 'INIT_FORM':
+     return { ...state, formInitialized: true };
+   case 'SET_LOADING':
+     return { ...state, isLoading: action.payload };
+   case 'SET_FORM_VALUES':
+     return { ...state, formValues: action.payload };
+   case 'SET_ERROR':
+     return { ...state, error: action.payload };
+   default:
+     return state;
+ }
 }
 
-export default StudentInfo;  
+export default StudentInfo;

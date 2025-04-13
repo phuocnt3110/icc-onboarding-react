@@ -153,7 +153,75 @@ export const API_CONFIG = {
     { code: '+36', country: 'Hungary' },
     { code: '+30', country: 'Greece' }
   ];
-  
+
+  // Danh sách tỉnh thành Việt Nam cập nhật 2025
+  export const VIETNAM_PROVINCES = [
+    // Miền Bắc
+    { code: "HNI", name: "Hà Nội" },
+    { code: "HPG", name: "Hải Phòng" },
+    { code: "VPC", name: "Vĩnh Phúc" },
+    { code: "BNH", name: "Bắc Ninh" },
+    { code: "HYN", name: "Hưng Yên" },
+    { code: "HBH", name: "Hòa Bình" },
+    { code: "HDG", name: "Hải Dương" },
+    { code: "QNH", name: "Quảng Ninh" },
+    { code: "HGG", name: "Hà Giang" },
+    { code: "CBG", name: "Cao Bằng" },
+    { code: "BKN", name: "Bắc Kạn" },
+    { code: "LCI", name: "Lào Cai" },
+    { code: "LSN", name: "Lạng Sơn" },
+    { code: "TQG", name: "Tuyên Quang" },
+    { code: "YBI", name: "Yên Bái" },
+    { code: "TNN", name: "Thái Nguyên" },
+    { code: "PTO", name: "Phú Thọ" },
+    { code: "DBN", name: "Điện Biên" },
+    { code: "LCU", name: "Lai Châu" },
+    { code: "SLA", name: "Sơn La" },
+    { code: "BGG", name: "Bắc Giang" },
+    { code: "THH", name: "Thanh Hóa" },
+    { code: "NAN", name: "Nghệ An" },
+    { code: "HTH", name: "Hà Tĩnh" },
+    
+    // Miền Trung
+    { code: "QBH", name: "Quảng Bình" },
+    { code: "QTI", name: "Quảng Trị" },
+    { code: "HUE", name: "Thừa Thiên Huế" },
+    { code: "DNG", name: "Đà Nẵng" },
+    { code: "QNM", name: "Quảng Nam" },
+    { code: "QNI", name: "Quảng Ngãi" },
+    { code: "BDH", name: "Bình Định" },
+    { code: "PYN", name: "Phú Yên" },
+    { code: "KHA", name: "Khánh Hòa" },
+    { code: "NTN", name: "Ninh Thuận" },
+    { code: "BTN", name: "Bình Thuận" },
+    { code: "KTM", name: "Kon Tum" },
+    { code: "GLI", name: "Gia Lai" },
+    { code: "DLK", name: "Đắk Lắk" },
+    { code: "DNO", name: "Đắk Nông" },
+    
+    // Miền Nam
+    { code: "HCM", name: "Hồ Chí Minh" },
+    { code: "BDG", name: "Bình Dương" },
+    { code: "DNI", name: "Đồng Nai" },
+    { code: "TNH", name: "Tây Ninh" },
+    { code: "VTU", name: "Bà Rịa - Vũng Tàu" },
+    { code: "LDG", name: "Lâm Đồng" },
+    { code: "BPC", name: "Bình Phước" },
+    { code: "LAN", name: "Long An" },
+    { code: "TGG", name: "Tiền Giang" },
+    { code: "BTE", name: "Bến Tre" },
+    { code: "TVH", name: "Trà Vinh" },
+    { code: "VLG", name: "Vĩnh Long" },
+    { code: "CTO", name: "Cần Thơ" },
+    { code: "HGG", name: "Hậu Giang" },
+    { code: "DTP", name: "Đồng Tháp" },
+    { code: "AGG", name: "An Giang" },
+    { code: "KGG", name: "Kiên Giang" },
+    { code: "CMU", name: "Cà Mau" },
+    { code: "BTR", name: "Bạc Liêu" },
+    { code: "STG", name: "Sóc Trăng" }
+  ];
+
   // Message configurations
   export const MESSAGES = {
     // Common messages
@@ -221,6 +289,20 @@ export const API_CONFIG = {
     SCHEDULE_SELECTION: "Chọn lịch học",
     CONFIRMATION: "Xác nhận đăng ký"
   };
+
+  // Danh sách mối quan hệ với học viên
+  export const GUARDIAN_RELATIONS = [
+    { code: "CHA", name: "Cha" },
+    { code: "ME", name: "Mẹ" },
+    { code: "ANH_CHI", name: "Anh/Chị" },
+    { code: "ONG_BA", name: "Ông/Bà" },
+    { code: "BAC", name: "Bác" },
+    { code: "CO_DI", name: "Cô/Dì" },
+    { code: "CHU", name: "Chú" },
+    { code: "CAU", name: "Cậu" },
+    { code: "NGUOI_GIAM_HO", name: "Người giám hộ" },
+    { code: "KHAC", name: "Khác" }
+  ];
   
   export default {
     API_CONFIG,
@@ -230,6 +312,8 @@ export const API_CONFIG = {
     TIME_SLOTS,
     WEEKDAYS,
     COUNTRY_CODES,
+    VIETNAM_PROVINCES,
+    GUARDIAN_RELATIONS,
     MESSAGES,
     THEME,
     SECTION_TITLES
