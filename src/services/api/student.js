@@ -136,3 +136,103 @@ export const checkStudentExists = async (billItemId) => {
     return false;
   }
 }; 
+
+/**
+ * Tìm kiếm hoặc tạo mới bản ghi Student_info
+ * @param {string} maTheoDoiHV - Mã theo dõi học viên
+ * @param {Object} studentInfoData - Dữ liệu cập nhật
+ * @returns {Object} - Thông tin bản ghi đã cập nhật hoặc tạo mới
+ */
+export const updateOrCreateStudentInfo = async (maTheoDoiHV, studentInfoData) => {
+  if (!maTheoDoiHV) {
+    console.error('Missing student ID in updateOrCreateStudentInfo');
+    throw new Error('Missing student ID');
+  }
+
+  try {
+    console.log('Finding or creating Student_info with student ID:', maTheoDoiHV);
+    
+    // Kiểm tra xem đã có bản ghi chưa
+    const findResponse = await apiClient.get(`/db/data/v1/${TABLE_IDS.STUDENT_INFO}`, {
+      params: {
+        where: `(${FIELD_MAPPINGS.STUDENT_INFO.STUDENT_ID},eq,${maTheoDoiHV})`
+      }
+    });
+    
+    const existingRecords = findResponse.data?.list || [];
+    
+    // Đảm bảo dữ liệu có chứa mã học viên
+    const dataToUpdate = {
+      ...studentInfoData,
+      [FIELD_MAPPINGS.STUDENT_INFO.STUDENT_ID]: maTheoDoiHV
+    };
+    
+    // Xử lý tạo mới hoặc cập nhật
+    if (existingRecords.length > 0) {
+      // Cập nhật bản ghi hiện có
+      const recordId = existingRecords[0].Id;
+      console.log(`Updating existing Student_info record with ID: ${recordId}`);
+      
+      const updateResponse = await apiClient.patch(
+        `/db/data/v1/${TABLE_IDS.STUDENT_INFO}/${recordId}`,
+        dataToUpdate
+      );
+      
+      console.log('Student_info update response:', updateResponse.data);
+      return updateResponse.data;
+    } else {
+      // Tạo bản ghi mới
+      console.log('Creating new Student_info record');
+      
+      const createResponse = await apiClient.post(
+        `/db/data/v1/${TABLE_IDS.STUDENT_INFO}`,
+        dataToUpdate
+      );
+      
+      console.log('Student_info create response:', createResponse.data);
+      return createResponse.data;
+    }
+  } catch (error) {
+    console.error('Error in updateOrCreateStudentInfo:', error);
+    if (error.response) {
+      console.error('Response data:', error.response.data);
+      console.error('Response status:', error.response.status);
+    }
+    throw error;
+  }
+};
+
+/**
+ * Cập nhật cả thông tin Student và Student_info
+ * @param {Object} studentData - Dữ liệu Student cần cập nhật
+ * @param {Object} studentInfoData - Dữ liệu Student_info cần cập nhật
+ * @param {string} maTheoDoiHV - Mã theo dõi học viên
+ * @returns {Object} - Kết quả cập nhật
+ */
+export const updateStudentWithInfo = async (studentData, studentInfoData, maTheoDoiHV) => {
+  try {
+    console.log('Updating both Student and Student_info');
+    
+    // 1. Cập nhật bảng Student
+    const studentResult = await updateStudentClass(studentData);
+    
+    // 2. Cập nhật hoặc tạo bảng Student_info (nếu có maTheoDoiHV)
+    let infoResult = null;
+    if (maTheoDoiHV) {
+      try {
+        infoResult = await updateOrCreateStudentInfo(maTheoDoiHV, studentInfoData);
+      } catch (infoError) {
+        console.error('Error updating Student_info but continuing:', infoError);
+        // Không throw lỗi để tiếp tục luồng xử lý
+      }
+    }
+    
+    return {
+      studentResult,
+      infoResult
+    };
+  } catch (error) {
+    console.error('Error in updateStudentWithInfo:', error);
+    throw error;
+  }
+};

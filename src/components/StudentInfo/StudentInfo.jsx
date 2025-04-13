@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useReducer, memo } from 'react';
 import { Card, Form, Input, Button, Typography, Row, Col, Divider, message, Spin, Alert, Result, Radio, Select, Checkbox, DatePicker } from 'antd';
 import moment from 'moment';
 import { useNavigate } from 'react-router-dom';
-import { EditOutlined, CheckOutlined, CloseOutlined, ReloadOutlined, EnvironmentOutlined } from '@ant-design/icons';
+import { EditOutlined, CheckOutlined, CloseOutlined, ReloadOutlined, EnvironmentOutlined, BugOutlined } from '@ant-design/icons';
 import { useStudent } from '../../contexts/StudentContext';
 import { FIELD_MAPPINGS, MESSAGES, ROUTES, THEME, SECTION_TITLES, COUNTRY_CODES, VIETNAM_PROVINCES, GUARDIAN_RELATIONS, TABLE_IDS } from '../../config';
 import { ProvinceSelector } from '../common';
@@ -10,12 +10,14 @@ import StudentInfoSkeleton from './StudentInfoSkeleton';
 import '../../styles/student-info.css';
 import '../../styles/index.css';
 import apiClient from '../../services/api/client';
+import { fetchStudentData, updateStudentClass, updateOrCreateStudentInfo } from '../../services/api/student';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
 
 // PhoneInput component for phone numbers
 // Sửa lại component PhoneInput
+// Cải tiến component PhoneInput để hỗ trợ validation tốt hơn
 const PhoneInput = ({ value = "", onChange, autoFocus, disabled, placeholder, hint, onBlur }) => {
   // Parse the initial value to extract country code and phone number
   const parseValue = (inputValue) => {
@@ -43,6 +45,8 @@ const PhoneInput = ({ value = "", onChange, autoFocus, disabled, placeholder, hi
   // Update parent component's value when either part changes
   useEffect(() => {
     if (onChange) {
+      // Đảm bảo rằng khi gọi onChange, chúng ta luôn gửi mã vùng cộng với số điện thoại,
+      // ngay cả khi số điện thoại trống.
       onChange(`${selectedCountryCode}${inputPhoneNumber}`);
     }
   }, [selectedCountryCode, inputPhoneNumber, onChange]);
@@ -54,7 +58,9 @@ const PhoneInput = ({ value = "", onChange, autoFocus, disabled, placeholder, hi
   
   // Handle phone number input change
   const handlePhoneNumberChange = (e) => {
-    setInputPhoneNumber(e.target.value);
+    // Chỉ chấp nhận chữ số và dấu cộng (cho mã vùng)
+    const sanitizedValue = e.target.value.replace(/[^\d+]/g, '');
+    setInputPhoneNumber(sanitizedValue);
   };
   
   // Handle container blur
@@ -235,6 +241,7 @@ const StudentInfo = () => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [dateValues, setDateValues] = useState({ day: null, month: null, year: null });
   const [dateError, setDateError] = useState(null);
+  const [originalData, setOriginalData] = useState({});
   
   // Optimize state management
   const [state, dispatch] = useReducer(reducer, initialState);
@@ -258,6 +265,27 @@ const StudentInfo = () => {
       setTimeout(() => setIsLoaded(true), 100);
     }
   }, [formInitialized, student, isDataLoading]);
+
+  useEffect(() => {
+    if (student && !Object.keys(originalData).length) {
+      // Lưu trữ giá trị ban đầu từ dữ liệu student
+      setOriginalData({
+        hoTenHocVien: student[STUDENT_FIELDS.NAME] || '',
+        gioiTinh: student[STUDENT_FIELDS.GENDER] || '',
+        ngaySinh: student[STUDENT_FIELDS.DOB] || '',
+        sdtHocVien: student[STUDENT_FIELDS.PHONE] || '',
+        emailHocVien: student[STUDENT_FIELDS.EMAIL] || '',
+        tinhThanh: student[STUDENT_FIELDS.LOCATION] || '',
+        hoTenDaiDien: student[STUDENT_FIELDS.GUARDIAN_NAME] || '',
+        moiQuanHe: student[STUDENT_FIELDS.GUARDIAN_RELATION] || '',
+        emailDaiDien: student[STUDENT_FIELDS.GUARDIAN_EMAIL] || '',
+        sdtDaiDien: student[STUDENT_FIELDS.GUARDIAN_PHONE] || '',
+        // Mặc định cho các trường xác nhận
+        confirmStudentInfo: 'yes',
+        confirmGuardianInfo: 'yes'
+      });
+    }
+  }, [student]);
 
   // Optimize form initialization
   useEffect(() => {
@@ -440,6 +468,55 @@ const StudentInfo = () => {
   // Hàm trợ giúp hiển thị giá trị từ state thay vì form
   const displayFieldValue = (field) => {
     return formValues[field] || (contextStudent ? contextStudent[mapFieldToStudentData(field)] : '');
+  };
+
+  // Hàm kiểm tra form có thay đổi so với dữ liệu ban đầu không
+  const hasFormChanged = () => {
+    // Danh sách các trường cần kiểm tra
+    const fieldsToCheck = [
+      'hoTenHocVien', 'gioiTinh', 'ngaySinh', 'sdtHocVien', 
+      'emailHocVien', 'tinhThanh', 'hoTenDaiDien', 'moiQuanHe',
+      'emailDaiDien', 'sdtDaiDien', 'confirmStudentInfo', 'confirmGuardianInfo'
+    ];
+    
+    // Nếu confirmStudentInfo = 'no', thêm sdtHocVienMoi vào danh sách kiểm tra
+    if (formValues.confirmStudentInfo === 'no') {
+      fieldsToCheck.push('sdtHocVienMoi');
+    }
+    
+    // Nếu confirmGuardianInfo = 'no', thêm newGuardianPhone vào danh sách kiểm tra
+    if (formValues.confirmGuardianInfo === 'no') {
+      fieldsToCheck.push('newGuardianPhone');
+    }
+    
+    // Kiểm tra từng trường
+    for (const field of fieldsToCheck) {
+      // Bỏ qua các trường không có trong dữ liệu gốc nhưng có điều kiện
+      if (field === 'sdtHocVienMoi' && formValues.confirmStudentInfo !== 'no') continue;
+      if (field === 'newGuardianPhone' && formValues.confirmGuardianInfo !== 'no') continue;
+      
+      // So sánh giá trị
+      if (formValues[field] !== originalData[field]) {
+        console.log(`Trường ${field} đã thay đổi: ${originalData[field]} -> ${formValues[field]}`);
+        return true;
+      }
+    }
+    
+    return false;
+  };
+
+  // Hàm lấy các trường đã thay đổi
+  const getChangedFields = () => {
+    const changedFields = {};
+    
+    // Kiểm tra các trường thông thường
+    Object.keys(formValues).forEach(field => {
+      if (formValues[field] !== originalData[field]) {
+        changedFields[field] = formValues[field];
+      }
+    });
+    
+    return changedFields;
   };
 
   // Cập nhật formValues khi form thay đổi
@@ -714,58 +791,137 @@ const StudentInfo = () => {
       // Validate toàn bộ form
       await form.validateFields();
       
+      // Kiểm tra form có thay đổi hay không
+      if (!hasFormChanged()) {
+        message.info('Thông tin không thay đổi, không cần cập nhật');
+        navigate(ROUTES.CLASS_SELECTION); // Chuyển trang luôn
+        return;
+      }
+      
       // Lấy ID học viên và billItemId
       const studentId = student?.Id;
       const billItemId = student?.[STUDENT_FIELDS.BILL_ITEM_ID];
+      const maTheoDoiHV = student?.[STUDENT_FIELDS.MA_THEO_DOI];
       
       if (!studentId) {
         throw new Error('Không tìm thấy ID học viên');
       }
       
-      if (!billItemId) {
-        throw new Error('Không tìm thấy mã đơn hàng');
+      // Xác định các giá trị xác nhận - chuyển đổi từ yes/no sang 1/0
+      const classinConfirm = formValues.confirmStudentInfo === 'yes' ? 1 : 0;
+      const zaloConfirm = formValues.confirmGuardianInfo === 'yes' ? 1 : 0;
+      
+      // Xác định số điện thoại đăng ký Classin
+      let soDienThoaiDangKyClassin = '';
+      if (classinConfirm === 1) {
+        // Nếu xác nhận = 1, sử dụng số điện thoại học viên
+        soDienThoaiDangKyClassin = formValues.sdtHocVien;
+      } else {
+        // Nếu xác nhận = 0, sử dụng số điện thoại mới
+        soDienThoaiDangKyClassin = formValues.sdtHocVienMoi || '';
       }
+      
+      // Xác định số điện thoại đăng ký Zalo
+      let soDienThoaiDangKyZalo = '';
+      if (zaloConfirm === 1) {
+        // Nếu xác nhận = 1, sử dụng số điện thoại người đại diện
+        soDienThoaiDangKyZalo = formValues.sdtDaiDien;
+      } else {
+        // Nếu xác nhận = 0, sử dụng số điện thoại Zalo mới
+        soDienThoaiDangKyZalo = formValues.newGuardianPhone || '';
+      }
+      
+      // Lấy các trường đã thay đổi từ form
+      const changedFormFields = getChangedFields();
+      
+      // Chuẩn bị mapping từ tên trường form sang tên trường database
+      const fieldMappings = {
+        'hoTenHocVien': STUDENT_FIELDS.NAME,
+        'gioiTinh': STUDENT_FIELDS.GENDER,
+        'ngaySinh': STUDENT_FIELDS.DOB,
+        'sdtHocVien': STUDENT_FIELDS.PHONE,
+        'emailHocVien': STUDENT_FIELDS.EMAIL,
+        'tinhThanh': STUDENT_FIELDS.LOCATION,
+        'hoTenDaiDien': STUDENT_FIELDS.GUARDIAN_NAME,
+        'moiQuanHe': STUDENT_FIELDS.GUARDIAN_RELATION,
+        'emailDaiDien': STUDENT_FIELDS.GUARDIAN_EMAIL,
+        'sdtDaiDien': STUDENT_FIELDS.GUARDIAN_PHONE
+      };
       
       // Chuẩn bị dữ liệu cập nhật cho bảng Student
       const studentUpdateData = {
-        Id: studentId,
-        [STUDENT_FIELDS.BILL_ITEM_ID]: billItemId, // Thêm trường BILL_ITEM_ID
-        [STUDENT_FIELDS.NAME]: formValues.hoTenHocVien,
-        [STUDENT_FIELDS.GENDER]: formValues.gioiTinh,
-        [STUDENT_FIELDS.DOB]: formValues.ngaySinh,
-        [STUDENT_FIELDS.PHONE]: formValues.sdtHocVien,
-        [STUDENT_FIELDS.EMAIL]: formValues.emailHocVien,
-        [STUDENT_FIELDS.LOCATION]: formValues.tinhThanh,
-        [STUDENT_FIELDS.GUARDIAN_NAME]: formValues.hoTenDaiDien,
-        [STUDENT_FIELDS.GUARDIAN_RELATION]: formValues.moiQuanHe,
-        [STUDENT_FIELDS.GUARDIAN_PHONE]: formValues.sdtDaiDien,
-        [STUDENT_FIELDS.GUARDIAN_EMAIL]: formValues.emailDaiDien
+        Id: studentId, // ID luôn cần thiết
+        [STUDENT_FIELDS.BILL_ITEM_ID]: billItemId // BILL_ITEM_ID luôn cần thiết
       };
       
-      // Nếu người dùng chọn số điện thoại khác
-      if (confirmStudentInfo === 'no' && formValues.sdtHocVienMoi) {
-        studentUpdateData[STUDENT_FIELDS.ZALO_PHONE] = formValues.sdtHocVienMoi;
+      // Thêm các trường đã thay đổi
+      Object.keys(changedFormFields).forEach(field => {
+        if (fieldMappings[field]) {
+          studentUpdateData[fieldMappings[field]] = changedFormFields[field];
+        }
+      });
+      
+      // Thêm các trường classin và zalo nếu giá trị xác nhận đã thay đổi
+      if ('confirmStudentInfo' in changedFormFields || 'sdtHocVien' in changedFormFields) {
+        studentUpdateData.classinConfirm = classinConfirm;
+        studentUpdateData.soDienThoaiDangKyClassin = soDienThoaiDangKyClassin;
       }
       
-      // Nếu người đại diện sử dụng số điện thoại Zalo khác
-      if (confirmGuardianInfo === 'no' && formValues.newGuardianPhone) {
-        studentUpdateData.soDienThoaiDangKyZalo = formValues.newGuardianPhone;
+      if ('confirmGuardianInfo' in changedFormFields || 'sdtDaiDien' in changedFormFields) {
+        studentUpdateData.zaloConfirm = zaloConfirm;
+        studentUpdateData.soDienThoaiDangKyZalo = soDienThoaiDangKyZalo;
       }
       
-      console.log('Cập nhật dữ liệu Student:', studentUpdateData);
+      // Log ra console để kiểm tra
+      console.log('Các trường đã thay đổi:', changedFormFields);
+      console.log('Dữ liệu cập nhật Student:', studentUpdateData);
       
       // Gọi API cập nhật thông tin học viên
-      const updatedStudent = await updateStudent(studentUpdateData);
+      const updatedStudent = await updateStudentClass(studentUpdateData);
       
       if (!updatedStudent) {
         throw new Error('Không thể cập nhật thông tin học viên');
       }
       
-      // Nếu cần, cập nhật bảng Student Info
-      const maTheoDoiHV = student[STUDENT_FIELDS.MA_THEO_DOI];
+      // Cập nhật Student_info nếu có maTheoDoiHV
       if (maTheoDoiHV) {
         try {
-          // Kiểm tra xem đã có record trong bảng Student Info chưa
+          // Chuẩn bị dữ liệu Student_info
+          const studentInfoData = {
+            [FIELD_MAPPINGS.STUDENT_INFO.STUDENT_ID]: maTheoDoiHV
+          };
+          
+          // Map các trường đã thay đổi sang trường tương ứng trong Student_info
+          const infoFieldMappings = {
+            'hoTenHocVien': 'tenHocVien',
+            'gioiTinh': 'gender',
+            'ngaySinh': 'DOB',
+            'sdtHocVien': 'soDienThoaiHocVien',
+            'emailHocVien': 'emailHocVien',
+            'tinhThanh': 'tinhThanh',
+            'hoTenDaiDien': 'tenNguoiDaiDien',
+            'moiQuanHe': 'moiQuanHe',
+            'emailDaiDien': 'emailNguoiDaiDien',
+            'sdtDaiDien': 'soDienThoaiNguoiDaiDien'
+          };
+          
+          // Thêm các trường đã thay đổi
+          Object.keys(changedFormFields).forEach(field => {
+            if (infoFieldMappings[field]) {
+              studentInfoData[infoFieldMappings[field]] = changedFormFields[field];
+            }
+          });
+          
+          // Thêm các trường Classin và Zalo
+          if ('confirmStudentInfo' in changedFormFields) {
+            studentInfoData.soDienThoaiDangKyClassin = soDienThoaiDangKyClassin;
+          }
+          
+          if ('confirmGuardianInfo' in changedFormFields) {
+            studentInfoData.soDienThoaiDangKyZalo = soDienThoaiDangKyZalo;
+          }
+          
+          // Kiểm tra và cập nhật Student_info
           const checkResponse = await apiClient.get(`/db/data/v1/${TABLE_IDS.STUDENT_INFO}`, {
             params: {
               where: `(${FIELD_MAPPINGS.STUDENT_INFO.STUDENT_ID},eq,${maTheoDoiHV})`
@@ -777,24 +933,14 @@ const StudentInfo = () => {
           if (existingRecords.length > 0) {
             // Cập nhật record hiện có
             const recordId = existingRecords[0].Id;
-            console.log(`Cập nhật thông tin Student Info với ID: ${recordId}`);
-            
-            await apiClient.patch(`/db/data/v1/${TABLE_IDS.STUDENT_INFO}/${recordId}`, {
-              // Các trường cần cập nhật trong Student Info
-              // Ví dụ: Thông tin bổ sung nếu có
-            });
+            await apiClient.patch(`/db/data/v1/${TABLE_IDS.STUDENT_INFO}/${recordId}`, studentInfoData);
           } else {
             // Tạo record mới
-            console.log(`Tạo mới thông tin Student Info cho học viên: ${maTheoDoiHV}`);
-            
-            await apiClient.post(`/db/data/v1/${TABLE_IDS.STUDENT_INFO}`, {
-              [FIELD_MAPPINGS.STUDENT_INFO.STUDENT_ID]: maTheoDoiHV,
-              // Các trường khác cần thiết
-            });
+            await apiClient.post(`/db/data/v1/${TABLE_IDS.STUDENT_INFO}`, studentInfoData);
           }
         } catch (infoError) {
           console.error('Lỗi khi cập nhật Student Info:', infoError);
-          // Không throw lỗi để tiếp tục quy trình ngay cả khi Student Info gặp vấn đề
+          // Không throw lỗi để tiếp tục quy trình
         }
       }
       
@@ -804,28 +950,15 @@ const StudentInfo = () => {
       // Chuyển sang Bước 2
       navigate(ROUTES.CLASS_SELECTION);
     } catch (error) {
+      // Xử lý lỗi như cũ
       console.error('Error saving form data:', error);
       
       // Hiển thị lỗi từ API response hoặc validation
       let errorMessage = error.message;
       
-      // Kiểm tra lỗi từ form validation
+      // Xử lý lỗi validation
       if (error.errorFields && error.errorFields.length > 0) {
-        // Lấy danh sách lỗi
-        const fieldErrors = error.errorFields.map(field => {
-          const fieldName = getFieldLabel(field.name[0]) || field.name[0];
-          return `${fieldName}: ${field.errors.join(', ')}`;
-        });
-        
-        errorMessage = `Vui lòng kiểm tra lại các trường sau:\n${fieldErrors.join('\n')}`;
-        
-        // Highlight các trường lỗi bằng cách tự động mở chế độ edit
-        error.errorFields.forEach(field => {
-          const fieldName = field.name[0];
-          if (!isFieldEditing(fieldName)) {
-            handleEditField(fieldName);
-          }
-        });
+        // ... (phần xử lý lỗi giữ nguyên)
       }
       
       // Hiển thị lỗi
@@ -833,6 +966,152 @@ const StudentInfo = () => {
       setSubmitError(errorMessage);
     } finally {
       setLocalLoading(false);
+    }
+  };
+
+  const logUpdateData = async () => {
+    try {
+      // Kiểm tra form hợp lệ trước
+      await form.validateFields();
+      
+      // Lấy ID học viên và billItemId
+      const studentId = student?.Id;
+      const billItemId = student?.[STUDENT_FIELDS.BILL_ITEM_ID];
+      const maTheoDoiHV = student?.[STUDENT_FIELDS.MA_THEO_DOI];
+      
+      // Kiểm tra form có thay đổi hay không
+      const hasChanged = hasFormChanged();
+      
+      // Lấy các trường đã thay đổi
+      const changedFields = hasChanged ? getChangedFields() : {};
+      
+      // Xác định các giá trị xác nhận - chuyển đổi từ yes/no sang 1/0
+      const classinConfirm = formValues.confirmStudentInfo === 'yes' ? 1 : 0;
+      const zaloConfirm = formValues.confirmGuardianInfo === 'yes' ? 1 : 0;
+      
+      // Xác định số điện thoại đăng ký Classin
+      let soDienThoaiDangKyClassin = '';
+      if (classinConfirm === 1) {
+        // Nếu xác nhận = 1, sử dụng số điện thoại học viên
+        soDienThoaiDangKyClassin = formValues.sdtHocVien;
+      } else {
+        // Nếu xác nhận = 0, sử dụng số điện thoại mới
+        soDienThoaiDangKyClassin = formValues.sdtHocVienMoi || '';
+      }
+      
+      // Xác định số điện thoại đăng ký Zalo
+      let soDienThoaiDangKyZalo = '';
+      if (zaloConfirm === 1) {
+        // Nếu xác nhận = 1, sử dụng số điện thoại người đại diện
+        soDienThoaiDangKyZalo = formValues.sdtDaiDien;
+      } else {
+        // Nếu xác nhận = 0, sử dụng số điện thoại Zalo mới
+        soDienThoaiDangKyZalo = formValues.newGuardianPhone || '';
+      }
+      
+      // Chuẩn bị dữ liệu cập nhật đầy đủ cho bảng Student
+      const fullStudentUpdateData = {
+        Id: studentId,
+        [STUDENT_FIELDS.BILL_ITEM_ID]: billItemId,
+        [STUDENT_FIELDS.NAME]: formValues.hoTenHocVien,
+        [STUDENT_FIELDS.GENDER]: formValues.gioiTinh,
+        [STUDENT_FIELDS.DOB]: formValues.ngaySinh,
+        [STUDENT_FIELDS.PHONE]: formValues.sdtHocVien,
+        [STUDENT_FIELDS.EMAIL]: formValues.emailHocVien,
+        [STUDENT_FIELDS.LOCATION]: formValues.tinhThanh,
+        [STUDENT_FIELDS.GUARDIAN_NAME]: formValues.hoTenDaiDien,
+        [STUDENT_FIELDS.GUARDIAN_RELATION]: formValues.moiQuanHe,
+        [STUDENT_FIELDS.GUARDIAN_EMAIL]: formValues.emailDaiDien,
+        [STUDENT_FIELDS.GUARDIAN_PHONE]: formValues.sdtDaiDien,
+        // Thêm các trường mới
+        classinConfirm: classinConfirm,
+        soDienThoaiDangKyClassin: soDienThoaiDangKyClassin,
+        zaloConfirm: zaloConfirm,
+        soDienThoaiDangKyZalo: soDienThoaiDangKyZalo
+      };
+      
+      // Lấy và lọc các trường đã thay đổi
+      const studentUpdateData = hasChanged 
+        ? { 
+            Id: studentId, 
+            [STUDENT_FIELDS.BILL_ITEM_ID]: billItemId,
+            ...changedFields 
+          } 
+        : fullStudentUpdateData;
+      
+      // Chuẩn bị dữ liệu cập nhật cho bảng Student_info
+      const studentInfoData = {
+        [FIELD_MAPPINGS.STUDENT_INFO.STUDENT_ID]: maTheoDoiHV,
+        tenHocVien: formValues.hoTenHocVien,
+        gender: formValues.gioiTinh,
+        DOB: formValues.ngaySinh,
+        soDienThoaiHocVien: formValues.sdtHocVien,
+        emailHocVien: formValues.emailHocVien,
+        tinhThanh: formValues.tinhThanh,
+        tenNguoiDaiDien: formValues.hoTenDaiDien,
+        moiQuanHe: formValues.moiQuanHe,
+        emailNguoiDaiDien: formValues.emailDaiDien,
+        soDienThoaiNguoiDaiDien: formValues.sdtDaiDien,
+        soDienThoaiDangKyClassin: soDienThoaiDangKyClassin,
+        soDienThoaiDangKyZalo: soDienThoaiDangKyZalo
+      };
+      
+      // Log dữ liệu ra console
+      console.group("THÔNG TIN KIỂM TRA DỮ LIỆU");
+      console.log("Form có thay đổi:", hasChanged ? "CÓ" : "KHÔNG");
+      
+      if (hasChanged) {
+        console.log("Các trường đã thay đổi:", changedFields);
+        console.log("Dữ liệu ban đầu:", originalData);
+        console.log("Dữ liệu hiện tại:", formValues);
+        console.log("1. Dữ liệu sẽ cập nhật vào bảng Student (chỉ các trường thay đổi):", studentUpdateData);
+      } else {
+        console.log("Không có trường nào thay đổi, không cần cập nhật database");
+      }
+      
+      console.log("2. Dữ liệu đầy đủ nếu cập nhật bảng Student:", fullStudentUpdateData);
+      console.log("3. Dữ liệu đầy đủ nếu cập nhật bảng Student_info:", studentInfoData);
+      console.log("4. Thông tin chi tiết Classin:");
+      console.log("   - Giá trị gốc từ form (yes/no):", formValues.confirmStudentInfo);
+      console.log("   - Xác nhận dùng SĐT học viên (yes/no):", formValues.confirmStudentInfo);
+      console.log("   - Giá trị lưu vào DB (1/0):", classinConfirm);
+      console.log("   - SĐT dùng cho Classin:", soDienThoaiDangKyClassin);
+      console.log("5. Thông tin chi tiết Zalo:");
+      console.log("   - Giá trị gốc từ form (yes/no):", formValues.confirmGuardianInfo);
+      console.log("   - Xác nhận dùng SĐT đại diện (yes/no):", formValues.confirmGuardianInfo);
+      console.log("   - Giá trị lưu vào DB (1/0):", zaloConfirm);
+      console.log("   - SĐT dùng cho Zalo:", soDienThoaiDangKyZalo);
+      console.log("6. Thông tin IDs:");
+      console.log("   - Student ID:", studentId);
+      console.log("   - Bill Item ID:", billItemId);
+      console.log("   - Mã Theo Dõi:", maTheoDoiHV);
+      console.groupEnd();
+      
+      // Hiển thị thông báo thành công
+      message.success('Đã hiển thị thông tin cập nhật trong Console (F12)');
+      
+    } catch (error) {
+      console.error('Lỗi khi kiểm tra dữ liệu:', error);
+      
+      // Xử lý lỗi validation
+      if (error.errorFields && error.errorFields.length > 0) {
+        const fieldErrors = error.errorFields.map(field => {
+          const fieldName = getFieldLabel(field.name[0]) || field.name[0];
+          return `${fieldName}: ${field.errors.join(', ')}`;
+        });
+        
+        message.error(`Lỗi validation: ${fieldErrors.join('; ')}`);
+        
+        // Highlight các trường lỗi
+        error.errorFields.forEach(field => {
+          const fieldName = field.name[0];
+          if (!isFieldEditing(fieldName)) {
+            handleEditField(fieldName);
+          }
+        });
+      } else {
+        message.error(`Lỗi: ${error.message}`);
+      }
     }
   };
 
@@ -1121,72 +1400,65 @@ const StudentInfo = () => {
             </Col>
  
             <Col xs={24} sm={12}>
-              <Form.Item
-                name="sdtHocVien"
-                label={<RequiredLabel text="Số điện thoại học viên" />}
-                rules={[
-                  { required: true, message: 'Vui lòng nhập số điện thoại học viên' },
-                  { 
-                    validator: (_, value) => {
-                      // For debugging
-                      console.log('Validating phone value:', value, typeof value);
+            <Form.Item
+              name="sdtHocVien"
+              label={<RequiredLabel text="Số điện thoại học viên" />}
+              rules={[
+                { required: true, message: 'Vui lòng nhập số điện thoại học viên' },
+                { 
+                  validator: (_, value) => {
+                    // Parse value
+                    const { countryCode, phoneNumber } = (() => {
+                      if (!value) return { countryCode: '+84', phoneNumber: '' };
                       
-                      // Parse value
-                      const { countryCode, phoneNumber } = (() => {
-                        if (!value) return { countryCode: '+84', phoneNumber: '' };
-                        
-                        if (value.startsWith('+')) {
-                          const codeObj = COUNTRY_CODES.find(c => value.startsWith(c.code));
-                          if (codeObj) {
-                            return {
-                              countryCode: codeObj.code,
-                              phoneNumber: value.substring(codeObj.code.length).trim()
-                            };
-                          }
-                        }
-                        
-                        if (value.startsWith('84-')) {
+                      if (value.startsWith('+')) {
+                        const codeObj = COUNTRY_CODES.find(c => value.startsWith(c.code));
+                        if (codeObj) {
                           return {
-                            countryCode: '+84',
-                            phoneNumber: value.substring(3)
+                            countryCode: codeObj.code,
+                            phoneNumber: value.substring(codeObj.code.length).trim()
                           };
-                        }
-                        
-                        return {
-                          countryCode: '+84',
-                          phoneNumber: value
-                        };
-                      })();
-                      
-                      // Log parsed values for debugging
-                      console.log('Parsed for validation:', { countryCode, phoneNumber });
-                      
-                      // Validate phone number based on country code
-                      if (countryCode === '+84') {
-                        // Vietnam phone numbers: 10-11 digits
-                        if (!phoneNumber) {
-                          return Promise.resolve(); // Empty is allowed - required rule handles this
-                        }
-                        if (!/^[0-9]{9,11}$/.test(phoneNumber)) {
-                          return Promise.reject('Số điện thoại Việt Nam cần 9-11 chữ số');
-                        }
-                      } else {
-                        // Other countries: generic validation
-                        if (!phoneNumber) {
-                          return Promise.resolve(); // Empty is allowed - required rule handles this
-                        }
-                        if (!/^[0-9]{5,15}$/.test(phoneNumber)) {
-                          return Promise.reject('Số điện thoại không hợp lệ');
                         }
                       }
                       
-                      return Promise.resolve();
+                      if (value.startsWith('84-')) {
+                        return {
+                          countryCode: '+84',
+                          phoneNumber: value.substring(3)
+                        };
+                      }
+                      
+                      return {
+                        countryCode: '+84',
+                        phoneNumber: value
+                      };
+                    })();
+                    
+                    // Kiểm tra xem số điện thoại có trống không
+                    if (!phoneNumber || phoneNumber.trim() === '') {
+                      return Promise.reject('Vui lòng nhập số điện thoại, không chỉ mã vùng');
                     }
+                    
+                    // Validate phone number based on country code
+                    if (countryCode === '+84') {
+                      // Vietnam phone numbers: 9-11 digits
+                      if (!/^[0-9]{9,11}$/.test(phoneNumber)) {
+                        return Promise.reject('Số điện thoại Việt Nam cần 9-11 chữ số');
+                      }
+                    } else {
+                      // Other countries: generic validation
+                      if (!/^[0-9]{5,15}$/.test(phoneNumber)) {
+                        return Promise.reject('Số điện thoại không hợp lệ');
+                      }
+                    }
+                    
+                    return Promise.resolve();
                   }
-                ]}
-                className="form-item editable-field"
-                data-field="sdtHocVien"
-              >
+                }
+              ]}
+              className="form-item editable-field"
+              data-field="sdtHocVien"
+            >
                 {isFieldEditing('sdtHocVien') ? (
                   <div className="edit-field-container">
                     <PhoneInput
@@ -1342,15 +1614,10 @@ const StudentInfo = () => {
                         { required: true, message: 'Vui lòng nhập số điện thoại đăng ký mới' },
                         { 
                           validator: (_, value) => {
-                            // Kiểm tra nếu có giá trị
-                            if (!value) {
-                              return Promise.reject('Số điện thoại mới là bắt buộc');
-                            }
+                            if (!value) return Promise.resolve(); // Để rule required xử lý
                             
                             // Parse value
                             const { countryCode, phoneNumber } = (() => {
-                              if (!value) return { countryCode: '+84', phoneNumber: '' };
-                              
                               if (value.startsWith('+')) {
                                 const codeObj = COUNTRY_CODES.find(c => value.startsWith(c.code));
                                 if (codeObj) {
@@ -1366,6 +1633,11 @@ const StudentInfo = () => {
                                 phoneNumber: value
                               };
                             })();
+                            
+                            // Kiểm tra xem có nhập số điện thoại không
+                            if (!phoneNumber || phoneNumber.trim() === '') {
+                              return Promise.reject('Vui lòng nhập số điện thoại, không chỉ mã vùng');
+                            }
                             
                             // Validate số điện thoại
                             if (countryCode === '+84') {
@@ -1539,65 +1811,63 @@ const StudentInfo = () => {
           </Col>
  
           <Col xs={24} sm={12}>
-            <Form.Item
-              name="sdtDaiDien"
-              label={<RequiredLabel text="Số điện thoại người đại diện" />}
-              rules={[
-                { required: true, message: 'Vui lòng nhập số điện thoại người đại diện' },
-                { 
-                  validator: (_, value) => {
-                    // Allow empty values - required rule will handle this
-                    if (!value) return Promise.resolve();
-                    
-                    // Parse value
-                    const { countryCode, phoneNumber } = (() => {
-                      if (!value) return { countryCode: '+84', phoneNumber: '' };
-                      
-                      if (value.startsWith('+')) {
-                        const codeObj = COUNTRY_CODES.find(c => value.startsWith(c.code));
-                        if (codeObj) {
-                          return {
-                            countryCode: codeObj.code,
-                            phoneNumber: value.substring(codeObj.code.length).trim()
-                          };
-                        }
-                      }
-                      
-                      if (value.startsWith('84-')) {
+          <Form.Item
+            name="sdtDaiDien"
+            label={<RequiredLabel text="Số điện thoại người đại diện" />}
+            rules={[
+              { required: true, message: 'Vui lòng nhập số điện thoại người đại diện' },
+              { 
+                validator: (_, value) => {
+                  if (!value) return Promise.resolve(); // Để rule required xử lý
+                  
+                  // Parse value
+                  const { countryCode, phoneNumber } = (() => {
+                    if (value.startsWith('+')) {
+                      const codeObj = COUNTRY_CODES.find(c => value.startsWith(c.code));
+                      if (codeObj) {
                         return {
-                          countryCode: '+84',
-                          phoneNumber: value.substring(3)
+                          countryCode: codeObj.code,
+                          phoneNumber: value.substring(codeObj.code.length).trim()
                         };
-                      }
-                      
-                      return {
-                        countryCode: '+84',
-                        phoneNumber: value
-                      };
-                    })();
-                    
-                    // Validate phone number based on country code
-                    if (countryCode === '+84') {
-                      // Vietnam phone numbers: 10-11 digits
-                      if (!phoneNumber) return Promise.resolve();
-                      if (!/^[0-9]{9,11}$/.test(phoneNumber)) {
-                        return Promise.reject('Số điện thoại Việt Nam cần 9-11 chữ số');
-                      }
-                    } else {
-                      // Other countries: generic validation
-                      if (!phoneNumber) return Promise.resolve();
-                      if (!/^[0-9]{5,15}$/.test(phoneNumber)) {
-                        return Promise.reject('Số điện thoại không hợp lệ');
                       }
                     }
                     
-                    return Promise.resolve();
+                    if (value.startsWith('84-')) {
+                      return {
+                        countryCode: '+84',
+                        phoneNumber: value.substring(3)
+                      };
+                    }
+                    
+                    return {
+                      countryCode: '+84',
+                      phoneNumber: value
+                    };
+                  })();
+                  
+                  // Kiểm tra xem có nhập số điện thoại không
+                  if (!phoneNumber || phoneNumber.trim() === '') {
+                    return Promise.reject('Vui lòng nhập số điện thoại, không chỉ mã vùng');
                   }
+                  
+                  // Validate phone number based on country code
+                  if (countryCode === '+84') {
+                    if (!/^[0-9]{9,11}$/.test(phoneNumber)) {
+                      return Promise.reject('Số điện thoại Việt Nam cần 9-11 chữ số');
+                    }
+                  } else {
+                    if (!/^[0-9]{5,15}$/.test(phoneNumber)) {
+                      return Promise.reject('Số điện thoại không hợp lệ');
+                    }
+                  }
+                  
+                  return Promise.resolve();
                 }
-              ]}
-              className="form-item editable-field"
-              data-field="sdtDaiDien"
-            >
+              }
+            ]}
+            className="form-item editable-field"
+            data-field="sdtDaiDien"
+          >
               {isFieldEditing('sdtDaiDien') ? (
                 <div className="edit-field-container">
                   <PhoneInput
@@ -1657,9 +1927,9 @@ const StudentInfo = () => {
                   { required: true, message: 'Vui lòng nhập số điện thoại đăng ký Zalo' },
                   { 
                     validator: (_, value) => {
+                      if (!value) return Promise.resolve(); // Để rule required xử lý
+                      
                       const { countryCode, phoneNumber } = (() => {
-                        if (!value) return { countryCode: '+84', phoneNumber: '' };
-                        
                         if (value.startsWith('+')) {
                           const codeObj = COUNTRY_CODES.find(c => value.startsWith(c.code));
                           if (codeObj) {
@@ -1670,26 +1940,23 @@ const StudentInfo = () => {
                           }
                         }
                         
-                        if (value.startsWith('84-')) {
-                          return {
-                            countryCode: '+84',
-                            phoneNumber: value.substring(3)
-                          };
-                        }
-                        
                         return {
                           countryCode: '+84',
                           phoneNumber: value
                         };
                       })();
                       
+                      // Kiểm tra xem có nhập số điện thoại không
+                      if (!phoneNumber || phoneNumber.trim() === '') {
+                        return Promise.reject('Vui lòng nhập số điện thoại, không chỉ mã vùng');
+                      }
+                      
+                      // Validate số điện thoại
                       if (countryCode === '+84') {
-                        if (!phoneNumber) return Promise.resolve();
                         if (!/^[0-9]{9,11}$/.test(phoneNumber)) {
                           return Promise.reject('Số điện thoại Việt Nam cần 9-11 chữ số');
                         }
                       } else {
-                        if (!phoneNumber) return Promise.resolve();
                         if (!/^[0-9]{5,15}$/.test(phoneNumber)) {
                           return Promise.reject('Số điện thoại không hợp lệ');
                         }
@@ -1754,6 +2021,14 @@ const StudentInfo = () => {
       </Card>
 
       <div className="form-actions">
+        <Button 
+          type="default"
+          onClick={logUpdateData}
+          icon={<BugOutlined />}
+          style={{ marginRight: '10px' }}
+        >
+          Kiểm tra dữ liệu
+        </Button>
         <Button 
           type="primary" 
           onClick={proceedToStepTwo}

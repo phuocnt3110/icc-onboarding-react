@@ -39,10 +39,10 @@ export const API_CONFIG = {
       GUARDIAN_PHONE: "sdtNguoiDaiDien", // không thay đổi
       GUARDIAN_EMAIL: "mailNguoiDaiDien", // không thay đổi
       PRODUCT: "sanPham",           // không thay đổi
-      LEVEL: "trinhDo",           // thay đổi từ PACKAGE - goiMua
+      LEVEL: "trinhDo",             // thay đổi từ PACKAGE - goiMua
       CLASS_SIZE: "loaiLop",        // thay đổi từ sizeLop
       TEACHER_TYPE: "loaiGV",       // thay đổi từ loaiGv (chỉ thay đổi chữ cái hoa)
-      CURRICULUM: "loTrinh",             // thay đổi từ LEVEL - trinhDO
+      CURRICULUM: "loTrinh",        // thay đổi từ LEVEL - trinhDO
       BILL_ITEM_ID: "billItemId",   // không thay đổi
       SESSIONS: "soBuoi",           // không thay đổi
       PRICE: "tongTien",            // không thay đổi
@@ -50,13 +50,17 @@ export const API_CONFIG = {
       SCHEDULE: "lichHoc",          // không thay đổi
       START_DATE: "ngayKhaiGiangDuKien", // không thay đổi
       STATUS: "trangThaiChonLop",   // không thay đổi
-      LOCATION: "diaChi",           // không thay đổi
       ZALO_PHONE: "soDienThoaiDangKyZalo", // không thay đổi
       MA_THEO_DOI: "maTheoDoiHV",   // thay đổi từ maTheoDoi
-      GENDER: "gioiTinh",
-      DOB: "ngaySinh",
-      LOCATION: "tinhThanh",
-      GUARDIAN_RELATION: "moiQuanHe",
+      GENDER: "gioiTinh",           // không thay đổi
+      DOB: "ngaySinh",              // không thay đổi
+      LOCATION: "tinhThanh",        // không thay đổi
+      GUARDIAN_RELATION: "moiQuanHe", // không thay đổi
+      
+      // Thêm các trường mới
+      CLASSIN_CONFIRM: "classinConfirm",       // Xác nhận sử dụng SĐT học viên cho Classin
+      CLASSIN_PHONE: "soDienThoaiDangKyClassin", // SĐT đăng ký Classin
+      ZALO_CONFIRM: "zaloConfirm",              // Xác nhận sử dụng SĐT người đại diện cho Zalo
     },
     
     // Class table field mappings
@@ -89,7 +93,21 @@ export const API_CONFIG = {
     STUDENT_INFO: {
       ID: "Id",
       STUDENT_ID: "maHocVien",
-      SCHEDULE_BITMAP: "scheduleBitmap"
+      SCHEDULE_BITMAP: "scheduleBitmap",
+      
+      // Thêm các trường mới
+      STUDENT_NAME: "tenHocVien",
+      GENDER: "gender",
+      DOB: "DOB",
+      STUDENT_PHONE: "soDienThoaiHocVien",
+      STUDENT_EMAIL: "emailHocVien",
+      LOCATION: "tinhThanh",
+      GUARDIAN_NAME: "tenNguoiDaiDien",
+      GUARDIAN_RELATION: "moiQuanHe",
+      GUARDIAN_EMAIL: "emailNguoiDaiDien",
+      GUARDIAN_PHONE: "soDienThoaiNguoiDaiDien",
+      CLASSIN_PHONE: "soDienThoaiDangKyClassin",
+      ZALO_PHONE: "soDienThoaiDangKyZalo"
     }
   };
   
