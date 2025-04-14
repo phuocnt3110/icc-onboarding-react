@@ -1,9 +1,25 @@
 /* ClassSelection Styles */
 .class-selection-container {
-  width: 100%;
-  max-width: 1000px;
-  margin: 0 auto;
-  padding: 1rem;
+  width: 70% !important;
+  max-width: 80% !important; /* Thay đổi từ 1000px để tận dụng toàn bộ chiều rộng màn hình */
+  margin: 0 auto !important;
+  padding: 1rem !important;
+}
+
+/* Override form-container cho màn hình Class Registration */
+.form-container.class-registration-wide {
+  width: 70% !important;
+  max-width: 80% !important;
+  padding: 1rem !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+/* Mở rộng card trong Class Selection */
+.class-registration-wide .ant-card,
+.form-container.class-registration-wide .ant-card {
+  width: 70% !important;
+  max-width: 80% !important;
 }
 
 .class-selection-card {
@@ -12,9 +28,11 @@
   border-radius: 8px;
 }
 
+/* Table styles with improved scrolling */
 .class-selection-table {
   width: 100%;
   overflow-x: auto;
+  margin: 0 auto;
 }
 
 .class-selection-table .ant-table {
@@ -26,29 +44,61 @@
   word-break: break-word;
 }
 
-/* Column widths */
-.class-selection-table .ant-table-cell:first-child {
-  width: 120px;
-  min-width: 120px;
+/* Filter styles */
+.filter-group {
+  margin-bottom: 15px;
 }
 
-.class-selection-table .ant-table-cell:nth-child(2) {
-  min-width: 300px;
+.filter-label {
+  font-weight: 500;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
-.class-selection-table .ant-table-cell:nth-child(3) {
-  width: 100px;
-  min-width: 100px;
+.ant-checkbox-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
-.class-selection-table .ant-table-cell:nth-child(4) {
-  width: 130px;
-  min-width: 130px;
+.ant-checkbox-wrapper {
+  margin-right: 8px !important;
 }
 
-.class-selection-table .ant-table-cell:last-child {
-  width: 100px;
-  min-width: 100px;
+/* Mobile optimizations */
+@media (max-width: 576px) {
+  .hide-on-mobile {
+    display: none;
+  }
+  
+  .ant-table-cell {
+    padding: 8px 6px !important;
+  }
+  
+  .ant-checkbox-group {
+    flex-direction: column;
+  }
+  
+  .ant-pagination-options {
+    display: none !important;
+  }
+}
+
+/* Medium screens */
+@media (max-width: 992px) {
+  .ant-table {
+    font-size: 0.9rem;
+  }
+  
+  .ant-btn {
+    padding: 0 8px;
+  }
+  
+  .filter-group {
+    margin-bottom: 12px;
+  }
 }
 
 /* Responsive adjustments */

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   Card, 
   Typography, 
@@ -16,7 +16,14 @@ import {
   Tooltip,
   Modal,
   message,
-  Spin
+  Spin,
+  Select,
+  DatePicker,
+  Radio,
+  Collapse,
+  Checkbox,
+  Popover,
+  Dropdown
 } from 'antd';
 import { 
   CalendarOutlined, 
@@ -26,7 +33,12 @@ import {
   SearchOutlined,
   ExclamationCircleOutlined,
   QuestionCircleOutlined,
-  TeamOutlined
+  TeamOutlined,
+  FilterOutlined,
+  SortAscendingOutlined,
+  SunOutlined,
+  DownOutlined,
+  ReloadOutlined
 } from '@ant-design/icons';
 import { FIELD_MAPPINGS, MESSAGES } from '../../../config';
 import _ from 'lodash';
@@ -39,6 +51,8 @@ import { formatDate, validateClassSelection, processClassList, formatSchedule } 
 
 const { Title, Text, Paragraph } = Typography;
 const { Search } = Input;
+const { Panel } = Collapse;
+const { RangePicker } = DatePicker;
 
 // Extract field mappings for easier access
 const { STUDENT: STUDENT_FIELDS, CLASS: CLASS_FIELDS } = FIELD_MAPPINGS;
@@ -71,30 +85,65 @@ const ClassSelection = ({
   const [tableLoading, setTableLoading] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [classToConfirm, setClassToConfirm] = useState(null);
+  
+  // Thêm các state mới cho filter
+  const [weekdayFilter, setWeekdayFilter] = useState([]);
+  const [timeFilter, setTimeFilter] = useState([]);
+  const [startDateRange, setStartDateRange] = useState(null);
+  const [filteredData, setFilteredData] = useState([]);
+  
+  // Hook xử lý responsive
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  
+  // Hàm xử lý resize của window
+  const handleResize = useCallback(() => {
+    setIsMobile(window.innerWidth < 768);
+  }, []);
+  
+  // Theo dõi thay đổi kích thước màn hình
+  useEffect(() => {
+    window.addEventListener('resize', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, [handleResize]);
+  
+  // Hàm xử lý thay đổi thứ học
+  const handleWeekdayChange = (values) => {
+    console.log('Chọn thứ học:', values);
+    setWeekdayFilter(values);
+  };
+  
+  // Hàm xử lý thay đổi ca học
+  const handleTimeFilterChange = (values) => {
+    console.log('Chọn ca học:', values);
+    setTimeFilter(values);
+  };
+  
+  // Hàm đặt lại tất cả bộ lọc
+  const handleResetFilters = () => {
+    console.log('Đặt lại tất cả bộ lọc');
+    setWeekdayFilter([]);
+    setTimeFilter([]);
+    setStartDateRange(null);
+    setSearchText('');
+  };
 
   // Process and group classes when classList changes
   useEffect(() => {
-    console.log('DEBUG - ClassSelection - classList raw data:', {
-      count: classList?.length || 0,
-      data: classList
-    });
-    
     if (!classList || !classList.length) {
-      console.log('DEBUG - ClassSelection - No class data to process');
+      console.log('DISPLAY - Không có dữ liệu lớp học để hiển thị');
       setFilteredClasses([]);
       setGroupedClasses([]);
       return;
     }
+
+    // Log thông tin tổng quan về danh sách lớp học cần hiển thị
+    console.log(`DISPLAY - Đã nhận ${classList.length} lớp học để hiển thị trong danh sách`);
     
     // Ensure all classes have schedules property
     const classesWithSchedules = classList.map(classItem => {
       if (!classItem.schedules || classItem.schedules.length === 0) {
-        console.log('DEBUG - ClassSelection - Adding schedule to class:', {
-          classCode: classItem[CLASS_FIELDS.CODE],
-          weekday: classItem[CLASS_FIELDS.WEEKDAY] || '(empty)',
-          startTime: classItem[CLASS_FIELDS.START_TIME] || '(empty)',
-          endTime: classItem[CLASS_FIELDS.END_TIME] || '(empty)'
-        });
         
         return {
           ...classItem,
@@ -107,32 +156,18 @@ const ClassSelection = ({
       return classItem;
     });
     
-    console.log('DEBUG - ClassSelection - Classes with schedules:', {
-      count: classesWithSchedules.length,
-      sample: classesWithSchedules.slice(0, 2)
-    });
-    
     setFilteredClasses(classesWithSchedules);
     
     // Group classes by class code
     const grouped = _.groupBy(classesWithSchedules, CLASS_FIELDS.CODE);
     
-    console.log('DEBUG - ClassSelection - Grouped classes:', {
-      uniqueClassCodes: Object.keys(grouped).length,
-      classCodesList: Object.keys(grouped)
-    });
+    console.log(`DISPLAY - Nhóm thành ${Object.keys(grouped).length} mã lớp khác nhau`);
     
     // Create array of grouped classes
     const transformedData = Object.keys(grouped).map(classCode => {
       const classGroup = grouped[classCode];
       const firstClass = classGroup[0]; // Use first class for common properties
       
-      console.log(`DEBUG - ClassSelection - Processing class group: ${classCode}`, {
-        classesInGroup: classGroup.length,
-        className: firstClass[CLASS_FIELDS.NAME] || '(no name)',
-        status: firstClass[CLASS_FIELDS.STATUS],
-        registered: firstClass[CLASS_FIELDS.REGISTERED]
-      });
       
       // Collect all schedules from all classes with this code
       const allSchedules = [];
@@ -155,22 +190,116 @@ const ClassSelection = ({
       };
     });
     
-    console.log('DEBUG - ClassSelection - Final transformed data:', {
-      count: transformedData.length,
-      data: transformedData
-    });
+    console.log(`DISPLAY - Có ${transformedData.length} lớp học sau khi xử lý để hiển thị trên giao diện`);
     
     setGroupedClasses(transformedData);
   }, [classList]);
   
-  // Log whenever groupedClasses changes
+  // Log khi trạng thái groupedClasses thay đổi
   useEffect(() => {
-    console.log('DEBUG - ClassSelection - groupedClasses state updated:', {
-      count: groupedClasses.length,
-      isEmpty: groupedClasses.length === 0
-    });
+    if (groupedClasses.length === 0) {
+      console.log('DISPLAY - Không có dữ liệu lớp học để hiển thị trong bảng');
+    }
   }, [groupedClasses]);
 
+  // Thực hiện lọc data với các bộ lọc
+  useEffect(() => {
+    if (!groupedClasses.length) return;
+    
+    let result = [...groupedClasses];
+    let filtersApplied = false;
+    
+    // Lọc theo thứ học trong tuần (điều kiện AND)
+    if (weekdayFilter.length > 0) {
+      filtersApplied = true;
+      result = result.filter(classItem => {
+        // Kiểm tra tất cả các thứ được chọn đều tồn tại trong lịch học của lớp
+        return weekdayFilter.every(day => {
+          return classItem.allSchedules?.some(schedule => schedule.weekday === day);
+        });
+      });
+      console.log(`Sau khi lọc theo thứ học (${weekdayFilter.join(', ')}): ${result.length} lớp`);
+    }
+    
+    // Lọc theo ca học (sáng, chiều, tối)
+    if (timeFilter.length > 0) {
+      filtersApplied = true;
+      result = result.filter(classItem => {
+        return classItem.allSchedules?.some(schedule => {
+          // Kiểm tra xem schedule.time có tồn tại và đúng định dạng không
+          if (!schedule.time || typeof schedule.time !== 'string') {
+            console.log('Lỗi: Lịch học không có thời gian hoặc định dạng không đúng:', schedule);
+            return false;
+          }
+
+          try {
+            const timeParts = schedule.time.split(' - ');
+            if (!timeParts || timeParts.length < 1) return false;
+            
+            const startTimePart = timeParts[0].trim();
+            if (!startTimePart) return false;
+            
+            const hourMinParts = startTimePart.split(':');
+            if (!hourMinParts || hourMinParts.length < 1) return false;
+            
+            const startHour = parseInt(hourMinParts[0]);
+            if (isNaN(startHour)) return false;
+            
+            console.log(`Ca học: ${schedule.time}, giờ bắt đầu: ${startHour}, đang kiểm tra với: ${timeFilter.join(', ')}`);
+            
+            // Kiểm tra từng loại ca học
+            if (timeFilter.includes('sáng') && startHour >= 6 && startHour < 12) return true;
+            if (timeFilter.includes('chiều') && startHour >= 12 && startHour < 18) return true;
+            if (timeFilter.includes('tối') && (startHour >= 18 || startHour < 6)) return true;
+          } catch (error) {
+            console.error('Lỗi khi xử lý thời gian:', error, schedule);
+            return false;
+          }
+          
+          return false;
+        });
+      });
+      console.log(`Sau khi lọc theo ca học (${timeFilter.join(', ')}): ${result.length} lớp`);
+    }
+    
+    // Lọc theo ngày khai giảng
+    if (startDateRange && startDateRange[0] && startDateRange[1]) {
+      filtersApplied = true;
+      const startDate = new Date(startDateRange[0]);
+      const endDate = new Date(startDateRange[1]);
+      
+      // Đặt giờ về 0 cho startDate và 23:59:59 cho endDate để tính cả ngày
+      startDate.setHours(0, 0, 0, 0);
+      endDate.setHours(23, 59, 59, 999);
+      
+      result = result.filter(classItem => {
+        const rawDate = classItem[CLASS_FIELDS.START_DATE];
+        if (!rawDate) return false;
+        
+        // Chuyển chuỗi ngày tháng sang đối tượng Date
+        const classStartDate = new Date(rawDate);
+        classStartDate.setHours(0, 0, 0, 0); // Reset giờ để so sánh chính xác
+        
+        return classStartDate >= startDate && classStartDate <= endDate;
+      });
+      console.log(`Sau khi lọc theo ngày khai giảng (${startDate.toLocaleDateString()} - ${endDate.toLocaleDateString()}): ${result.length} lớp`);
+    }
+    
+    // Chỉ set filteredData nếu có bộ lọc nào được áp dụng và có kết quả lọc
+    if (filtersApplied) {
+      console.log(`Kết quả cuối cùng sau khi lọc: ${result.length} lớp`);
+      setFilteredData(result);
+    } else {
+      setFilteredData([]);
+    }
+  }, [groupedClasses, weekdayFilter, timeFilter, startDateRange]);
+  
+  // Chúng ta đã loại bỏ toggleFilter vì đã sử dụng cách tiếp cận Popover
+  const toggleFilter = () => {
+    console.log('Hàm này đã không còn sử dụng');
+    // setFilterVisible đã bị xóa
+  };
+  
   // Handle search
   const handleSearch = (value) => {
     setTableLoading(true);
@@ -268,10 +397,23 @@ const ClassSelection = ({
         item[CLASS_FIELDS.CODE] === classToSelect[CLASS_FIELDS.CODE]
       );
       
+      // Kiểm tra đầy đủ dữ liệu trước khi validate
+      if (!studentData || !classToSelect) {
+        message.error('Thiếu thông tin học viên hoặc lớp học');
+        console.error('Thiếu dữ liệu:', { studentData, classToSelect });
+        return;
+      }
+
       // Kiểm tra tính hợp lệ của lớp học
-      const validationResult = validateClassSelection(studentData, classToSelect);
-      if (!validationResult.valid) {
-        message.error(validationResult.message);
+      try {
+        const validationResult = validateClassSelection(studentData, classToSelect);
+        if (!validationResult.valid) {
+          message.error(validationResult.message);
+          return;
+        }
+      } catch (error) {
+        console.error('Lỗi khi kiểm tra tính hợp lệ của lớp học:', error);
+        message.error('Không thể kiểm tra tính hợp lệ của lớp học');
         return;
       }
       
@@ -280,15 +422,28 @@ const ClassSelection = ({
       setSelectedSchedule(schedule);
     } else {
       // Nếu người dùng nhấn nút "Chọn" trên bảng
-      // Kiểm tra tính hợp lệ của lớp học
-      const validationResult = validateClassSelection(studentData, record);
-      if (!validationResult.valid) {
-        message.error(validationResult.message);
+      // Kiểm tra dữ liệu đầu vào trước khi validate
+      if (!studentData || !record) {
+        message.error('Thiếu thông tin học viên hoặc lớp học');
+        console.error('Thiếu dữ liệu:', { studentData, record });
         return;
       }
-      
-      // Lưu lại record đã được gom nhóm (đã có allSchedules)
-      setClassToConfirm(record);
+
+      try {
+        // Kiểm tra tính hợp lệ của lớp học
+        const validationResult = validateClassSelection(studentData, record);
+        if (!validationResult.valid) {
+          message.error(validationResult.message);
+          return;
+        }
+        
+        // Lưu lại record đã được gom nhóm (đã có allSchedules)
+        setClassToConfirm(record);
+      } catch (error) {
+        console.error('Lỗi khi kiểm tra tính hợp lệ của lớp học:', error);
+        message.error('Không thể kiểm tra tính hợp lệ của lớp học');
+        return;
+      }
     }
     
     // Hiển thị modal xác nhận
@@ -381,7 +536,7 @@ const ClassSelection = ({
     );
   };
   
-  // Table columns
+  // Table columns - tối ưu lại để phù hợp với mobile và thiết bị nhỏ
   const columns = [
     {
       title: 'Mã lớp',
@@ -392,58 +547,104 @@ const ClassSelection = ({
         return a[CLASS_FIELDS.CODE].localeCompare(b[CLASS_FIELDS.CODE]);
       },
       defaultSortOrder: 'ascend',
-      width: 120,
+      width: isMobile ? 90 : 110,
+      fixed: 'left',
+      render: (text) => (
+        <div style={{ fontWeight: 'bold', color: '#1890ff' }}>{text}</div>
+      ),
     },
     {
       title: 'Lịch học',
       key: 'schedules',
-      render: (_, record) => renderSchedules(record.allSchedules),
-      width: 300,
+      render: (_, record) => {
+        // Sử dụng state isMobile từ responsive hook để xử lý hiển thị
+        if (isMobile) {
+          // Hiển thị compact hơn cho mobile
+          const firstSchedule = record.allSchedules?.[0];
+          if (!firstSchedule) return <Text type="secondary">Không có lịch</Text>;
+          
+          return (
+            <Tooltip title="Nhấn để xem tất cả lịch học">
+              <div onClick={() => handleClassSelection(null, firstSchedule)}>
+                <Tag color="blue" style={{cursor: 'pointer'}}>
+                  <CalendarOutlined /> {firstSchedule.weekday} 
+                  <ClockCircleOutlined style={{ marginLeft: '4px' }} />
+                </Tag>
+                {record.allSchedules.length > 1 && 
+                  <Text type="secondary" style={{ marginLeft: '4px' }}>+{record.allSchedules.length - 1}</Text>
+                }
+              </div>
+            </Tooltip>
+          );
+        } else {
+          // Hiển thị đầy đủ cho desktop
+          return renderSchedules(record.allSchedules);
+        }
+      },
+      width: isMobile ? 130 : 210,
+      responsive: ['xs', 'sm', 'md', 'lg', 'xl'],
     },
     {
-      title: 'Sĩ số',
+      title: isMobile ? 'Sĩ số' : 'Sĩ số',
       key: 'capacity',
-      render: (_, record) => (
-        <Space>
-          <UserOutlined />
-          <span>
-            {record[CLASS_FIELDS.REGISTERED] || 0}/
-            {record[CLASS_FIELDS.TOTAL_SLOTS] || 0}
-          </span>
-        </Space>
-      ),
+      render: (_, record) => {
+        // Hiển thị gọn cho mobile, đầy đủ cho desktop
+        return (
+          <Space size={2}>
+            <UserOutlined style={{ color: '#1890ff' }} />
+            <span>
+              {record[CLASS_FIELDS.REGISTERED] || 0}/
+              {record[CLASS_FIELDS.TOTAL_SLOTS] || 0}
+            </span>
+          </Space>
+        );
+      },
       sorter: (a, b) => {
         const aRatio = (a[CLASS_FIELDS.REGISTERED] || 0) / (a[CLASS_FIELDS.TOTAL_SLOTS] || 1);
         const bRatio = (b[CLASS_FIELDS.REGISTERED] || 0) / (b[CLASS_FIELDS.TOTAL_SLOTS] || 1);
         return aRatio - bRatio;
       },
-      defaultSortOrder: 'ascend',
-      width: 100,
+      width: isMobile ? 60 : 80,
+      responsive: ['xs', 'sm', 'md', 'lg', 'xl'],
     },
     {
-      title: 'Ngày khai giảng',
+      title: isMobile ? 'KG' : 'Khai giảng',
       dataIndex: CLASS_FIELDS.START_DATE,
       key: 'startDate',
-      render: (text) => formatDate(text),
+      render: (text) => {
+        if (!text) return <Text type="secondary">-</Text>;
+        
+        // Hiển thị gọn cho mobile
+        if (isMobile) {
+          const date = new Date(text);
+          return `${date.getDate()}/${date.getMonth() + 1}`;
+        }
+        
+        // Hiển thị đầy đủ cho desktop
+        return formatDate(text);
+      },
       sorter: (a, b) => {
         if (!a[CLASS_FIELDS.START_DATE] || !b[CLASS_FIELDS.START_DATE]) return 0;
         return new Date(a[CLASS_FIELDS.START_DATE]) - new Date(b[CLASS_FIELDS.START_DATE]);
       },
-      width: 130,
+      width: isMobile ? 60 : 110,
+      responsive: ['xs', 'sm', 'md', 'lg', 'xl'],
     },
     {
-      title: 'Thao tác',
+      title: '',
       key: 'action',
       render: (_, record) => (
         <Button 
           type="primary" 
           onClick={() => handleClassSelection(record)}
           size="small"
+          icon={isMobile ? <CheckCircleOutlined /> : null}
         >
-          Chọn
+          {isMobile ? '' : 'Chọn'}
         </Button>
       ),
-      width: 100,
+      width: isMobile ? 50 : 70,
+      fixed: 'right',
     },
   ];
 
@@ -457,7 +658,7 @@ const ClassSelection = ({
   }
 
   return (
-    <Card style={{ borderRadius: '8px', marginBottom: '20px', maxWidth: '1000px', margin: '0 auto' }}>
+    <Card style={{ borderRadius: '8px', marginBottom: '20px', width: '100%', margin: '0 auto' }}>
       <Title level={5} className="card-title">
         Chọn lớp học phù hợp
       </Title>
@@ -480,36 +681,111 @@ const ClassSelection = ({
         </Paragraph>
       </div>
       
-      <Row gutter={[16, 16]} style={{ marginBottom: '24px', padding: '0 8px' }}>
-        <Col xs={24} md={16} lg={12}>
-          <Search
-            placeholder="Tìm kiếm lớp học..."
-            allowClear
-            size="large"
-            enterButton={<SearchOutlined />}
-            onSearch={handleSearch}
-            onChange={(e) => setSearchText(e.target.value)}
+      <div style={{ marginBottom: '12px', textAlign: 'right' }}>
+        <Space wrap size="small" className="filter-buttons">
+          <Button 
+            size="small"
+            shape="circle"
+            icon={<ReloadOutlined />}
+            onClick={handleResetFilters}
+            disabled={!(weekdayFilter.length > 0 || timeFilter.length > 0 || startDateRange)}
+            title="Đặt lại bộ lọc"
           />
-        </Col>
-      </Row>
+          <Popover 
+            content={
+              <Checkbox.Group 
+                options={['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'Chủ Nhật']} 
+                value={weekdayFilter}
+                onChange={handleWeekdayChange}
+              />
+            }
+            title="Chọn thứ học"
+            trigger="click"
+            placement="bottom"
+          >
+            <Button 
+              icon={<CalendarOutlined />}
+              type={weekdayFilter.length > 0 ? 'primary' : 'default'}
+              size="small"
+            >
+              Thứ học {weekdayFilter.length > 0 && `(${weekdayFilter.length})`}
+            </Button>
+          </Popover>
+          
+          <Popover
+            content={
+              <Checkbox.Group 
+                options={[{ label: 'Sáng (6h-12h)', value: 'sáng' }, 
+                          { label: 'Chiều (12h-18h)', value: 'chiều' }, 
+                          { label: 'Tối (18h-6h)', value: 'tối' }]} 
+                value={timeFilter}
+                onChange={handleTimeFilterChange}
+              />
+            }
+            title="Chọn ca học"
+            trigger="click"
+            placement="bottom"
+          >
+            <Button 
+              icon={<ClockCircleOutlined />}
+              type={timeFilter.length > 0 ? 'primary' : 'default'}
+              size="small"
+            >
+              Ca học {timeFilter.length > 0 && `(${timeFilter.length})`}
+            </Button>
+          </Popover>
+          
+          <Popover
+            content={
+              <div style={{ padding: '8px 0' }}>
+                <RangePicker 
+                  style={{ width: '230px' }} 
+                  format="DD/MM/YYYY"
+                  value={startDateRange}
+                  onChange={setStartDateRange}
+                />
+              </div>
+            }
+            title="Chọn ngày khai giảng"
+            trigger="click"
+            placement="bottom"
+          >
+            <Button 
+              icon={<CalendarOutlined />}
+              type={startDateRange ? 'primary' : 'default'}
+              size="small"
+            >
+              Ngày KG
+            </Button>
+          </Popover>
+          
+          {/* Chỉ sử dụng icon reset ở đầu danh sách */}
+        </Space>
+      </div>
       
-      {console.log('DEBUG - ClassSelection - Before rendering table:', {
-        hasData: groupedClasses && groupedClasses.length > 0,
-        tableLoading
-      }) || groupedClasses && groupedClasses.length > 0 ? (
-        <Table 
-          dataSource={groupedClasses} 
-          columns={columns} 
-          rowKey={(record) => record[CLASS_FIELDS.CODE]} 
-          pagination={{ 
-            pageSize: 5,
-            showSizeChanger: true,
-            pageSizeOptions: ['5', '10', '20'],
-            showTotal: (total) => `Tổng ${total} lớp học`
-          }}
-          loading={tableLoading}
-          scroll={{ x: 'max-content' }}
-        />
+      {groupedClasses && groupedClasses.length > 0 ? (
+        <div className="table-responsive" style={{ width: '100%', overflow: 'auto' }}>
+          <Table 
+            dataSource={filteredData.length > 0 || (weekdayFilter.length > 0 || timeFilter.length > 0 || startDateRange) ? filteredData : groupedClasses} 
+            columns={columns} 
+            rowKey={(record) => record[CLASS_FIELDS.CODE]} 
+            pagination={{ 
+              pageSize: 10, // Tăng số dòng mỗi trang
+              showSizeChanger: true,
+              pageSizeOptions: ['5', '10', '20', '50'],
+              showTotal: (total) => `Tổng ${total} lớp học`
+            }}
+            loading={tableLoading}
+            scroll={{ x: 800 }} // Giảm chiều rộng tối thiểu của bảng
+            style={{ width: '100%' }}
+            size="middle"
+            locale={{
+              emptyText: (weekdayFilter.length > 0 || timeFilter.length > 0 || startDateRange) ? 
+                'Không có lớp học nào thỏa mãn điều kiện lọc' : 
+                'Không có lớp học nào'
+            }}
+          />
+        </div>
       ) : (
         <Empty 
           description={

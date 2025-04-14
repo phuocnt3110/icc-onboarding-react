@@ -46,7 +46,7 @@ export const API_CONFIG = {
       BILL_ITEM_ID: "billItemId",   // không thay đổi
       SESSIONS: "soBuoi",           // không thay đổi
       PRICE: "tongTien",            // không thay đổi
-      CLASS_CODE: "maLopChot",      // thay đổi từ maLop
+      CLASS_CODE: "maLop",      // thay đổi từ maLop
       SCHEDULE: "lichHoc",          // không thay đổi
       START_DATE: "ngayKhaiGiangDuKien", // không thay đổi
       STATUS: "trangThaiChonLop",   // không thay đổi
@@ -97,7 +97,7 @@ export const API_CONFIG = {
       
       // Thêm các trường mới
       STUDENT_NAME: "tenHocVien",
-      GENDER: "gender",
+      GENDER: "gioiTinh",
       DOB: "DOB",
       STUDENT_PHONE: "soDienThoaiHocVien",
       STUDENT_EMAIL: "emailHocVien",

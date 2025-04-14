@@ -111,8 +111,14 @@ const ClassRegistration = () => {
           }
           else if (screen === 'selection') {
             console.log('Chuyển đến màn hình danh sách lớp theo tham số');
-            // Load danh sách lớp sử dụng hàm loadClasses từ context
-            await loadClasses();
+            // Load danh sách lớp sử dụng hàm loadClasses từ context với các tham số cần thiết từ dữ liệu học viên
+            const studentResponse = await fetchStudentDataFromContext(id);
+            await loadClasses({
+              sanPham: studentResponse[STUDENT_FIELDS.PRODUCT] || null,
+              loaiLop: studentResponse[STUDENT_FIELDS.CLASS_SIZE] || null,
+              loaiGV: studentResponse[STUDENT_FIELDS.TEACHER_TYPE] || null,
+              trinhDo: studentResponse[STUDENT_FIELDS.LEVEL] || null
+            });
             setCurrentScreen('classList');
           }
         } catch (error) {
@@ -275,9 +281,9 @@ const ClassRegistration = () => {
         // Fetch classes using context
         await loadClasses({
           sanPham: data[STUDENT_FIELDS.PRODUCT] || null,
-          sizeLop: data[STUDENT_FIELDS.CLASS_SIZE] || null,
-          loaiGv: data[STUDENT_FIELDS.TEACHER_TYPE] || null,
-          goiMua: data[STUDENT_FIELDS.LEVEL] || null
+          loaiLop: data[STUDENT_FIELDS.CLASS_SIZE] || null,
+          loaiGV: data[STUDENT_FIELDS.TEACHER_TYPE] || null,
+          trinhDo: data[STUDENT_FIELDS.LEVEL] || null
         });
         
         setCurrentScreen('classList');
@@ -653,8 +659,18 @@ const ClassRegistration = () => {
     }
   };
 
+  // Sử dụng inline style để ghi đè toàn bộ CSS class từ theme chung
   return (
-    <div className="form-container">
+    <div 
+      className="form-container class-registration-wide"
+      style={{
+        width: '70%',
+        maxWidth: '80%',
+        marginLeft: 'auto',
+        marginRight: 'auto',
+        padding: '1rem'
+      }}
+    >
       {renderContent()}
     </div>
   );

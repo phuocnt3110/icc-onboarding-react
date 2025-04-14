@@ -5,10 +5,7 @@ import apiClient from './client';
 const { CLASS } = TABLE_IDS;
 const { CLASS: CLASS_FIELDS } = FIELD_MAPPINGS;
 
-// Dùng để debug
-console.log('Debug class.js - TABLE_IDS:', TABLE_IDS);
-console.log('Debug class.js - CLASS value:', CLASS);
-console.log('Debug class.js - CLASS_FIELDS:', CLASS_FIELDS);
+// Không cần các log debug trước đây nữa
 
 /**
  * Fetch available classes based on filters
@@ -17,62 +14,77 @@ console.log('Debug class.js - CLASS_FIELDS:', CLASS_FIELDS);
  */
 export const fetchAvailableClasses = async (filters) => {
   try {
-    console.log('DEBUG - fetchAvailableClasses - Start fetching with filters:', filters);
-    
-    // Đảm bảo đường dẫn API đúng với NocoDB v2
-    // Base URL đã có /api/v2 nên đường dẫn cần là /tables/{table}/records
-    const url = `/tables/${CLASS}/records`;
-    const params = {
-      where: `(${CLASS_FIELDS.STATUS},eq,active)`,
-      ...filters
-    };
-    
-    console.log('DEBUG - fetchAvailableClasses - API request details:', {
-      url,
-      params,
-      tableId: CLASS,
-      whereClause: `(${CLASS_FIELDS.STATUS},eq,active)`,
-      statusField: CLASS_FIELDS.STATUS,
-      headers: apiClient.defaults.headers,
-      baseURL: apiClient.defaults.baseURL
+    // Log thông tin về các điều kiện lọc
+    console.log('FILTER - Tìm lớp học với các điều kiện:', {
+      trạngThái: 'Dự kiến khai giảng',
+      sảnPhẩm: filters?.sanPham || 'Không có thông tin',
+      loạiLớp: filters?.loaiLop || 'Không có thông tin',
+      loạiGV: filters?.loaiGV || 'Không có thông tin',
+      trìnhDo: filters?.trinhDo || 'Không có thông tin'
     });
     
+    // Đảm bảo đường dẫn API đúng với NocoDB v2
+    const url = `/tables/${CLASS}/records`;
+    
+    // Xây dựng câu lệnh where kết hợp tất cả các điều kiện với AND
+    let whereConditions = [`(${CLASS_FIELDS.STATUS},eq,Dự kiến khai giảng)`];
+    
+    // Thêm các điều kiện lọc theo các trường
+    if (filters?.sanPham) {
+      whereConditions.push(`(sanPham,eq,${filters.sanPham})`);
+    }
+    
+    if (filters?.loaiLop) {
+      whereConditions.push(`(loaiLop,eq,${filters.loaiLop})`);
+    }
+    
+    if (filters?.loaiGV) {
+      whereConditions.push(`(loaiGV,eq,${filters.loaiGV})`);
+    }
+    
+    if (filters?.trinhDo) {
+      whereConditions.push(`(trinhDo,eq,${filters.trinhDo})`);
+    }
+    
+    // Kết hợp các điều kiện với AND
+    const whereClause = whereConditions.join('~and');
+    
+    const params = {
+      where: whereClause
+    };
+    
+    console.log('FILTER - Query gửi đến API với điều kiện AND:', params);
+    
     // Gọi API
-    console.log('DEBUG - fetchAvailableClasses - Sending API request...');
     const response = await apiClient.get(url, { params });
     
     // Log kết quả thành công
-    console.log('DEBUG - fetchAvailableClasses - API response status:', response.status);
-    console.log('DEBUG - fetchAvailableClasses - API response data type:', typeof response.data);
-    console.log('DEBUG - fetchAvailableClasses - API response data structure:', {
-      hasListProperty: 'list' in response.data,
-      listLength: response.data.list?.length || 0,
-      responseKeys: Object.keys(response.data)
-    });
-    
-    if (!response.data.list || response.data.list.length === 0) {
-      console.log('DEBUG - fetchAvailableClasses - No classes found in response!');
-    } else {
-      console.log('DEBUG - fetchAvailableClasses - Found classes:', {
-        count: response.data.list.length,
-        firstClassCode: response.data.list[0]?.[CLASS_FIELDS.CODE] || 'N/A',
-        sampleClass: response.data.list[0]
-      });
-    }
-    
+    // Log kết quả từ API
     const result = response.data.list || [];
-    console.log('DEBUG - fetchAvailableClasses - Returning result array length:', result.length);
+    
+    if (result.length === 0) {
+      console.log('FILTER - KHÔNG tìm thấy lớp học nào phù hợp với điều kiện lọc!');
+    } else {
+      console.log(`FILTER - Tìm thấy ${result.length} lớp học phù hợp với điều kiện lọc`);
+      
+      // Hiển thị ngắn gọn các lớp đã tìm thấy
+      const classDetails = result.map(cls => ({
+        mãLớp: cls[CLASS_FIELDS.CODE],
+        trạngThái: cls[CLASS_FIELDS.STATUS],
+        ngàyKhaiGiảng: cls[CLASS_FIELDS.START_DATE],
+        sảnPhẩm: cls.sanPham,
+        loạiLớp: cls.loaiLop,
+        loạiGV: cls.loaiGV,
+        trìnhDo: cls.trinhDo
+      }));
+      
+      console.log('FILTER - Danh sách lớp học:', classDetails);
+    }
     
     return result;
   } catch (error) {
-    // Xử lý lỗi chi tiết hơn
-    console.error('Error fetching classes:', error);
-    console.error('Error details:', {
-      message: error.message,
-      status: error.response?.status,
-      statusText: error.response?.statusText,
-      responseData: error.response?.data
-    });
+    // Xử lý lỗi gọn gàng hơn
+    console.error('FILTER - Lỗi khi tìm lớp học:', error.message);
     
     throw new Error(MESSAGES.CLASS_FETCH_ERROR);
   }

@@ -148,6 +148,14 @@ body {
   background: transparent;
 }
 
+/* Override for class registration screen */
+.form-container.class-registration-wide {
+  width: 100% !important;
+  max-width: 100% !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
 /* Success screen specific styles */
 .success-screen-container {
   width: 100% !important;
