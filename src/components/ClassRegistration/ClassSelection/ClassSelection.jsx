@@ -74,7 +74,13 @@ const ClassSelection = ({
 
   // Process and group classes when classList changes
   useEffect(() => {
+    console.log('DEBUG - ClassSelection - classList raw data:', {
+      count: classList?.length || 0,
+      data: classList
+    });
+    
     if (!classList || !classList.length) {
+      console.log('DEBUG - ClassSelection - No class data to process');
       setFilteredClasses([]);
       setGroupedClasses([]);
       return;
@@ -83,6 +89,13 @@ const ClassSelection = ({
     // Ensure all classes have schedules property
     const classesWithSchedules = classList.map(classItem => {
       if (!classItem.schedules || classItem.schedules.length === 0) {
+        console.log('DEBUG - ClassSelection - Adding schedule to class:', {
+          classCode: classItem[CLASS_FIELDS.CODE],
+          weekday: classItem[CLASS_FIELDS.WEEKDAY] || '(empty)',
+          startTime: classItem[CLASS_FIELDS.START_TIME] || '(empty)',
+          endTime: classItem[CLASS_FIELDS.END_TIME] || '(empty)'
+        });
+        
         return {
           ...classItem,
           schedules: [{
@@ -94,15 +107,32 @@ const ClassSelection = ({
       return classItem;
     });
     
+    console.log('DEBUG - ClassSelection - Classes with schedules:', {
+      count: classesWithSchedules.length,
+      sample: classesWithSchedules.slice(0, 2)
+    });
+    
     setFilteredClasses(classesWithSchedules);
     
     // Group classes by class code
     const grouped = _.groupBy(classesWithSchedules, CLASS_FIELDS.CODE);
     
+    console.log('DEBUG - ClassSelection - Grouped classes:', {
+      uniqueClassCodes: Object.keys(grouped).length,
+      classCodesList: Object.keys(grouped)
+    });
+    
     // Create array of grouped classes
     const transformedData = Object.keys(grouped).map(classCode => {
       const classGroup = grouped[classCode];
       const firstClass = classGroup[0]; // Use first class for common properties
+      
+      console.log(`DEBUG - ClassSelection - Processing class group: ${classCode}`, {
+        classesInGroup: classGroup.length,
+        className: firstClass[CLASS_FIELDS.NAME] || '(no name)',
+        status: firstClass[CLASS_FIELDS.STATUS],
+        registered: firstClass[CLASS_FIELDS.REGISTERED]
+      });
       
       // Collect all schedules from all classes with this code
       const allSchedules = [];
@@ -125,8 +155,21 @@ const ClassSelection = ({
       };
     });
     
+    console.log('DEBUG - ClassSelection - Final transformed data:', {
+      count: transformedData.length,
+      data: transformedData
+    });
+    
     setGroupedClasses(transformedData);
   }, [classList]);
+  
+  // Log whenever groupedClasses changes
+  useEffect(() => {
+    console.log('DEBUG - ClassSelection - groupedClasses state updated:', {
+      count: groupedClasses.length,
+      isEmpty: groupedClasses.length === 0
+    });
+  }, [groupedClasses]);
 
   // Handle search
   const handleSearch = (value) => {
@@ -414,7 +457,7 @@ const ClassSelection = ({
   }
 
   return (
-    <Card style={{ borderRadius: '8px', marginBottom: '20px' }}>
+    <Card style={{ borderRadius: '8px', marginBottom: '20px', maxWidth: '1000px', margin: '0 auto' }}>
       <Title level={5} className="card-title">
         Chọn lớp học phù hợp
       </Title>
@@ -431,17 +474,18 @@ const ClassSelection = ({
         />
       )}
       
-      <div style={{ marginBottom: '20px' }}>
-        <Paragraph>
+      <div style={{ marginBottom: '24px', padding: '0 8px' }}>
+        <Paragraph style={{ fontSize: '16px' }}>
           Dưới đây là các lớp học phù hợp với khóa học và trình độ của bạn. Vui lòng chọn lớp phù hợp với lịch trống của bạn.
         </Paragraph>
       </div>
       
-      <Row gutter={[16, 16]} style={{ marginBottom: '16px' }}>
-        <Col xs={24} md={12}>
+      <Row gutter={[16, 16]} style={{ marginBottom: '24px', padding: '0 8px' }}>
+        <Col xs={24} md={16} lg={12}>
           <Search
             placeholder="Tìm kiếm lớp học..."
             allowClear
+            size="large"
             enterButton={<SearchOutlined />}
             onSearch={handleSearch}
             onChange={(e) => setSearchText(e.target.value)}
@@ -449,7 +493,10 @@ const ClassSelection = ({
         </Col>
       </Row>
       
-      {groupedClasses && groupedClasses.length > 0 ? (
+      {console.log('DEBUG - ClassSelection - Before rendering table:', {
+        hasData: groupedClasses && groupedClasses.length > 0,
+        tableLoading
+      }) || groupedClasses && groupedClasses.length > 0 ? (
         <Table 
           dataSource={groupedClasses} 
           columns={columns} 
@@ -470,12 +517,18 @@ const ClassSelection = ({
               ? "Không tìm thấy lớp học phù hợp với tìm kiếm của bạn" 
               : "Không tìm thấy lớp học phù hợp"
           }
-          style={{ margin: '40px 0' }}
+          style={{ margin: '60px 0', padding: '20px' }}
+          image={Empty.PRESENTED_IMAGE_SIMPLE}
         />
       )}
       
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '20px' }}>
-        <Button onClick={onSwitchToCustomSchedule} disabled={loading}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '30px', padding: '0 8px' }}>
+        <Button 
+          onClick={onSwitchToCustomSchedule} 
+          disabled={loading}
+          size="large"
+          style={{ paddingLeft: '20px', paddingRight: '20px' }}
+        >
           Tôi không thấy lịch học phù hợp
         </Button>
       </div>
@@ -494,6 +547,8 @@ const ClassSelection = ({
         okText="Xác nhận"
         cancelText="Hủy"
         centered
+        width={600}
+        bodyStyle={{ padding: '24px' }}
       >
         {classToConfirm && (
           <div>

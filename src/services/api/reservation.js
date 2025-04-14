@@ -5,6 +5,11 @@ import { TABLE_IDS, FIELD_MAPPINGS, MESSAGES } from '../../config';
 const { RESERVATION } = TABLE_IDS;
 const { RESERVATION: RESERVATION_FIELDS } = FIELD_MAPPINGS;
 
+// Dùng để debug
+console.log('Debug reservation.js - TABLE_IDS:', TABLE_IDS);
+console.log('Debug reservation.js - RESERVATION value:', RESERVATION);
+console.log('Debug reservation.js - RESERVATION_FIELDS:', RESERVATION_FIELDS);
+
 /**
  * Check if a class is already reserved
  * @param {string} classCode - Class code to check
@@ -12,6 +17,10 @@ const { RESERVATION: RESERVATION_FIELDS } = FIELD_MAPPINGS;
  */
 export const checkReservation = async (classCode) => {
   try {
+    console.log('checkReservation - API request details:', {
+      classCode
+    });
+    
     const response = await apiClient.get(`/tables/${RESERVATION}/records`, {
       params: {
         where: `(${RESERVATION_FIELDS.CLASS_CODE},eq,${classCode})`
@@ -32,6 +41,10 @@ export const checkReservation = async (classCode) => {
  */
 export const createReservation = async (reservationData) => {
   try {
+    console.log('createReservation - API request details:', {
+      dataFields: Object.keys(reservationData)
+    });
+    
     const response = await apiClient.post(
       `/tables/${RESERVATION}/records`,
       reservationData
@@ -50,6 +63,10 @@ export const createReservation = async (reservationData) => {
  */
 export const deleteReservation = async (reservationId) => {
   try {
+    console.log('deleteReservation - API request details:', {
+      reservationId
+    });
+    
     await apiClient.delete(`/tables/${RESERVATION}/records/${reservationId}`);
     return true;
   } catch (error) {

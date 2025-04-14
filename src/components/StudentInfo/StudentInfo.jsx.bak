@@ -1200,7 +1200,7 @@ const StudentInfo = () => {
       // Lấy các thông tin cần thiết cho việc điều hướng
       const maLop = student?.[STUDENT_FIELDS.CLASS_CODE];
       const loaiLop = student?.loaiLop;
-      // billItemId đã được khai báo trước đó, không cần khai báo lại
+      const billItemId = student?.[STUDENT_FIELDS.BILL_ITEM_ID];
       
       console.log('Kiểm tra điều kiện chuyển hướng:', { maLop, loaiLop });
       console.log('Sử dụng billItemId cho tham số URL:', billItemId);

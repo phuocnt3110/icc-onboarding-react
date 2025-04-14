@@ -5,6 +5,11 @@ import { TABLE_IDS, FIELD_MAPPINGS, MESSAGES } from '../../config';
 const { STUDENT } = TABLE_IDS;
 const { STUDENT: STUDENT_FIELDS } = FIELD_MAPPINGS;
 
+// Dùng để debug
+console.log('Debug student.js - TABLE_IDS:', TABLE_IDS);
+console.log('Debug student.js - STUDENT value:', STUDENT);
+console.log('Debug student.js - STUDENT_FIELDS:', STUDENT_FIELDS);
+
 /**
  * Fetch student data by BILL_ITEM_ID
  * @param {string} billItemId - BILL_ITEM_ID value
@@ -21,11 +26,18 @@ export const fetchStudentData = async (billItemId) => {
     console.log('Using table:', STUDENT);
     console.log('Using field:', STUDENT_FIELDS.BILL_ITEM_ID);
 
+    console.log('fetchStudentData - API request details:', {
+      billItemId,
+      headers: apiClient.defaults.headers,
+      baseURL: apiClient.defaults.baseURL
+    });
+    
     const response = await apiClient.get(`/tables/${STUDENT}/records`, {
       params: {
         where: `(${STUDENT_FIELDS.BILL_ITEM_ID},eq,${billItemId})`
       }
     });
+    
     
     console.log('API Response:', response.data);
 
@@ -73,20 +85,60 @@ export const fetchStudentData = async (billItemId) => {
  * @returns {Object} - Updated student data
  */
 export const updateStudentClass = async (updateData) => {
-  if (!updateData[STUDENT_FIELDS.BILL_ITEM_ID]) {
+  if (!updateData[FIELD_MAPPINGS.STUDENT.BILL_ITEM_ID]) {
     console.error('Missing BILL_ITEM_ID in update data');
     throw new Error(MESSAGES.MISSING_BILL_ITEM_ID);
   }
 
   try {
-    console.log('Updating student with BILL_ITEM_ID:', updateData[STUDENT_FIELDS.BILL_ITEM_ID]);
-    console.log('Update data:', updateData);
+    console.log('\n=== Starting updateStudentClass ===');
+    console.log('Original update data:', updateData);
+
+    // Đầu tiên, tìm record ID dựa trên BILL_ITEM_ID
+    console.log('\n1. Finding student record...');
+    
+    console.log('updateStudentClass - Finding student details:', {
+      billItemId: updateData[FIELD_MAPPINGS.STUDENT.BILL_ITEM_ID]
+    });
+    
+    const findResponse = await apiClient.get(`/tables/${STUDENT}/records`, {
+      params: {
+        where: `(billItemId,eq,${updateData[FIELD_MAPPINGS.STUDENT.BILL_ITEM_ID]})`,
+        fields: ['Id']
+      }
+    });
+
+    console.log('Find response:', findResponse.data);
+
+    if (!findResponse.data?.list?.length) {
+      console.error('No student record found!');
+      throw new Error('Student record not found');
+    }
+
+    const recordId = findResponse.data.list[0].Id;
+    console.log('Found record ID:', recordId);
+
+    // Chuẩn bị dữ liệu cập nhật theo đúng format của NocoDB v2
+    const mappedUpdateData = {};
+
+    // Map các trường dữ liệu sang tên trường trong database
+    Object.entries(updateData).forEach(([key, value]) => {
+      // Bỏ qua trường Id vì chúng ta sẽ sử dụng nó trong URL
+      if (key !== 'Id') {
+        // Sử dụng tên trường gốc vì API endpoint đã được cấu hình để sử dụng tên trường trong code
+        mappedUpdateData[key] = value;
+      }
+    });
+
+    console.log('\n2. Updating student record...');
+    console.log('Update URL:', `/tables/${STUDENT}/records`);
+    console.log('Mapped update data:', mappedUpdateData);
 
     const response = await apiClient.patch(
       `/tables/${STUDENT}/records`,
       {
-        where: `(${STUDENT_FIELDS.BILL_ITEM_ID},eq,${updateData[STUDENT_FIELDS.BILL_ITEM_ID]})`,
-        data: updateData
+        Id: recordId,
+        ...mappedUpdateData
       }
     );
     
@@ -95,13 +147,21 @@ export const updateStudentClass = async (updateData) => {
       throw new Error('No data returned from update');
     }
     
-    console.log('Update response:', response.data);
+    console.log('\n3. Update successful!');
+    console.log('Response data:', response.data);
     return response.data;
   } catch (error) {
-    console.error('Error updating student class:', error);
+    console.error('\n=== Error in updateStudentClass ===');
+    console.error('Error object:', error);
     if (error.response) {
       console.error('Response data:', error.response.data);
       console.error('Response status:', error.response.status);
+      console.error('Request config:', {
+        method: error.config?.method,
+        url: error.config?.url,
+        data: error.config?.data,
+        headers: error.config?.headers
+      });
     }
     throw new Error(error.message || MESSAGES.UPDATE_FAILED.replace('{error}', error.message));
   }
@@ -119,6 +179,11 @@ export const checkStudentExists = async (billItemId) => {
 
   try {
     console.log('Checking student existence with BILL_ITEM_ID:', billItemId);
+        
+    console.log('checkStudentExists - API request details:', {
+      billItemId
+    });
+    
     const response = await apiClient.get(`/tables/${STUDENT}/records`, {
       params: {
         where: `(${STUDENT_FIELDS.BILL_ITEM_ID},eq,${billItemId})`
@@ -152,10 +217,15 @@ export const updateOrCreateStudentInfo = async (maTheoDoiHV, studentInfoData) =>
   try {
     console.log('Finding or creating Student_info with student ID:', maTheoDoiHV);
     
-    // Kiểm tra xem đã có bản ghi chưa
-    const findResponse = await apiClient.get(`/db/data/v1/${TABLE_IDS.STUDENT_INFO}`, {
+    // Kiểm tra xem đã có bản ghi chưa - sử dụng API v2
+    console.log('updateOrCreateStudentInfo - Finding record details:', {
+      maTheoDoiHV
+    });
+    
+    const findResponse = await apiClient.get(`/tables/${TABLE_IDS.STUDENT_INFO}/records`, {
       params: {
-        where: `(${FIELD_MAPPINGS.STUDENT_INFO.STUDENT_ID},eq,${maTheoDoiHV})`
+        where: `(maTheoDoiHV,eq,${maTheoDoiHV})`,
+        fields: ['Id']
       }
     });
     
@@ -173,8 +243,13 @@ export const updateOrCreateStudentInfo = async (maTheoDoiHV, studentInfoData) =>
       const recordId = existingRecords[0].Id;
       console.log(`Updating existing Student_info record with ID: ${recordId}`);
       
+      console.log('Student_info update details:', {
+        recordId,
+        dataFields: Object.keys(dataToUpdate)
+      });
+      
       const updateResponse = await apiClient.patch(
-        `/db/data/v1/${TABLE_IDS.STUDENT_INFO}/${recordId}`,
+        `/tables/${TABLE_IDS.STUDENT_INFO}/records/${recordId}`,
         dataToUpdate
       );
       
@@ -184,8 +259,12 @@ export const updateOrCreateStudentInfo = async (maTheoDoiHV, studentInfoData) =>
       // Tạo bản ghi mới
       console.log('Creating new Student_info record');
       
+      console.log('Student_info create details:', {
+        dataFields: Object.keys(dataToUpdate)
+      });
+      
       const createResponse = await apiClient.post(
-        `/db/data/v1/${TABLE_IDS.STUDENT_INFO}`,
+        `/tables/${TABLE_IDS.STUDENT_INFO}/records`,
         dataToUpdate
       );
       
@@ -211,28 +290,53 @@ export const updateOrCreateStudentInfo = async (maTheoDoiHV, studentInfoData) =>
  */
 export const updateStudentWithInfo = async (studentData, studentInfoData, maTheoDoiHV) => {
   try {
-    console.log('Updating both Student and Student_info');
+    console.log('=== Starting updateStudentWithInfo ===');
+    console.log('Input studentData:', studentData);
+    console.log('Input studentInfoData:', studentInfoData);
+    console.log('Input maTheoDoiHV:', maTheoDoiHV);
+    console.log('Using STUDENT table:', TABLE_IDS.STUDENT);
+    console.log('Using STUDENT_INFO table:', TABLE_IDS.STUDENT_INFO);
     
     // 1. Cập nhật bảng Student
+    console.log('\n=== Updating Student table ===');
     const studentResult = await updateStudentClass(studentData);
+    console.log('Student update result:', studentResult);
     
     // 2. Cập nhật hoặc tạo bảng Student_info (nếu có maTheoDoiHV)
     let infoResult = null;
     if (maTheoDoiHV) {
+      console.log('\n=== Updating Student_info table ===');
       try {
+        // Kiểm tra dữ liệu trước khi gửi
+        console.log('studentInfoData before update:', studentInfoData);
         infoResult = await updateOrCreateStudentInfo(maTheoDoiHV, studentInfoData);
+        console.log('Student_info update result:', infoResult);
       } catch (infoError) {
-        console.error('Error updating Student_info but continuing:', infoError);
+        console.error('\n=== Error updating Student_info ===');
+        console.error('Error details:', infoError);
+        console.error('Error response:', infoError.response?.data);
         // Không throw lỗi để tiếp tục luồng xử lý
       }
+    } else {
+      console.log('\n=== Skipping Student_info update (no maTheoDoiHV) ===');
     }
+    
+    console.log('\n=== Update process completed ===');
+    console.log('Final results:', { studentResult, infoResult });
     
     return {
       studentResult,
       infoResult
     };
   } catch (error) {
-    console.error('Error in updateStudentWithInfo:', error);
+    console.error('\n=== Critical error in updateStudentWithInfo ===');
+    console.error('Error object:', error);
+    console.error('Error response:', error.response?.data);
+    console.error('Error request:', {
+      method: error.config?.method,
+      url: error.config?.url,
+      data: error.config?.data
+    });
     throw error;
   }
 };

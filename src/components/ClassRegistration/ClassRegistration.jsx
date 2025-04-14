@@ -24,7 +24,7 @@ const ClassRegistration = () => {
     loading: studentLoading, 
     error: studentError,
     updateStudentClass,
-    fetchStudentData
+    loadStudentData: fetchStudentDataFromContext  // Đổi tên để tránh xung đột với hàm cùng tên trong component
   } = useStudent();
   
   const {
@@ -35,7 +35,7 @@ const ClassRegistration = () => {
     currentCase,
     setCurrentCase,
     checkReservation,
-    fetchAvailableClasses,
+    loadClasses,        // Đây là hàm đúng từ context thay vì fetchAvailableClasses
     updateClassRegistration
   } = useClass();
   
@@ -47,18 +47,24 @@ const ClassRegistration = () => {
   const [processingAction, setProcessingAction] = useState(false);
 
   useEffect(() => {
-    // Get ID and direct_success from URL
+    // Get params from URL
     const queryParams = new URLSearchParams(window.location.search);
     const id = queryParams.get('id');
     const directSuccess = queryParams.get('direct_success');
+    const screen = queryParams.get('screen'); // Đọc tham số screen mới
     
-    console.log('URL params:', {id, directSuccess});
+    console.log('URL params:', {id, directSuccess, screen});
     
     if (!id) {
       setErrorMessage(MESSAGES.NO_ID_IN_URL);
       setCurrentScreen('error');
       return;
     }
+    
+    // Xử lý theo thứ tự ưu tiên
+    // 1. direct_success (cao nhất)
+    // 2. screen parameter (trung bình)
+    // 3. loadStudentData thông thường (thấp nhất)
     
     // Nếu có tham số direct_success=true, chuyển thẳng đến Success Screen
     if (directSuccess === 'true') {
@@ -68,7 +74,7 @@ const ClassRegistration = () => {
       if (!studentData) {
         (async () => {
           try {
-            await fetchStudentData(id);
+            await fetchStudentDataFromContext(id);
           } catch (error) {
             console.error('Lỗi khi tải dữ liệu học viên:', error);
             setErrorMessage(error.message || 'Không thể tải thông tin học viên');
@@ -76,9 +82,49 @@ const ClassRegistration = () => {
           }
         })();
       }
-    } else {
-      // Flow bình thường
-      console.log('Không có direct_success hoặc không bằng true, thực hiện flow bình thường');
+    } 
+    // Xử lý tham số screen từ StudentInfo.jsx
+    else if (screen) {
+      console.log('Tìm thấy tham số screen:', screen);
+      
+      // Đơn giản hóa flow sử dụng với tham số screen
+      (async () => {
+        try {
+          // Đặt màn hình loading trước
+          setCurrentScreen('loading');
+          
+          // 1. Fetch dữ liệu học viên trước
+          console.log('Fetching student data for ID:', id);
+          // Sử dụng hàm được import từ context đã đổi tên để tránh xung đột
+          console.log('Calling fetchStudentDataFromContext from context');
+          const studentResponse = await fetchStudentDataFromContext(id);
+          console.log('Fetched student data using loadStudentData');
+          
+          // 2. Xử lý theo tham số screen
+          if (screen === 'reservation') {
+            console.log('Chuyển đến màn hình reservation theo tham số');
+            setCurrentScreen('reservation');
+          }
+          else if (screen === 'customSchedule') {
+            console.log('Chuyển đến màn hình customSchedule theo tham số');
+            setCurrentScreen('customSchedule');
+          }
+          else if (screen === 'selection') {
+            console.log('Chuyển đến màn hình danh sách lớp theo tham số');
+            // Load danh sách lớp sử dụng hàm loadClasses từ context
+            await loadClasses();
+            setCurrentScreen('classList');
+          }
+        } catch (error) {
+          console.error('Lỗi khi xử lý tham số screen:', error);
+          setErrorMessage(error.message || 'Không thể tải thông tin học viên');
+          setCurrentScreen('error');
+        }
+      })();
+    } 
+    // Flow bình thường - không có tham số đặc biệt
+    else {
+      console.log('Không có tham số đặc biệt, thực hiện flow bình thường');
       
       // Thêm async IIFE để xử lý Promise từ loadStudentData
       (async () => {
@@ -96,6 +142,7 @@ const ClassRegistration = () => {
   /**
    * Main function to load student data and determine the case
    * @param {string} id - Bill Item ID from URL
+   * @returns {Object} - Student data loaded from API
    */
   const loadStudentData = async (id) => {
     try {
@@ -110,7 +157,7 @@ const ClassRegistration = () => {
         setCurrentScreen('loading');
         
         // Gọi hàm fetch và đợi phản hồi trực tiếp
-        const fetchedStudent = await fetchStudentData(id);
+        const fetchedStudent = await fetchStudentDataFromContext(id);
         
         // Kiểm tra dữ liệu trả về trực tiếp từ hàm fetch
         if (!fetchedStudent) {
@@ -226,7 +273,7 @@ const ClassRegistration = () => {
         }
         
         // Fetch classes using context
-        await fetchAvailableClasses({
+        await loadClasses({
           sanPham: data[STUDENT_FIELDS.PRODUCT] || null,
           sizeLop: data[STUDENT_FIELDS.CLASS_SIZE] || null,
           loaiGv: data[STUDENT_FIELDS.TEACHER_TYPE] || null,
@@ -455,7 +502,8 @@ const ClassRegistration = () => {
     }
     
     try {
-      await fetchAvailableClasses({
+      // Sử dụng loadClasses từ context thay vì fetchAvailableClasses trực tiếp
+      await loadClasses({
         sanPham: studentData[STUDENT_FIELDS.PRODUCT],
         sizeLop: studentData[STUDENT_FIELDS.CLASS_SIZE],
         loaiGv: studentData[STUDENT_FIELDS.TEACHER_TYPE],

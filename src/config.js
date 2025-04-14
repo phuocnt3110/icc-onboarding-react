@@ -92,7 +92,7 @@ export const API_CONFIG = {
     // Student Info table field mappings
     STUDENT_INFO: {
       ID: "Id",
-      STUDENT_ID: "maHocVien",
+      STUDENT_ID: "maTheoDoiHV",
       SCHEDULE_BITMAP: "scheduleBitmap",
       
       // Thêm các trường mới
