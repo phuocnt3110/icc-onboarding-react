@@ -3,9 +3,6 @@
 // Danh sách ngày trong tuần
 export const WEEKDAYS = ['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'Chủ nhật'];
 
-// Danh sách ngày trong tuần - rút gọn cho giao diện nhỏ
-export const WEEKDAYS_SHORT = ['2', '3', '4', '5', '6', '7', 'CN'];
-
 // Thiết lập giờ
 export const TIME_SETTINGS = {
   startHour: 7,    // 7 AM
@@ -25,14 +22,6 @@ export const TIME_FILTERS = [
   { label: 'Buổi sáng', value: 'morning' },
   { label: 'Buổi chiều', value: 'afternoon' },
   { label: 'Buổi tối', value: 'evening' },
-];
-
-// Bộ lọc thời gian rút gọn cho giao diện nhỏ
-export const TIME_FILTERS_SHORT = [
-  { label: 'A', value: 'all' },      // Tất cả - All
-  { label: 'S', value: 'morning' },    // Sáng
-  { label: 'C', value: 'afternoon' },  // Chiều
-  { label: 'T', value: 'evening' },    // Tối
 ];
 
 // Phạm vi thời gian cho mỗi bộ lọc

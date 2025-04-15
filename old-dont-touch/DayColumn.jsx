@@ -58,26 +58,19 @@ const DayColumn = ({
   
   // Định dạng hiển thị khung giờ để rút gọn và dễ đọc
   const formatTimeDisplay = (startTime, endTime) => {
-    // Phân tách thời gian
-    const [startHour, startMinute] = startTime.split(':');
-    const [endHour, endMinute] = endTime.split(':');
+    // Trường hợp muốn hiển thị đầy đủ
+    // return `${startTime} - ${endTime}`;
     
-    // Nếu giờ giống nhau nhưng phút khác nhau, hiển thị đầy đủ
-    if (startHour === endHour && startMinute !== endMinute) {
-      return `${startHour}:${startMinute} - ${endHour}:${endMinute}`;
-    }
-    
-    // Nếu giờ khác nhau, hiển thị giờ kèm phút nếu phút khác 0
-    const startDisplay = startMinute === '00' ? `${startHour}h` : `${startHour}:${startMinute}`;
-    const endDisplay = endMinute === '00' ? `${endHour}h` : `${endHour}:${endMinute}`;
-    
-    return `${startDisplay} - ${endDisplay}`;
+    // Rút gọn giờ để hiển thị tốt hơn
+    const start = startTime.split(':')[0];
+    const end = endTime.split(':')[0];
+    return `${start}h - ${end}h`;
   };
   
   return (
     <div className="day-column">
       <div className="day-header">
-        <Text strong>{day}</Text>
+        <Text strong>{isMobile ? day.slice(0, 3) : day}</Text>
       </div>
       <div 
         className="day-grid"

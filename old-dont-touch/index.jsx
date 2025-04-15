@@ -4,35 +4,22 @@ import {
   Typography, 
   Button, 
   Divider, 
-  Table, 
-  Tag, 
-  Space, 
   Alert, 
-  Empty, 
-  Skeleton,
-  Input,
-  Row,
-  Col,
+  Space, 
   Tooltip,
-  Modal,
+  Skeleton,
+  FloatButton,
   message,
-  Spin,
-  FloatButton
+  Modal
 } from 'antd';
 import { 
-  CalendarOutlined, 
-  ClockCircleOutlined, 
-  UserOutlined, 
-  CheckCircleOutlined,
-  SearchOutlined,
   ExclamationCircleOutlined,
-  QuestionCircleOutlined,
-  TeamOutlined,
-  ReloadOutlined,
   InfoCircleOutlined,
+  CalendarOutlined,
+  ReloadOutlined,
   MenuOutlined
 } from '@ant-design/icons';
-import { FIELD_MAPPINGS, MESSAGES } from '../../../config';
+import { FIELD_MAPPINGS } from '../../../config';
 import ScheduleGrid from './ScheduleGrid';
 import SelectedSlots from './SelectedSlots';
 import MobileDrawer from './MobileDrawer';
@@ -44,6 +31,7 @@ import {
   hasSelectedSlots as checkHasSelectedSlots,
   formatSchedulesForSubmit,
   positionToSlot,
+  // New utility functions
   optimizeBitmap,
   prioritizeSchedules,
   createCompactScheduleString,
@@ -53,9 +41,10 @@ import {
   updateStudentSchedule, 
   saveScheduleBitmap 
 } from './api';
-import { updateClassRegistration, validateScheduleSelection } from '../../../services/api/class';
-import '../../../styles/custom-schedule.css';
-import '../../../styles/index.css';
+// Import from parent directory for updateStudentClass
+import { updateStudentClass } from '../api';
+import './CustomScheduleStyles.css';
+import './LayoutAdjustments.css';
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -300,7 +289,13 @@ const CustomSchedule = ({
         }
         
         // Update student record with full schedule
-        await updateStudentSchedule(studentId, scheduleText, "HV Chọn lịch ngoài");
+        await updateStudentClass(
+          studentId, 
+          {
+            [STUDENT_FIELDS.SCHEDULE]: scheduleText,
+            [STUDENT_FIELDS.STATUS]: "HV Chọn lịch ngoài"
+          }
+        );
         
         console.log('Successfully updated student record with schedule');
         
@@ -383,6 +378,17 @@ const CustomSchedule = ({
         <Title level={5} className="card-title" style={{ marginBottom: 0 }}>
           Đăng ký khung giờ học
         </Title>
+        
+        {!isMobile && (
+          <Button 
+            icon={<ReloadOutlined />}
+            onClick={showResetConfirm}
+            disabled={!hasSelectedSlots}
+            size="small"
+          >
+            Thiết lập lại
+          </Button>
+        )}
       </div>
       <Divider />
       
@@ -420,9 +426,18 @@ const CustomSchedule = ({
       
       <Card 
         type="inner"
-        style={{ width: '100%', margin: '0 auto', maxWidth: '100%' }}
-
-        bodyStyle={{ padding: '12px', width: '100%', boxSizing: 'border-box', margin: '0 auto' }}
+        extra={
+          isMobile && (
+            <Button 
+              icon={<MenuOutlined />}
+              onClick={() => setDrawerVisible(true)}
+              size="small"
+            >
+              Khung giờ đã chọn
+            </Button>
+          )
+        }
+        bodyStyle={{ padding: '12px 0', width: '100%' }}
       >
         <ScheduleGrid 
           schedule={schedule}
@@ -435,10 +450,6 @@ const CustomSchedule = ({
           onMouseDown={handleMouseDown}
           onToggleCell={toggleCell}
           isMobile={isMobile}
-          onReset={showResetConfirm}
-          onViewSelected={() => setDrawerVisible(true)}
-          hasSelectedSlots={hasSelectedSlots}
-          selectedCount={groupedSchedule.length}
         />
       </Card>
       
@@ -460,7 +471,16 @@ const CustomSchedule = ({
         onReset={showResetConfirm}
       />
       
-      {/* Đã thay thế FloatButton bằng nút trong thanh công cụ */}
+      {/* Float button for mobile */}
+      {isMobile && hasSelectedSlots && !drawerVisible && (
+        <FloatButton
+          type="primary"
+          icon={<CalendarOutlined />}
+          onClick={() => setDrawerVisible(true)}
+          style={{ right: 24, bottom: 74 }}
+          tooltip="Khung giờ đã chọn"
+        />
+      )}
       
       {/* Confirm dialog */}
       <ConfirmDialog
