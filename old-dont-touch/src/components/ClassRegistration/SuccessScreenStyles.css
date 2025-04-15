@@ -1,0 +1,81 @@
+/* Điều chỉnh thêm cho SuccessScreenStyles.css */
+
+/* Tăng chiều dài tổng thể của container */
+.success-screen-container {
+    max-width: 900px !important; /* Tăng từ 800px lên 900px */
+  }
+  
+  /* Điều chỉnh cho tiêu đề các khối để tránh xuống dòng */
+  .success-screen-container .column-header {
+    min-width: 200px;
+    white-space: nowrap;  /* Ngăn title xuống dòng */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 15px;  /* Tăng kích thước font */
+    padding: 12px 20px;  /* Tăng padding ngang */
+  }
+  
+  /* Tăng chiều rộng cho nhãn trong các hàng thông tin */
+  .success-screen-container .info-label {
+    min-width: 140px;
+    white-space: nowrap;
+    padding-right: 15px;
+  }
+  
+  /* Điều chỉnh các cột trong layout để có nhiều không gian hơn */
+  .success-screen-container .ant-col-8 {
+    min-width: 180px;
+  }
+  
+  /* Tăng không gian cho weekday-cell trong lịch học */
+  .success-screen-container .weekday-cell {
+    min-width: 100px;
+    width: 120px;
+    white-space: nowrap;
+  }
+  
+  /* Responsive adjustments */
+  @media (min-width: 992px) {
+    .success-screen-container .column-header {
+      font-size: 16px;
+      padding: 12px 24px;
+    }
+  }
+  
+  @media (max-width: 768px) {
+    .success-screen-container .column-header {
+      min-width: auto;
+      font-size: 14px;
+    }
+    
+    .success-screen-container .info-label {
+      min-width: 100px;
+    }
+    
+    /* Trên mobile, cho phép xuống dòng khi cần thiết */
+    .success-screen-container .ant-col-xs-24 {
+      white-space: normal;
+    }
+  }
+
+  .success-screen-container .ant-result {
+  padding: 20px 0 0;
+  margin-bottom: 0 !important; /* Loại bỏ margin-bottom mặc định */
+}
+
+/* Giảm margin của phần subtitle */
+.success-screen-container .ant-result-subtitle {
+  margin-top: 4px !important;
+  margin-bottom: 10px !important;
+}
+
+/* Điều chỉnh tiêu đề "THÔNG TIN LỚP HỌC CỦA BẠN" */
+.success-screen-container h4.ant-typography {
+  margin-top: 50px !important; /* Giảm margin-top */
+  margin-bottom: 16px !important;
+}
+
+/* Đảm bảo container thông tin không có margin top thừa */
+.success-screen-container .class-info-container {
+  margin-top: 10px !important;
+}
