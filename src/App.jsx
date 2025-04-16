@@ -6,6 +6,8 @@ import StudentInfo from './components/StudentInfo/StudentInfo';
 import ClassRegistration from './components/ClassRegistration/ClassRegistration';
 import { StudentProvider } from './contexts/StudentContext';
 import { ClassProvider } from './contexts/ClassContext';
+import { ProgressStepProvider } from './contexts/ProgressStepContext';
+import ProgressSteps from './components/common/ProgressSteps.jsx';
 import { ROUTES } from './config';
 import './index.css';
 
@@ -59,8 +61,11 @@ const BackgroundImage = () => {
 };
 
 const App = () => {
-  // Determine which step we're on based on the URL
-  const isStepTwo = window.location.pathname.includes('step-two');
+  // Định nghĩa các bước trong quy trình
+  const steps = [
+    { label: 'Xác nhận thông tin' },
+    { label: 'Đặt lịch học' }
+  ];
   
   return (
     <>
@@ -71,79 +76,71 @@ const App = () => {
         {/* Wrap entire app with context providers */}
         <StudentProvider>
           <ClassProvider>
-            <Router>
-              <Layout style={{ minHeight: '100vh', background: 'transparent' }}>
-                {/* Fixed Header */}
-                <Header style={{ 
-                  background: '#fff', 
-                  height: '64px',
-                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
-                  position: 'fixed',
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  zIndex: 100,
-                  display: 'flex',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  padding: '0',
-                }}>
-                  <img 
-                    src="https://www.icanconnect.vn/_next/image?url=https%3A%2F%2Fs3.icankid.io%2Fmedia%2Fweb%2Fican-connect%2FICanConnect-logo.png&w=256&q=75" 
-                    alt="ICANCONNECT Logo" 
-                    style={{ height: '45px' }}
-                  />
-                </Header>
-                
-                {/* Content with added top padding to prevent overlap with fixed header */}
-                <Content style={{ 
-                  padding: '20px 20px', // Tăng padding ngang để có khoảng cách mềm hơn với rìa màn hình
-                  background: 'transparent',
-                  marginTop: '64px',
-                  marginBottom: '50px',
-                  position: 'relative',
-                  zIndex: 1,
-                  width: '100%',
-                  maxWidth: '100%', // Đảm bảo sử dụng toàn bộ không gian ngang
-                }}>
-                  {/* Horizontal Progress Steps */}
-                  <div className="progress-steps">
-                    <div className={`step ${!isStepTwo ? 'active' : 'completed'}`}>
-                      <div className="circle">1</div>
-                      <div>Xác nhận thông tin</div>
-                    </div>
-                    <div className="divider"></div>
-                    <div className={`step ${isStepTwo ? 'active' : ''}`}>
-                      <div className="circle">2</div>
-                      <div>Đặt lịch học</div>
-                    </div>
-                  </div>
+            <ProgressStepProvider>
+              <Router>
+                <Layout style={{ minHeight: '100vh', background: 'transparent' }}>
+                  {/* Fixed Header */}
+                  <Header style={{ 
+                    background: '#fff', 
+                    height: '64px',
+                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    zIndex: 100,
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    padding: '0',
+                  }}>
+                    <img 
+                      src="https://www.icanconnect.vn/_next/image?url=https%3A%2F%2Fs3.icankid.io%2Fmedia%2Fweb%2Fican-connect%2FICanConnect-logo.png&w=256&q=75" 
+                      alt="ICANCONNECT Logo" 
+                      style={{ height: '45px' }}
+                    />
+                  </Header>
                   
-                  <Routes>
-                    <Route path="/step-one" element={<StudentInfo />} />
-                    <Route path="/step-two" element={<ClassRegistration />} />
-                    <Route path="/" element={<Navigate to="/step-one" />} />
-                    <Route path="*" element={<Navigate to="/step-one" />} />
-                  </Routes>
-                </Content>
-                
-                {/* Fixed Footer */}
-                <Footer style={{ 
-                  textAlign: 'center',
-                  background: '#001529',
-                  color: 'rgba(255, 255, 255, 0.7)',
-                  position: 'fixed',
-                  bottom: 0,
-                  left: 0,
-                  right: 0,
-                  zIndex: 100,
-                  padding: '15px 0',
-                  height: '50px',
-                }}>
-                  <span>ICANCONNECT © 2023. All rights reserved.</span>
-                </Footer>
-              </Layout>
-            </Router>
+                  {/* Content with added top padding to prevent overlap with fixed header */}
+                  <Content style={{ 
+                    padding: '20px 20px', // Tăng padding ngang để có khoảng cách mềm hơn với rìa màn hình
+                    background: 'transparent',
+                    marginTop: '64px',
+                    marginBottom: '50px',
+                    position: 'relative',
+                    zIndex: 1,
+                    width: '100%',
+                    maxWidth: '100%', // Đảm bảo sử dụng toàn bộ không gian ngang
+                  }}>
+                    {/* Horizontal Progress Steps */}
+                    <ProgressSteps steps={steps} />
+                    
+                    <Routes>
+                      <Route path="/step-one" element={<StudentInfo />} />
+                      <Route path="/step-two" element={<ClassRegistration />} />
+                      <Route path="/" element={<Navigate to="/step-one" />} />
+                      <Route path="*" element={<Navigate to="/step-one" />} />
+                    </Routes>
+                  </Content>
+                  
+                  {/* Fixed Footer */}
+                  <Footer style={{ 
+                    textAlign: 'center',
+                    background: '#001529',
+                    color: 'rgba(255, 255, 255, 0.7)',
+                    position: 'fixed',
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    zIndex: 100,
+                    padding: '15px 0',
+                    height: '50px',
+                  }}>
+                    <span>ICANCONNECT 2023. All rights reserved.</span>
+                  </Footer>
+                </Layout>
+              </Router>
+            </ProgressStepProvider>
           </ClassProvider>
         </StudentProvider>
       </ConfigProvider>

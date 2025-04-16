@@ -4,15 +4,15 @@ import moment from 'moment';
 import { useNavigate } from 'react-router-dom';
 import { EditOutlined, CheckOutlined, CloseOutlined, ReloadOutlined, EnvironmentOutlined, BugOutlined } from '@ant-design/icons';
 import { useStudent } from '../../contexts/StudentContext';
+import { useProgressStep } from '../../contexts/ProgressStepContext';
 import { FIELD_MAPPINGS, MESSAGES, ROUTES, THEME, SECTION_TITLES, COUNTRY_CODES, VIETNAM_PROVINCES, GUARDIAN_RELATIONS, TABLE_IDS } from '../../config';
 import { ProvinceSelector } from '../common';
 import StudentInfoSkeleton from './StudentInfoSkeleton';
+import apiClient from '../../services/api/client';
+import { updateStudentClass } from '../../services/api/student';
 import '../../styles/student-info.css';
 import '../../styles/index.css';
-import apiClient from '../../services/api/client';
-import { fetchStudentData, updateStudentClass, updateOrCreateStudentInfo } from '../../services/api/student';
 
-const { Title, Text } = Typography;
 const { Option } = Select;
 
 // PhoneInput component for phone numbers
@@ -255,6 +255,9 @@ const StudentInfo = () => {
     updateStudent,
     loadStudentData
   } = useStudent();
+
+  // Access progress step context
+  const { goToStep, completeStep } = useProgressStep();
 
   // Combine loading states
   const isDataLoading = studentLoading || isLoading;
@@ -870,6 +873,9 @@ const StudentInfo = () => {
           targetUrl += `?screen=selection&id=${billItemId}`;
         }
         
+        // Cập nhật thanh trạng thái trước khi chuyển trang
+        completeStep(1);
+        goToStep(2);
         navigate(targetUrl);
         return;
       }
@@ -923,6 +929,9 @@ const StudentInfo = () => {
         }
         
         console.log('Chuyển hướng khi không có thay đổi đến:', targetUrl);
+        // Cập nhật thanh trạng thái trước khi chuyển trang
+        completeStep(1);
+        goToStep(2);
         navigate(targetUrl); // Chuyển trang luôn
         return;
       }
@@ -1200,10 +1209,10 @@ const StudentInfo = () => {
       // Lấy các thông tin cần thiết cho việc điều hướng
       const maLop = student?.[STUDENT_FIELDS.CLASS_CODE];
       const loaiLop = student?.loaiLop;
-      // billItemId đã được khai báo trước đó, không cần khai báo lại
+      // billItemId đã được khai báo trong hàm logUpdateData
       
       console.log('Kiểm tra điều kiện chuyển hướng:', { maLop, loaiLop });
-      console.log('Sử dụng billItemId cho tham số URL:', billItemId);
+      console.log('Sử dụng billItemId cho tham số URL:', student?.[STUDENT_FIELDS.BILL_ITEM_ID]);
       
       // Xây dựng url với query params phù hợp
       let targetUrl = ROUTES.STEP_TWO;
@@ -1223,6 +1232,9 @@ const StudentInfo = () => {
       }
       
       console.log('Chuyển hướng đến:', targetUrl);
+      // Cập nhật thanh trạng thái trước khi chuyển trang
+      completeStep(1);
+      goToStep(2);
       navigate(targetUrl);
     } catch (error) {
       // Xử lý lỗi như cũ
@@ -2298,7 +2310,14 @@ const StudentInfo = () => {
       </Card>
 
       <div className="form-actions">
-        {/* Đã xóa nút Kiểm tra dữ liệu */}
+        <Button 
+          type="default"
+          onClick={logUpdateData}
+          icon={<BugOutlined />}
+          style={{ marginRight: '10px' }}
+        >
+          Kiểm tra dữ liệu
+        </Button>
         <Button 
           type="primary" 
           onClick={showConfirmationModal}

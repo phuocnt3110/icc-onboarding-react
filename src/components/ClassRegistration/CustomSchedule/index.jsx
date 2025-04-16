@@ -84,7 +84,8 @@ const CustomSchedule = ({
   onSubmit,
   onCancel,
   loading = false,
-  fromCase2 = false
+  fromCase2 = false,
+  showWarning = false
 }) => {
   // States
   const [schedule, setSchedule] = useState(createEmptySchedule());
@@ -418,14 +419,13 @@ const CustomSchedule = ({
       </div>
       <Divider />
       
-      {fromCase2 && (
+      {/* CASE 1a: Chỉ hiển thị cảnh báo cho Case 1a */}
+      {showWarning && student?.[STUDENT_FIELDS.ASSIGNED_CLASS] && (
         <Alert
-          message="Cảnh báo"
-          description={`Bạn đã giữ chỗ trước đó, nhưng chúng tôi không tìm thấy ${student?.[STUDENT_FIELDS.CLASS_RESERVATION] || 'mã lớp'} của bạn. Vui lòng liên hệ với tư vấn viên của bạn, hoặc tiếp tục chọn lịch học theo ý muốn dưới đây.`}
+          message={`Bạn đã được chỉ định lớp ${student[STUDENT_FIELDS.ASSIGNED_CLASS]} nhưng mã giữ chỗ không còn hiệu lực. Vui lòng chọn lịch mới.`}
           type="warning"
           showIcon
-          icon={<ExclamationCircleOutlined />}
-          style={{ marginBottom: '20px' }}
+          style={{ marginBottom: '16px' }}
         />
       )}
       

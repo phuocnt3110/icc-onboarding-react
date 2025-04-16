@@ -5,6 +5,7 @@ import {
   updateClassRegistration,
   checkClassAvailability
 } from '../services/api/class';
+import { checkReservation } from '../services/api/reservation';
 import { MESSAGES, FIELD_MAPPINGS } from '../config';
 
 // Extract values from config
@@ -27,6 +28,8 @@ export const ClassProvider = ({ children }) => {
   const [classList, setClassList] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [currentCase, setCurrentCase] = useState(null);
+  const [reservationData, setReservationData] = useState(null);
   const { studentData } = useStudent();
 
   // Load available classes
@@ -85,8 +88,13 @@ export const ClassProvider = ({ children }) => {
     <ClassContext.Provider 
       value={{ 
         classList, 
+        reservationData,
+        setReservationData, // Thêm setReservationData để cập nhật reservation data
         loading, 
         error, 
+        currentCase,
+        setCurrentCase,
+        checkReservation, // Thêm hàm checkReservation vào đây
         loadClasses, 
         updateRegistration,
         clearClassData

@@ -47,6 +47,7 @@ export const API_CONFIG = {
       SESSIONS: "soBuoi",           // không thay đổi
       PRICE: "tongTien",            // không thay đổi
       CLASS_CODE: "maLop",      // thay đổi từ maLop
+      ASSIGNED_CLASS: "maLopBanGiao", // Thêm mapping cho mã lớp bàn giao
       SCHEDULE: "lichHoc",          // không thay đổi
       START_DATE: "ngayKhaiGiangDuKien", // không thay đổi
       STATUS: "trangThaiChonLop",   // không thay đổi
@@ -86,7 +87,9 @@ export const API_CONFIG = {
       ID: "Id",
       ORDER_CODE: "maGiuCho",    // thay đổi từ ma_order
       CLASS_CODE: "maLop",       // thay đổi từ ma_lop
-      IS_VALID: "checkHopLe"     // không thay đổi
+      IS_VALID: "checkHopLe",
+      SCHEDULE: "lichHoc",
+      START_DATE: "ngayKhaiGiangDuKien",
     },
     
     // Student Info table field mappings

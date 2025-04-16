@@ -20,14 +20,18 @@ export const fetchAvailableClasses = async (filters) => {
       sảnPhẩm: filters?.sanPham || 'Không có thông tin',
       loạiLớp: filters?.loaiLop || 'Không có thông tin',
       loạiGV: filters?.loaiGV || 'Không có thông tin',
-      trìnhDo: filters?.trinhDo || 'Không có thông tin'
+      trìnhDo: filters?.trinhDo || 'Không có thông tin',
+      soSlotConLai: '> 0' // Thêm thông tin về điều kiện soSlotConLai
     });
     
     // Đảm bảo đường dẫn API đúng với NocoDB v2
     const url = `/tables/${CLASS}/records`;
     
     // Xây dựng câu lệnh where kết hợp tất cả các điều kiện với AND
-    let whereConditions = [`(${CLASS_FIELDS.STATUS},eq,Dự kiến khai giảng)`];
+    let whereConditions = [
+      `(${CLASS_FIELDS.STATUS},eq,Dự kiến khai giảng)`,
+      `(${CLASS_FIELDS.SLOTS_LEFT},gt,0)` // Thêm điều kiện soSlotConLai > 0
+    ];
     
     // Thêm các điều kiện lọc theo các trường
     if (filters?.sanPham) {

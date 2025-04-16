@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { 
   Card, 
   Typography, 
@@ -19,6 +19,7 @@ import {
   UserOutlined
 } from '@ant-design/icons';
 import { FIELD_MAPPINGS } from '../../config';
+import { useProgressStep } from '../../contexts/ProgressStepContext';
 import './SuccessScreenStyles.css';
 
 const { Title, Text } = Typography;
@@ -39,6 +40,14 @@ const SuccessScreen = ({
   onComplete,
   loading = false
 }) => {
+  // Use the progress step context
+  const { completeStep, goToStep } = useProgressStep();
+  
+  // When success screen is shown, mark step 2 as completed
+  useEffect(() => {
+    completeStep(2);  // Mark step 2 as completed (turns green)
+    goToStep(3);     // Set step 3 as active
+  }, [completeStep, goToStep]);
   // Get appropriate course type description based on product and status
   const getCourseTypeLabel = () => {
     if (!student) return 'LỚP HỌC';

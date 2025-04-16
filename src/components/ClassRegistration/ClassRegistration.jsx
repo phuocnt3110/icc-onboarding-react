@@ -8,10 +8,13 @@ import ReservationConfirmation from '../Confirmation/ReservationConfirmation';
 import ClassSelection from './ClassSelection/ClassSelection';
 import CustomSchedule from './CustomSchedule/index';
 import SuccessScreen from '../Confirmation/SuccessScreen';
-import { MESSAGES, FIELD_MAPPINGS, ROUTES } from '../../config';
+import { MESSAGES, FIELD_MAPPINGS, ROUTES, TABLE_IDS } from '../../config';
+import { checkClassAvailability } from '../../services/api/class';
+import apiClient from '../../services/api/client';
 
-// Extract field mappings for easier access
+// Extract field mappings and table IDs for easier access
 const { STUDENT: STUDENT_FIELDS } = FIELD_MAPPINGS;
+const { CLASS } = TABLE_IDS;
 
 /**
  * Main component for class registration process
@@ -38,6 +41,7 @@ const ClassRegistration = () => {
   const {
     classList,
     reservationData,
+    setReservationData,  // Thêm setReservationData để cập nhật dữ liệu reservation
     loading: classLoading,
     error: classError,
     currentCase,
@@ -53,6 +57,9 @@ const ClassRegistration = () => {
   const [currentScreen, setCurrentScreen] = useState('loading'); // loading, error, reservation, classList, customSchedule, success
   const [errorMessage, setErrorMessage] = useState('');
   const [processingAction, setProcessingAction] = useState(false);
+  
+  // Thêm state cho modal thông báo lớp đã hết chỗ
+  const [classFullModalVisible, setClassFullModalVisible] = useState(false);
 
   // Đồng bộ URL với màn hình hiển thị thực tế để dễ debug
   useEffect(() => {
@@ -135,29 +142,59 @@ const ClassRegistration = () => {
       // CASE NEW: student.trangThaiChonLop = "HV Chưa chọn lịch"
       console.log('🎯 Case NEW: trangThaiChonLop = "HV Chưa chọn lịch"');
       
-      // Kiểm tra điều kiện cho Case 1 & Case 1a
-      if (fetchedStudent[STUDENT_FIELDS.ASSIGNED_CLASS]) {
+      // Debug thông tin mapping field
+      console.log('🔍 DEBUG - STUDENT_FIELDS.ASSIGNED_CLASS =', STUDENT_FIELDS.ASSIGNED_CLASS);
+      console.log('🔍 DEBUG - Giá trị maLopBanGiao trực tiếp =', fetchedStudent.maLopBanGiao);
+      console.log('🔍 DEBUG - Giá trị mapped =', fetchedStudent[STUDENT_FIELDS.ASSIGNED_CLASS]);
+      
+      // Kiểm tra điều kiện cho Case 1 & Case 1a - cải thiện kiểm tra giá trị
+      if (fetchedStudent[STUDENT_FIELDS.ASSIGNED_CLASS] && fetchedStudent[STUDENT_FIELDS.ASSIGNED_CLASS].trim() !== '') {
         console.log('👉 Student có maLopBanGiao:', fetchedStudent[STUDENT_FIELDS.ASSIGNED_CLASS]);
         
-        // Kiểm tra reservation với maLopBanGiao
-        const foundReservation = await checkReservation(fetchedStudent[STUDENT_FIELDS.ASSIGNED_CLASS]);
+        // Kiểm tra reservation với maLopBanGiao (truyền vào hàm với tên handoverClassCode)
+        const handoverClassCode = fetchedStudent[STUDENT_FIELDS.ASSIGNED_CLASS];
+        const reservationResult = await checkReservation(handoverClassCode);
+        
+        // Lấy thông tin reservation và trạng thái tìm thấy từ kết quả mới
+        const { found: foundReservation, data: reservationData } = reservationResult;
+        
+        console.log('🔍 DEBUG - Kết quả kiểm tra reservation:', foundReservation ? 'Tìm thấy reservation' : 'Không tìm thấy reservation');
+        console.log('🔍 DEBUG - Dữ liệu reservation:', reservationData);
+        console.log('🔍 DEBUG - Đã truyền mã lớp bàn giao:', handoverClassCode);
         
         // Case 1: maLopBanGiao có giá trị và tìm thấy reservation hợp lệ
-        if (foundReservation && currentCase === 1) {
-          console.log('🎯 Case 1: Tìm thấy reservation hợp lệ với mã lớp bàn giao');
+        if (foundReservation) {
+          console.log('🏁 Case 1: Tìm thấy reservation hợp lệ với mã lớp bàn giao');
+          setCurrentCase(1);
+          
+          // Lưu trữ dữ liệu reservation để hiển thị trong màn hình ReservationConfirmation
+          setReservationData(reservationData);
+          
+          console.log('♻️ Chuyển đến màn hình reservation...');
           setCurrentScreen('reservation');
           return fetchedStudent;
         }
         
         // Case 1a: maLopBanGiao có giá trị nhưng không tìm thấy reservation hợp lệ
-        console.log('🎯 Case 1a: Không tìm thấy reservation hợp lệ với mã lớp bàn giao');
+        console.log('🚩 Case 1a: Không tìm thấy reservation hợp lệ với mã lớp bàn giao');
+        setCurrentCase('1a');
+        
+        // Chuẩn bị nội dung thông báo cảnh báo về mã giữ chỗ không hợp lệ
+        const warningMessage = `Bạn đã được chỉ định vào lớp ${fetchedStudent[STUDENT_FIELDS.ASSIGNED_CLASS]} nhưng mã giữ chỗ không còn hiệu lực. Vui lòng chọn lịch học mới.`;
+        
+        // Hiển thị thông báo cảnh báo
+        setTimeout(() => {
+          message.warning(warningMessage, 8); // Hiển thị trong 8 giây
+        }, 500); // Đợi 500ms sau khi màn hình render xong
         
         // Xác định màn hình dựa trên loại lớp
         if (fetchedStudent[STUDENT_FIELDS.CLASS_SIZE] === '1:1') {
           console.log('👉 Student có loại lớp 1:1, chuyển đến màn hình customSchedule');
+          console.log('♻️ Chuyển đến màn hình customSchedule...');
           setCurrentScreen('customSchedule');
         } else {
-          console.log('👉 Student có loại lớp khác 1:1, chuyển đến màn hình classSelection');
+          console.log('👉 Student có loại lớp khác 1:1, chuyển đến màn hình classList');
+          console.log('♻️ Chuyển đến màn hình classList...');
           // Load danh sách lớp học
           await loadClasses({
             sanPham: fetchedStudent[STUDENT_FIELDS.PRODUCT] || null,
@@ -172,17 +209,22 @@ const ClassRegistration = () => {
       }
       
       // Case 2 và Case 3: maLopBanGiao trống
-      console.log('👉 Student không có maLopBanGiao');
+      console.log('👉 Student không có maLopBanGiao - Giá trị maLopBanGiao trực tiếp:', fetchedStudent.maLopBanGiao);
+      console.log('👉 Student không có maLopBanGiao - Giá trị mapped:', fetchedStudent[STUDENT_FIELDS.ASSIGNED_CLASS]);
       
       // Case 2: maLopBanGiao trống && loaiLop = 1:1
       if (fetchedStudent[STUDENT_FIELDS.CLASS_SIZE] === '1:1') {
-        console.log('🎯 Case 2: Student không có maLopBanGiao và loại lớp 1:1');
+        console.log('🏁 Case 2: Student không có maLopBanGiao và loại lớp 1:1');
+        setCurrentCase(2);
+        console.log('♻️ Chuyển đến màn hình customSchedule...');
         setCurrentScreen('customSchedule');
         return fetchedStudent;
       }
       
       // Case 3: maLopBanGiao trống && loaiLop <> 1:1
-      console.log('🎯 Case 3: Student không có maLopBanGiao và loại lớp khác 1:1');
+      console.log('🏁 Case 3: Student không có maLopBanGiao và loại lớp khác 1:1');
+      setCurrentCase(3);
+      console.log('♻️ Chuyển đến màn hình classList...');
       // Load danh sách lớp học
       await loadClasses({
         sanPham: fetchedStudent[STUDENT_FIELDS.PRODUCT] || null,
@@ -316,10 +358,21 @@ const ClassRegistration = () => {
       
       console.log("Lịch học đã format:", scheduleString);
       
+      // Bước mới: Kiểm tra lại xem lớp học còn slot trống không trước khi cập nhật
+      const classCode = selectedClass[FIELD_MAPPINGS.CLASS.CODE];
+      console.log('Kiểm tra lại tính khả dụng của lớp trước khi đăng ký:', classCode);
+      const isStillAvailable = await checkClassAvailability(classCode);
+      
+      if (!isStillAvailable) {
+        // Sử dụng state để hiển thị modal thông báo
+        setClassFullModalVisible(true);
+        return; // Dừng xử lý tại đây, không tiếp tục đăng ký
+      }
+      
       // 2. Cập nhật thông tin học viên
       const updateData = {
         Id: student.Id, // Thêm ID vào updateData thay vì truyền riêng
-        [STUDENT_FIELDS.CLASS_CODE]: selectedClass[FIELD_MAPPINGS.CLASS.CODE],
+        [STUDENT_FIELDS.CLASS_CODE]: classCode,
         [STUDENT_FIELDS.SCHEDULE]: scheduleString,
         [STUDENT_FIELDS.START_DATE]: selectedClass[FIELD_MAPPINGS.CLASS.START_DATE],
         [STUDENT_FIELDS.STATUS]: "HV Chọn lịch hệ thống"
@@ -331,9 +384,7 @@ const ClassRegistration = () => {
       if (updated) {
         // 3. Cập nhật số lượng đăng ký trong bảng Class
         try {
-          // Lấy mã lớp học từ selectedClass
-          const classCode = selectedClass[FIELD_MAPPINGS.CLASS.CODE];
-          
+          // Mã lớp học đã được lấy ở bước kiểm tra availability
           if (classCode) {
             // Gọi API để cập nhật số lượng đăng ký cho tất cả bản ghi của lớp
             await updateRegistration(classCode);
@@ -367,14 +418,21 @@ const ClassRegistration = () => {
       }
     } catch (error) {
       console.error('Error updating class selection:', error);
-      message.error(error.message || MESSAGES.CLASS_REGISTRATION_FAILED.replace('{error}', ''));
+      
+      // Kiểm tra nếu là lỗi lớp đã hết chỗ
+      if (error.message && error.message.includes('hết chỗ')) {
+        // Lỗi lớp đã hết chỗ được xử lý ở trên, không cần hiển thị thông báo những lần nữa
+      } else {
+        // Các lỗi khác hiển thị message thông thường
+        message.error(error.message || MESSAGES.CLASS_REGISTRATION_FAILED.replace('{error}', ''));
+      }
     } finally {
       setProcessingAction(false);
     }
   };
 
   /**
-   * Confirm reservation
+   * Xác nhận giữ chỗ - cập nhật bảng Student và Reservation
    */
   const handleConfirmReservation = async () => {
     if (!student || !student.Id || !reservationData) {
@@ -386,36 +444,51 @@ const ClassRegistration = () => {
     
     try {
       // Lấy các thông tin quan trọng từ reservationData
-      const classCode = reservationData[FIELD_MAPPINGS.RESERVATION.CLASS_CODE];
+      const classCode = reservationData[FIELD_MAPPINGS.RESERVATION.CLASS_CODE] || reservationData.maLop;
       const schedule = reservationData.lichHoc;
       const startDate = reservationData.ngayKhaiGiangDuKien;
+      const reservationId = reservationData.Id;
       
-      // Update student data with complete information
-      const updateData = {
+      console.log('handleConfirmReservation - Thông tin xác nhận:', {
+        classCode,
+        schedule,
+        startDate,
+        reservationId
+      });
+      
+      // 1. Cập nhật thông tin học viên trong bảng Student
+      const updateStudentData = {
         [STUDENT_FIELDS.CLASS_CODE]: classCode,
         [STUDENT_FIELDS.SCHEDULE]: schedule,
         [STUDENT_FIELDS.START_DATE]: startDate,
         [STUDENT_FIELDS.STATUS]: "HV Xác nhận lịch được giữ"
       };
       
-      const updated = await updateStudent(student.Id, updateData);
+      // Phải truyền một đối tượng duy nhất vào hàm updateStudent
+      const updateObj = {
+        ...updateStudentData,
+        Id: student.Id // Thêm Id vào đối tượng cập nhật
+      };
+      console.log('handleConfirmReservation - Dữ liệu cập nhật học viên đã điều chỉnh:', updateObj);
+      const updated = await updateStudent(updateObj);
       
       if (updated) {
-        // 3. Cập nhật số lượng đăng ký trong bảng Class
+        // 2. Cập nhật trạng thái xác nhận trong bảng Reservation
         try {
-          if (classCode) {
-            // Gọi API để cập nhật số lượng đăng ký cho lớp học
-            await updateRegistration(classCode);
-            console.log("Đã cập nhật số lượng đăng ký cho lớp:", classCode);
+          if (reservationId) {
+            // Gọi API để cập nhật trạng thái CheckTrangThaiXacNhanLich
+            const { updateReservation } = await import('../../services/api/reservation');
+            await updateReservation(reservationId, 'XacNhanLich');
+            console.log('handleConfirmReservation - Đã cập nhật trạng thái xác nhận cho reservation:', reservationId);
           } else {
-            console.warn("Không tìm thấy mã lớp, không thể cập nhật số lượng đăng ký");
+            console.warn('handleConfirmReservation - Không tìm thấy ID reservation, không thể cập nhật trạng thái');
           }
-        } catch (classUpdateError) {
-          console.error("Lỗi khi cập nhật số lượng đăng ký:", classUpdateError);
+        } catch (reservationUpdateError) {
+          console.error('handleConfirmReservation - Lỗi khi cập nhật trạng thái reservation:', reservationUpdateError);
           // Vẫn tiếp tục xử lý vì đã cập nhật thành công thông tin học viên
         }
         
-        // Tải lại dữ liệu học viên mới nhất trước khi chuyển màn hình
+        // 3. Tải lại dữ liệu học viên mới nhất trước khi chuyển màn hình
         try {
           console.log('Tải lại dữ liệu học viên sau khi xác nhận reservation');
           // Lấy billItemId từ student hiện tại
@@ -428,7 +501,7 @@ const ClassRegistration = () => {
           // Vẫn tiếp tục vì đã cập nhật database thành công
         }
         
-        // Show success screen
+        // 4. Chuyển đến màn hình thành công
         setCurrentScreen('success');
         message.success(MESSAGES.RESERVATION_CONFIRMATION_SUCCESS);
       } else {
@@ -437,6 +510,120 @@ const ClassRegistration = () => {
     } catch (error) {
       console.error('Error confirming reservation:', error);
       message.error(error.message || MESSAGES.RESERVATION_CONFIRMATION_FAILED.replace('{error}', ''));
+    } finally {
+      setProcessingAction(false);
+    }
+  };
+  
+  /**
+   * Hủy giữ chỗ - cập nhật bảng Reservation và giảm soSlotGiuCho trong bảng Class
+   */
+  const handleCancelReservation = async () => {
+    if (!reservationData || !reservationData.Id) {
+      message.error('Không tìm thấy thông tin giữ chỗ');
+      return;
+    }
+    
+    setProcessingAction(true);
+    
+    try {
+      const reservationId = reservationData.Id;
+      const classCode = reservationData[FIELD_MAPPINGS.RESERVATION.CLASS_CODE] || reservationData.maLop;
+      
+      console.log('handleCancelReservation - Thông tin hủy giữ chỗ:', {
+        reservationId,
+        classCode
+      });
+      
+      // 1. Cập nhật trạng thái hủy giữ chỗ trong bảng Reservation
+      try {
+        const { updateReservation } = await import('../../services/api/reservation');
+        await updateReservation(reservationId, 'KhongXacNhanLich');
+        console.log('handleCancelReservation - Đã cập nhật trạng thái hủy giữ chỗ:', reservationId);
+      } catch (reservationUpdateError) {
+        console.error('Lỗi khi cập nhật trạng thái hủy giữ chỗ:', reservationUpdateError);
+        throw reservationUpdateError;
+      }
+      
+      // 2. Cập nhật số slot giữ chỗ trong bảng Class (giảm đi 1)
+      try {
+        if (classCode) {
+          // Tìm tất cả các bản ghi lớp học dựa trên mã lớp
+          const searchResponse = await apiClient.get(`/tables/${CLASS}/records`, {
+            params: {
+              where: `(${FIELD_MAPPINGS.CLASS.CODE},eq,${classCode})`
+            }
+          });
+          
+          if (searchResponse.data?.list?.length) {
+            const classRecords = searchResponse.data.list;
+            console.log(`Tìm thấy ${classRecords.length} bản ghi cho lớp ${classCode}`);
+            
+            // Lấy thông tin soSlotGiuCho từ bản ghi đầu tiên
+            const firstRecord = classRecords[0];
+            let currentReservedSlots = firstRecord.soSlotGiuCho || "0";
+            let newReservedSlots;
+            
+            // Xử lý trường hợp soSlotGiuCho là chuỗi
+            if (typeof currentReservedSlots === 'string') {
+              // Chuyển thành số, trừ 1, rồi chuyển lại thành chuỗi
+              newReservedSlots = Math.max(0, parseInt(currentReservedSlots, 10) - 1).toString();
+            } else {
+              // Trường hợp đã là số
+              newReservedSlots = Math.max(0, currentReservedSlots - 1);
+            }
+            
+            console.log(`Cập nhật soSlotGiuCho: ${currentReservedSlots} -> ${newReservedSlots}`);
+            
+            // Cập nhật cho tất cả các bản ghi của lớp học
+            const updatePromises = classRecords.map(async (record) => {
+              const updateData = {
+                Id: record.Id,
+                soSlotGiuCho: newReservedSlots
+              };
+              
+              console.log(`Cập nhật bản ghi ${record.Id} cho lớp ${classCode}:`, updateData);
+              
+              return apiClient.patch(
+                `/tables/${CLASS}/records`, 
+                updateData
+              );
+            });
+            
+            // Thực hiện tất cả các cập nhật cùng lúc
+            await Promise.all(updatePromises);
+            console.log(`Đã cập nhật thành công soSlotGiuCho cho lớp ${classCode}`);
+          } else {
+            console.warn(`Không tìm thấy lớp học với mã: ${classCode}`);
+          }
+        } else {
+          console.warn('Không tìm thấy mã lớp, không thể cập nhật soSlotGiuCho');
+        }
+      } catch (classUpdateError) {
+        console.error('Lỗi khi cập nhật soSlotGiuCho:', classUpdateError);
+        // Vẫn tiếp tục vì đã cập nhật thành công status reservation
+      }
+      
+      // 3. Chuyển đến màn hình danh sách lớp
+      try {
+        // Tải lại danh sách lớp học
+        await loadClasses({
+          sanPham: student?.[STUDENT_FIELDS.PRODUCT] || null,
+          loaiLop: student?.[STUDENT_FIELDS.CLASS_SIZE] || null,
+          loaiGV: student?.[STUDENT_FIELDS.TEACHER_TYPE] || null,
+          trinhDo: student?.[STUDENT_FIELDS.LEVEL] || null
+        });
+      } catch (loadClassesError) {
+        console.warn('Không thể tải danh sách lớp:', loadClassesError);
+        // Vẫn tiếp tục chuyển màn hình
+      }
+      
+      // Thông báo và chuyển màn hình
+      message.success('Đã hủy giữ chỗ thành công');
+      setCurrentScreen('classList');
+    } catch (error) {
+      console.error('Lỗi khi hủy giữ chỗ:', error);
+      message.error(`Không thể hủy giữ chỗ: ${error.message || 'Lỗi không xác định'}`);
     } finally {
       setProcessingAction(false);
     }
@@ -561,7 +748,8 @@ const ClassRegistration = () => {
     }
   };
 
-  const handleCancelReservation = () => {
+  // Hàm chuyển tới danh sách lớp học
+  const handleGoToClassList = () => {
     handleCase3(student);
   };
 
@@ -618,13 +806,26 @@ const ClassRegistration = () => {
     switch (currentScreen) {
       case 'reservation':
         console.log('🎫 renderContent - Showing ReservationConfirmation screen');
+        // Log dữ liệu trước khi truyền vào component
+        // Log cấu trúc dữ liệu student để hiểu rõ hơn
+        console.log('🔍 DEBUG - student từ context:', student);
+        console.log('🔍 DEBUG - student.data:', student?.data);
+        console.log('🔍 DEBUG - student.hasData:', student?.hasData);
+        console.log('🔍 DEBUG - reservationData:', reservationData);
+        
+        // Tách biệt rõ ràng dữ liệu - không kết hợp dữ liệu 
+        // Thông tin khóa học lấy từ Student
+        // Thông tin lịch học lấy từ Reservation
+        console.log('🔍 DEBUG - Tách biệt dữ liệu Student và Reservation');
+        
         return (
           <ReservationConfirmation
             student={student}
             reservationData={reservationData}
             onConfirm={handleConfirmReservation}
-            onCancel={handleCancelReservation}
-            loading={processingAction}
+            onCancel={handleGoToClassList}
+            onCancelReservation={handleCancelReservation}
+            loading={processingAction || studentLoading || classLoading}
           />
         );
         
@@ -643,7 +844,7 @@ const ClassRegistration = () => {
           <ClassSelection
             student={student}
             classList={classList}
-            showWarning={currentCase === 2}
+            showWarning={currentCase === '1a' || currentCase === 2}
             onClassSelect={handleClassSelection}
             onSwitchToCustomSchedule={handleSwitchToCustomSchedule}
             loading={processingAction || classLoading}
@@ -661,9 +862,10 @@ const ClassRegistration = () => {
               : setCurrentScreen('classList')}
             loading={processingAction}
             fromCase2={currentCase === 2}
+            showWarning={currentCase === '1a'}
           />
         );
-      
+        
       case 'success':
         return (
           <SuccessScreen
@@ -673,7 +875,7 @@ const ClassRegistration = () => {
             loading={processingAction}
           />
         );
-      
+        
       default:
         return (
           <Result
@@ -690,6 +892,23 @@ const ClassRegistration = () => {
     }
   };
 
+  // Xử lý đóng modal và reload danh sách lớp
+  const handleClassFullModalOk = async () => {
+    setClassFullModalVisible(false);
+    setProcessingAction(true);
+    try {
+      // Lấy lại thông tin filter từ student
+      await loadClasses({
+        sanPham: student[STUDENT_FIELDS.PRODUCT] || null,
+        loaiLop: student[STUDENT_FIELDS.CLASS_SIZE] || null,
+        loaiGV: student[STUDENT_FIELDS.TEACHER_TYPE] || null,
+        trinhDo: student[STUDENT_FIELDS.LEVEL] || null
+      });
+    } finally {
+      setProcessingAction(false);
+    }
+  };
+
   // Sử dụng inline style để ghi đè toàn bộ CSS class từ theme chung
   return (
     <div 
@@ -702,6 +921,18 @@ const ClassRegistration = () => {
         padding: '1rem'
       }}
     >
+      {/* Modal thông báo lớp đã hết chỗ */}
+      <Modal
+        title="Lớp học đã hết chỗ"
+        open={classFullModalVisible}
+        onOk={handleClassFullModalOk}
+        onCancel={handleClassFullModalOk}
+        okText="Đóng"
+        cancelButtonProps={{ style: { display: 'none' } }}
+      >
+        <p>Rất tiếc, lớp học đã hết chỗ trong lúc bạn đang xác nhận. Chúng tôi sẽ tải lại danh sách lớp học để bạn có thể chọn lớp khác.</p>
+      </Modal>
+      
       {renderContent()}
     </div>
   );

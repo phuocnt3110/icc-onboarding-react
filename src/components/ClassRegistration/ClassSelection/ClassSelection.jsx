@@ -89,6 +89,7 @@ const ClassSelection = ({
     classSize: student?.[STUDENT_FIELDS.CLASS_SIZE],
     rawData: student
   });
+  console.log('🔍 DEBUG - ClassSelection - showWarning:', showWarning);
   const [selectedClass, setSelectedClass] = useState(null);
   const [selectedSchedule, setSelectedSchedule] = useState(null);
   const [searchText, setSearchText] = useState('');
@@ -685,21 +686,21 @@ const ClassSelection = ({
       </Title>
       <Divider />
       
-      {showWarning && (
+      {showWarning && student?.[STUDENT_FIELDS.ASSIGNED_CLASS] && (
         <Alert
-          message="Cảnh báo"
-          description={`Bạn đã giữ chỗ trước đó, nhưng chúng tôi không tìm thấy ${student[STUDENT_FIELDS.CLASS_RESERVATION] || 'mã lớp'} của bạn. Vui lòng liên hệ với tư vấn viên của bạn, hoặc tiếp tục chọn lịch học theo danh sách dưới đây.`}
+          message={`Bạn đã được chỉ định lớp ${student[STUDENT_FIELDS.ASSIGNED_CLASS]} nhưng mã giữ chỗ không còn hiệu lực. Vui lòng chọn lịch mới.`}
           type="warning"
           showIcon
-          icon={<ExclamationCircleOutlined />}
-          style={{ marginBottom: '20px' }}
+          style={{ marginBottom: '16px' }}
         />
       )}
       
-      <div style={{ marginBottom: '24px', padding: '0 8px' }}>
-        <Paragraph style={{ fontSize: '16px' }}>
-          Dưới đây là các lớp học phù hợp với khóa học và trình độ của bạn. Vui lòng chọn lớp phù hợp với lịch trống của bạn.
-        </Paragraph>
+      <div style={{ marginBottom: '16px' }}>
+        <Alert
+          message="Dưới đây là các lớp học phù hợp với khóa học và trình độ của bạn. Vui lòng chọn lớp phù hợp với lịch trống của bạn."
+          type="info"
+          showIcon
+        />
       </div>
       
       <div style={{ marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
