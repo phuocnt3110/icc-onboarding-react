@@ -202,6 +202,550 @@ body {
   }
 }
 
+/* ======== QR CODE SUPPORT CARD ======== */
+
+.qr-code-float {
+  background-color: white;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  width: 60px;
+  height: 60px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: 2px solid #00509f;
+}
+
+.qr-code-float.expanded {
+  width: 220px;
+  height: auto;
+  padding: 15px;
+}
+
+.qr-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  position: relative;
+}
+
+.support-icon {
+  position: absolute;
+  width: 30px;
+  height: 30px;
+  background-color: #00509f;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: bold;
+  font-size: 16px;
+  z-index: 2;
+}
+
+.qr-title {
+  font-weight: bold;
+  margin-bottom: 10px;
+  color: #00509f;
+}
+
+.qr-image {
+  width: 100%;
+  max-width: 180px;
+  height: auto;
+  border-radius: 5px;
+}
+
+.qr-text {
+  margin-top: 10px;
+  text-align: center;
+  width: 100%;
+}
+
+.qr-text p {
+  margin-bottom: 5px;
+  font-size: 14px;
+  color: #333;
+}
+
+.qr-subtext {
+  font-size: 12px !important;
+  color: #666 !important;
+  font-style: italic;
+}
+
+.qr-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  margin-top: 8px;
+}
+
+.qr-button {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  background-color: #00509f;
+  color: white;
+  padding: 5px 15px;
+  border-radius: 5px;
+  text-decoration: none;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.qr-button:hover {
+  background-color: #003c79;
+  color: white;
+}
+
+.qr-button.phone {
+  background-color: #28a745;
+}
+
+.qr-button.phone:hover {
+  background-color: #218838;
+}
+
+.qr-hotline-text {
+  font-size: 11px;
+  color: #666;
+  margin-top: 8px;
+  font-style: italic;
+}
+
+/* Hiệu ứng pulse */
+.qr-code-float.pulse {
+  animation: pulse-animation 1.5s ease-in-out;
+}
+
+@keyframes pulse-animation {
+  0% {
+    box-shadow: 0 0 0 0 rgba(0, 80, 159, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(0, 80, 159, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(0, 80, 159, 0);
+  }
+}
+
+/* --------- PHƯƠNG ÁN 2: Banner Hỗ Trợ Thu Gọn --------- */
+.qr-banner-container {
+  position: fixed;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 999;
+}
+
+.qr-banner {
+  display: flex;
+  background-color: white;
+  border-radius: 8px 0 0 8px;
+  box-shadow: -2px 0 10px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+  transition: all 0.4s ease;
+  max-width: 60px;
+}
+
+.qr-banner.expanded {
+  max-width: 300px;
+}
+
+.qr-banner-tab {
+  width: 60px;
+  min-width: 60px;
+  background-color: #00509f;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 10px 0;
+  cursor: pointer;
+}
+
+.qr-icon {
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 5px;
+  width: 30px;
+  height: 30px;
+  background-color: white;
+  color: #00509f;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.qr-banner-text {
+  writing-mode: vertical-lr;
+  transform: rotate(180deg);
+  text-align: center;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.qr-banner-content {
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow: hidden;
+  width: 240px;
+}
+
+.qr-banner-header {
+  width: 100%;
+  text-align: center;
+  margin-bottom: 10px;
+  color: #00509f;
+}
+
+.qr-banner-header h4 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.qr-banner-image {
+  width: 100%;
+  max-width: 150px;
+  height: auto;
+  border-radius: 8px;
+  margin-bottom: 10px;
+}
+
+.qr-banner-footer {
+  width: 100%;
+  text-align: center;
+}
+
+.qr-banner-footer p {
+  margin-bottom: 3px;
+  font-size: 14px;
+}
+
+.qr-banner-subtitle {
+  font-size: 12px;
+  color: #666;
+  font-style: italic;
+  margin-bottom: 8px;
+}
+
+.qr-banner-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  margin-top: 5px;
+}
+
+.qr-banner-button {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  background-color: #00509f;
+  color: white;
+  padding: 6px 15px;
+  border-radius: 5px;
+  text-decoration: none;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.qr-banner-button:hover {
+  background-color: #003c79;
+  color: white;
+}
+
+.qr-banner-button.phone {
+  background-color: #28a745;
+}
+
+.qr-banner-button.phone:hover {
+  background-color: #218838;
+  color: white;
+}
+
+/* --------- Floating Support Card --------- */
+.qr-card-container {
+  position: fixed;
+  right: 20px;
+  bottom: 80px; /* Vị trí phía trên footer */
+  z-index: 999;
+}
+
+/* Tooltip styling */
+.qr-card-tooltip {
+  position: absolute;
+  left: -180px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 1000;
+  pointer-events: none;
+  animation: fadeInOut 5s ease-in-out;
+}
+
+.qr-tooltip-content {
+  background-color: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 14px;
+  position: relative;
+  width: 170px;
+  text-align: center;
+}
+
+.qr-tooltip-arrow {
+  position: absolute;
+  right: -8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0;
+  height: 0;
+  border-top: 8px solid transparent;
+  border-bottom: 8px solid transparent;
+  border-left: 8px solid rgba(0, 0, 0, 0.8);
+}
+
+@keyframes fadeInOut {
+  0% { opacity: 0; }
+  10% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+.qr-card {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 15px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+  transition: all 0.3s ease;
+  width: 250px;
+  cursor: pointer;
+}
+
+.qr-card.expanded {
+  width: 280px;
+}
+
+.qr-card-collapsed {
+  display: flex;
+  align-items: center;
+  padding: 10px 15px;
+  background: linear-gradient(90deg, #004080, #00509f);
+  color: white;
+}
+
+.qr-card-icon {
+  margin-right: 12px;
+  font-size: 20px;
+}
+
+.qr-card-label {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.qr-card-expanded {
+  padding: 15px;
+}
+
+.qr-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 10px;
+}
+
+.qr-card-header h4 {
+  margin: 0;
+  color: #00509f;
+  font-size: 16px;
+}
+
+.qr-card-close {
+  font-size: 24px;
+  cursor: pointer;
+  color: #999;
+}
+
+.qr-card-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.qr-card-image {
+  width: 100%;
+  max-width: 180px;
+  height: auto;
+  border-radius: 8px;
+  margin-bottom: 15px;
+}
+
+.qr-card-text {
+  text-align: center;
+  margin-bottom: 15px;
+}
+
+.qr-card-text p {
+  margin-bottom: 5px;
+  font-size: 14px;
+}
+
+.qr-card-subtext {
+  font-size: 12px;
+  color: #666;
+  font-style: italic;
+}
+
+.qr-card-footer {
+  text-align: center;
+}
+
+.qr-card-contact-options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  margin-bottom: 10px;
+}
+
+.qr-card-button {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  background-color: #00509f;
+  color: white;
+  padding: 8px 15px;
+  border-radius: 5px;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.qr-card-button:hover {
+  background-color: #003c79;
+  color: white;
+  text-decoration: none;
+}
+
+.qr-card-button.phone {
+  background-color: #28a745;
+}
+
+.qr-card-button.phone:hover {
+  background-color: #218838;
+  color: white;
+}
+
+.qr-card-contact-info {
+  font-size: 12px;
+  color: #666;
+  margin-top: 5px;
+  text-align: center;
+  font-style: italic;
+}
+
+/* Mobile adjustments for all QR code options */
+@media screen and (max-width: 768px) {
+  /* Phương án 1 */
+  .qr-code-float-container.option1 {
+    right: 10px;
+    bottom: 90px;
+  }
+  
+  .qr-code-float {
+    width: 50px;
+    height: 50px;
+  }
+  
+  .qr-code-float.expanded {
+    width: 220px;
+  }
+  
+  .qr-text p {
+    font-size: 12px;
+  }
+  
+  .qr-button {
+    padding: 4px 12px;
+    font-size: 12px;
+  }
+  
+  .qr-hotline-text {
+    font-size: 10px;
+  }
+  
+  /* Phương án 2 */
+  .qr-banner-tab {
+    width: 40px;
+    min-width: 40px;
+  }
+  
+  .qr-banner-content {
+    width: 220px;
+    padding: 10px;
+  }
+  
+  .qr-banner-image {
+    max-width: 130px;
+  }
+  
+  /* QR Card mobile adjustments */
+  .qr-card-container {
+    bottom: 65px;
+    right: 10px;
+  }
+  
+  .qr-card {
+    width: 180px;
+  }
+  
+  .qr-card.expanded {
+    width: 220px;
+  }
+  
+  .qr-card-image {
+    max-width: 140px;
+  }
+  
+  .qr-card-label {
+    font-size: 12px;
+  }
+  
+  .qr-card-tooltip {
+    left: -130px;
+  }
+  
+  .qr-tooltip-content {
+    width: 120px;
+    font-size: 12px;
+  }
+  
+  .qr-card-button {
+    padding: 6px 12px;
+    font-size: 13px;
+  }
+}
+
 @media (min-width: 1024px) {
   .form-container {
     width: 60%;

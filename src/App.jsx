@@ -8,6 +8,8 @@ import { StudentProvider } from './contexts/StudentContext';
 import { ClassProvider } from './contexts/ClassContext';
 import { ProgressStepProvider } from './contexts/ProgressStepContext';
 import ProgressSteps from './components/common/ProgressSteps.jsx';
+// Import phương án QR code (Card)
+import QRCodeCard from './components/common/QRCodeCard.jsx';
 import { ROUTES } from './config';
 import './index.css';
 
@@ -100,6 +102,9 @@ const App = () => {
                       style={{ height: '45px' }}
                     />
                   </Header>
+                  
+                  {/* QR Code Support Card */}
+                  <QRCodeCard />
                   
                   {/* Content with added top padding to prevent overlap with fixed header */}
                   <Content style={{ 
