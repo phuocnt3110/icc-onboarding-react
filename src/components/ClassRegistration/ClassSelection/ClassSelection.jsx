@@ -23,7 +23,8 @@ import {
   Collapse,
   Checkbox,
   Popover,
-  Dropdown
+  Dropdown,
+  Pagination
 } from 'antd';
 import { 
   CalendarOutlined, 
@@ -38,7 +39,8 @@ import {
   SortAscendingOutlined,
   SunOutlined,
   DownOutlined,
-  ReloadOutlined
+  ReloadOutlined,
+  LeftOutlined
 } from '@ant-design/icons';
 import { FIELD_MAPPINGS, MESSAGES } from '../../../config';
 import _ from 'lodash';
@@ -60,7 +62,7 @@ const { STUDENT: STUDENT_FIELDS, CLASS: CLASS_FIELDS } = FIELD_MAPPINGS;
 /**
  * Component to display available classes for selection
  * Uses CombinedView approach to group classes by class code
- * @param {Object} studentData - Student data from API
+ * @param {Object} student - Student data from API
  * @param {Array} classList - List of available classes
  * @param {boolean} showWarning - Whether to show warning about invalid reservation
  * @param {Function} onClassSelect - Function to call when selecting a class
@@ -69,7 +71,7 @@ const { STUDENT: STUDENT_FIELDS, CLASS: CLASS_FIELDS } = FIELD_MAPPINGS;
  * @param {Function} onRefresh - Function to refresh class list data
  */
 const ClassSelection = ({ 
-  studentData, 
+  student, 
   classList = [], 
   showWarning = false, 
   onClassSelect, 
@@ -77,6 +79,16 @@ const ClassSelection = ({
   loading = false,
   onRefresh
 }) => {
+  // Thêm log ở đây
+  console.log('🔍 DEBUG - student đã nhận trong ClassSelection:', {
+    hasData: !!student,
+    dataType: typeof student,
+    isEmpty: !student || Object.keys(student || {}).length === 0,
+    studentId: student?.Id,
+    productInfo: student?.[STUDENT_FIELDS.PRODUCT],
+    classSize: student?.[STUDENT_FIELDS.CLASS_SIZE],
+    rawData: student
+  });
   const [selectedClass, setSelectedClass] = useState(null);
   const [selectedSchedule, setSelectedSchedule] = useState(null);
   const [searchText, setSearchText] = useState('');
@@ -388,6 +400,15 @@ const ClassSelection = ({
   const handleClassSelection = (record, schedule) => {
     console.log("Đã nhận nút chọn");
     
+    // Thêm log ở đây để kiểm tra student khi chọn lớp
+    console.log('🔍 DEBUG - student tại thời điểm chọn lớp:', {
+      hasData: !!student,
+      dataType: typeof student,
+      studentId: student?.Id,
+      record: record,
+      schedule: schedule
+    });
+
     if (schedule) {
       // Nếu người dùng chọn một lịch học cụ thể từ tag
       const classToSelect = schedule.originalClass;
@@ -398,15 +419,15 @@ const ClassSelection = ({
       );
       
       // Kiểm tra đầy đủ dữ liệu trước khi validate
-      if (!studentData || !classToSelect) {
+      if (!student || !classToSelect) {
         message.error('Thiếu thông tin học viên hoặc lớp học');
-        console.error('Thiếu dữ liệu:', { studentData, classToSelect });
+        console.error('Thiếu dữ liệu:', { student, classToSelect });
         return;
       }
 
       // Kiểm tra tính hợp lệ của lớp học
       try {
-        const validationResult = validateClassSelection(studentData, classToSelect);
+        const validationResult = validateClassSelection(student, classToSelect);
         if (!validationResult.valid) {
           message.error(validationResult.message);
           return;
@@ -423,15 +444,15 @@ const ClassSelection = ({
     } else {
       // Nếu người dùng nhấn nút "Chọn" trên bảng
       // Kiểm tra dữ liệu đầu vào trước khi validate
-      if (!studentData || !record) {
+      if (!student || !record) {
         message.error('Thiếu thông tin học viên hoặc lớp học');
-        console.error('Thiếu dữ liệu:', { studentData, record });
+        console.error('Thiếu dữ liệu:', { student, record });
         return;
       }
 
       try {
         // Kiểm tra tính hợp lệ của lớp học
-        const validationResult = validateClassSelection(studentData, record);
+        const validationResult = validateClassSelection(student, record);
         if (!validationResult.valid) {
           message.error(validationResult.message);
           return;
@@ -667,7 +688,7 @@ const ClassSelection = ({
       {showWarning && (
         <Alert
           message="Cảnh báo"
-          description={`Bạn đã giữ chỗ trước đó, nhưng chúng tôi không tìm thấy ${studentData[STUDENT_FIELDS.CLASS_RESERVATION] || 'mã lớp'} của bạn. Vui lòng liên hệ với tư vấn viên của bạn, hoặc tiếp tục chọn lịch học theo danh sách dưới đây.`}
+          description={`Bạn đã giữ chỗ trước đó, nhưng chúng tôi không tìm thấy ${student[STUDENT_FIELDS.CLASS_RESERVATION] || 'mã lớp'} của bạn. Vui lòng liên hệ với tư vấn viên của bạn, hoặc tiếp tục chọn lịch học theo danh sách dưới đây.`}
           type="warning"
           showIcon
           icon={<ExclamationCircleOutlined />}
@@ -681,86 +702,109 @@ const ClassSelection = ({
         </Paragraph>
       </div>
       
-      <div style={{ marginBottom: '12px', textAlign: 'right' }}>
-        <Space wrap size="small" className="filter-buttons">
-          <Button 
-            size="small"
-            shape="circle"
-            icon={<ReloadOutlined />}
-            onClick={handleResetFilters}
-            disabled={!(weekdayFilter.length > 0 || timeFilter.length > 0 || startDateRange)}
-            title="Đặt lại bộ lọc"
-          />
-          <Popover 
-            content={
-              <Checkbox.Group 
-                options={['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'Chủ Nhật']} 
-                value={weekdayFilter}
-                onChange={handleWeekdayChange}
-              />
-            }
-            title="Chọn thứ học"
-            trigger="click"
-            placement="bottom"
-          >
-            <Button 
-              icon={<CalendarOutlined />}
-              type={weekdayFilter.length > 0 ? 'primary' : 'default'}
-              size="small"
-            >
-              Thứ học {weekdayFilter.length > 0 && `(${weekdayFilter.length})`}
-            </Button>
-          </Popover>
-          
-          <Popover
-            content={
-              <Checkbox.Group 
-                options={[{ label: 'Sáng (6h-12h)', value: 'sáng' }, 
-                          { label: 'Chiều (12h-18h)', value: 'chiều' }, 
-                          { label: 'Tối (18h-6h)', value: 'tối' }]} 
-                value={timeFilter}
-                onChange={handleTimeFilterChange}
-              />
-            }
-            title="Chọn ca học"
-            trigger="click"
-            placement="bottom"
-          >
-            <Button 
-              icon={<ClockCircleOutlined />}
-              type={timeFilter.length > 0 ? 'primary' : 'default'}
-              size="small"
-            >
-              Ca học {timeFilter.length > 0 && `(${timeFilter.length})`}
-            </Button>
-          </Popover>
-          
-          <Popover
-            content={
-              <div style={{ padding: '8px 0' }}>
-                <RangePicker 
-                  style={{ width: '230px' }} 
-                  format="DD/MM/YYYY"
-                  value={startDateRange}
-                  onChange={setStartDateRange}
+      <div style={{ marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        {/* Bộ lọc ở phía trái */}
+        <div>
+          <Space wrap size="small" className="filter-buttons">
+            {/* 1. Thứ học */}
+            <Popover 
+              content={
+                <Checkbox.Group 
+                  options={['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'Chủ Nhật']} 
+                  value={weekdayFilter}
+                  onChange={handleWeekdayChange}
                 />
-              </div>
-            }
-            title="Chọn ngày khai giảng"
-            trigger="click"
-            placement="bottom"
-          >
-            <Button 
-              icon={<CalendarOutlined />}
-              type={startDateRange ? 'primary' : 'default'}
-              size="small"
+              }
+              title="Chọn thứ học"
+              trigger="click"
+              placement="bottom"
             >
-              Ngày KG
-            </Button>
-          </Popover>
-          
-          {/* Chỉ sử dụng icon reset ở đầu danh sách */}
-        </Space>
+              <Button 
+                icon={<CalendarOutlined />}
+                type={weekdayFilter.length > 0 ? 'primary' : 'default'}
+                size="small"
+              >
+                Thứ học {weekdayFilter.length > 0 && `(${weekdayFilter.length})`}
+              </Button>
+            </Popover>
+            
+            {/* 2. Ca học */}
+            <Popover
+              content={
+                <Checkbox.Group 
+                  options={[{ label: 'Sáng (6h-12h)', value: 'sáng' }, 
+                            { label: 'Chiều (12h-18h)', value: 'chiều' }, 
+                            { label: 'Tối (18h-6h)', value: 'tối' }]} 
+                  value={timeFilter}
+                  onChange={handleTimeFilterChange}
+                />
+              }
+              title="Chọn ca học"
+              trigger="click"
+              placement="bottom"
+            >
+              <Button 
+                icon={<ClockCircleOutlined />}
+                type={timeFilter.length > 0 ? 'primary' : 'default'}
+                size="small"
+              >
+                Ca học {timeFilter.length > 0 && `(${timeFilter.length})`}
+              </Button>
+            </Popover>
+            
+            {/* 3. Ngày khai giảng */}
+            <Popover
+              content={
+                <div style={{ padding: '8px 0' }}>
+                  <RangePicker 
+                    style={{ width: '230px' }} 
+                    format="DD/MM/YYYY"
+                    value={startDateRange}
+                    onChange={setStartDateRange}
+                  />
+                </div>
+              }
+              title="Chọn ngày khai giảng"
+              trigger="click"
+              placement="bottom"
+            >
+              <Button 
+                icon={<CalendarOutlined />}
+                type={startDateRange ? 'primary' : 'default'}
+                size="small"
+              >
+                Ngày KG
+              </Button>
+            </Popover>
+
+            {/* 4. Nút reset */}
+            <Button 
+              size="small"
+              icon={<ReloadOutlined />}
+              onClick={handleResetFilters}
+              disabled={!(weekdayFilter.length > 0 || timeFilter.length > 0 || startDateRange)}
+              title="Đặt lại bộ lọc"
+            />
+          </Space>
+        </div>
+
+        {/* Pagination ở phía phải */}
+        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+          {groupedClasses && groupedClasses.length > 0 && (
+            <Pagination
+              size="small"
+              total={filteredData.length > 0 || (weekdayFilter.length > 0 || timeFilter.length > 0 || startDateRange) ? 
+                filteredData.length : groupedClasses.length}
+              showTotal={(total) => `Tổng ${total} lớp học`}
+              defaultPageSize={10}
+              showSizeChanger
+              pageSizeOptions={['5', '10', '20', '50']}
+              onChange={(page, pageSize) => {
+                // Nếu cần xử lý khi thay đổi trang
+              }}
+            />
+          )}
+        </div>
       </div>
       
       {groupedClasses && groupedClasses.length > 0 ? (
@@ -769,14 +813,9 @@ const ClassSelection = ({
             dataSource={filteredData.length > 0 || (weekdayFilter.length > 0 || timeFilter.length > 0 || startDateRange) ? filteredData : groupedClasses} 
             columns={columns} 
             rowKey={(record) => record[CLASS_FIELDS.CODE]} 
-            pagination={{ 
-              pageSize: 10, // Tăng số dòng mỗi trang
-              showSizeChanger: true,
-              pageSizeOptions: ['5', '10', '20', '50'],
-              showTotal: (total) => `Tổng ${total} lớp học`
-            }}
+            pagination={false} // Tắt pagination ở trong bảng vì đã chuyển lên trên
             loading={tableLoading}
-            scroll={{ x: 800 }} // Giảm chiều rộng tối thiểu của bảng
+            scroll={{ x: 800 }}
             style={{ width: '100%' }}
             size="middle"
             locale={{
@@ -799,6 +838,16 @@ const ClassSelection = ({
       )}
       
       <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '30px', padding: '0 8px' }}>
+        <Button 
+          onClick={() => window.history.back()} 
+          disabled={loading}
+          size="large"
+          style={{ paddingLeft: '20px', paddingRight: '20px' }}
+          icon={<LeftOutlined />}
+        >
+          Quay lại
+        </Button>
+
         <Button 
           onClick={onSwitchToCustomSchedule} 
           disabled={loading}

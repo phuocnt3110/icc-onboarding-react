@@ -5,10 +5,8 @@ import {
   Button, 
   Divider, 
   Table, 
-  Tag, 
   Space, 
   Alert, 
-  Empty, 
   Skeleton,
   Input,
   Row,
@@ -17,13 +15,16 @@ import {
   Modal,
   message,
   Spin,
-  FloatButton
+  List,
+  Tag,
+  Empty
 } from 'antd';
 import { 
   CalendarOutlined, 
   ClockCircleOutlined, 
   UserOutlined, 
   CheckCircleOutlined,
+  CheckOutlined,
   SearchOutlined,
   ExclamationCircleOutlined,
   QuestionCircleOutlined,
@@ -57,16 +58,29 @@ import { updateClassRegistration, validateScheduleSelection } from '../../../ser
 import '../../../styles/custom-schedule.css';
 import '../../../styles/index.css';
 
-const { Title, Text, Paragraph } = Typography;
+const { Title, Text } = Typography;
+const { Paragraph } = Typography;
 
 // Extract field mappings for easier access
 const { STUDENT: STUDENT_FIELDS } = FIELD_MAPPINGS;
+
+// Định nghĩa tên các ngày trong tuần (tiếng Việt)
+// Theo bitmap: 0=Thứ 2, 1=Thứ 3, 2=Thứ 4, 3=Thứ 5, 4=Thứ 6, 5=Thứ 7, 6=Chủ nhật
+const DAYS_OF_WEEK = {
+  '0': 'Thứ 2',  // Monday
+  '1': 'Thứ 3',  // Tuesday
+  '2': 'Thứ 4',  // Wednesday
+  '3': 'Thứ 5',  // Thursday
+  '4': 'Thứ 6',  // Friday 
+  '5': 'Thứ 7',  // Saturday
+  '6': 'Chủ nhật', // Sunday
+};
 
 /**
  * Component chọn lịch học tùy chỉnh
  */
 const CustomSchedule = ({ 
-  studentData,
+  student, 
   onSubmit,
   onCancel,
   loading = false,
@@ -82,6 +96,7 @@ const CustomSchedule = ({
   const [selectionMode, setSelectionMode] = useState(1); // 1: Select, 0: Deselect
   const [resetConfirmVisible, setResetConfirmVisible] = useState(false);
   const [drawerVisible, setDrawerVisible] = useState(false);
+  const [submitConfirmVisible, setSubmitConfirmVisible] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   // Thêm state localLoading trong component chính
   const [localLoading, setLocalLoading] = useState(false);
@@ -288,16 +303,33 @@ const CustomSchedule = ({
       console.log('Schedule text:', scheduleText);
       
       try {
-        // Get student information
-        const studentId = studentData.Id;
-        const maHocVien = studentData[STUDENT_FIELDS.MA_THEO_DOI] || 
-                        studentData.maTheoDoi || 
-                        studentData[STUDENT_FIELDS.BILL_ITEM_ID] || 
-                        studentData.billItemId;
+        // Kiểm tra và lấy thông tin học viên
+        if (!student) {
+          throw new Error('Không tìm thấy thông tin học viên');
+        }
+        
+        // Sử dụng trực tiếp biến student
+        const studentObj = student;
+        
+        // Lấy ID học viên theo nhiều cách khác nhau
+        const studentId = studentObj.Id || 
+                        studentObj.id || 
+                        studentObj[STUDENT_FIELDS.ID] || 
+                        studentObj.billItemId || 
+                        studentObj[STUDENT_FIELDS.BILL_ITEM_ID];
+        
+        // Lấy mã học viên hoặc billItemId cho bảng ScheduleBitmap
+        const maHocVien = studentObj[STUDENT_FIELDS.MA_THEO_DOI] || 
+                        studentObj.maTheoDoi || 
+                        studentObj[STUDENT_FIELDS.BILL_ITEM_ID] || 
+                        studentObj.billItemId || 
+                        studentId; // Fallback to studentId
         
         if (!studentId) {
           throw new Error('Không tìm thấy ID học viên');
         }
+        
+        console.log('Thông tin học viên đã xác nhận:', { studentId, maHocVien });
         
         // Update student record with full schedule
         await updateStudentSchedule(studentId, scheduleText, "HV Chọn lịch ngoài");
@@ -369,7 +401,7 @@ const CustomSchedule = ({
   }, [isDragging, dragStart, dragCurrent, timeFilter]);
   
   // If data is still loading, show skeleton
-  if (loading && !studentData) {
+  if (loading && !student) {
     return (
       <Card style={{ borderRadius: '8px', marginBottom: '20px' }}>
         <Skeleton active paragraph={{ rows: 6 }} />
@@ -389,7 +421,7 @@ const CustomSchedule = ({
       {fromCase2 && (
         <Alert
           message="Cảnh báo"
-          description={`Bạn đã giữ chỗ trước đó, nhưng chúng tôi không tìm thấy ${studentData?.[STUDENT_FIELDS.CLASS_RESERVATION] || 'mã lớp'} của bạn. Vui lòng liên hệ với tư vấn viên của bạn, hoặc tiếp tục chọn lịch học theo ý muốn dưới đây.`}
+          description={`Bạn đã giữ chỗ trước đó, nhưng chúng tôi không tìm thấy ${student?.[STUDENT_FIELDS.CLASS_RESERVATION] || 'mã lớp'} của bạn. Vui lòng liên hệ với tư vấn viên của bạn, hoặc tiếp tục chọn lịch học theo ý muốn dưới đây.`}
           type="warning"
           showIcon
           icon={<ExclamationCircleOutlined />}
@@ -442,13 +474,7 @@ const CustomSchedule = ({
         />
       </Card>
       
-      {/* Selected slots (desktop only) */}
-      {!isMobile && hasSelectedSlots && (
-        <SelectedSlots 
-          groupedSchedule={groupedSchedule}
-          onDeleteSlot={handleDeleteSlot}
-        />
-      )}
+      {/* Đã xóa phần hiển thị Selected slots ở desktop theo yêu cầu */}
       
       {/* Mobile drawer */}
       <MobileDrawer
@@ -479,13 +505,102 @@ const CustomSchedule = ({
         </Button>
         <Button 
           type="primary" 
-          onClick={handleSubmit}
+          onClick={() => {
+            if (hasSelectedSlots) {
+              // Log thông tin lịch để debug
+              console.log('Schedule bitmap:', schedule);
+              console.log('Group lịch học trước khi hiển thị modal:', groupedSchedule);
+              console.log('Số lượng lịch đã chọn:', groupedSchedule.length);
+              
+              // Hiển thị modal với dữ liệu đã chọn
+              setSubmitConfirmVisible(true);
+            }
+          }}
           disabled={!hasSelectedSlots || loading || localLoading}
           loading={localLoading}
         >
           Xác nhận lịch học
         </Button>
       </div>
+      
+      {/* Confirm Submit dialog */}
+      <Modal
+        title={
+          <Space style={{ display: 'flex', alignItems: 'center' }}>
+            <CheckOutlined style={{ color: '#52c41a' }} />
+            <span>Xác nhận thông tin đăng ký</span>
+          </Space>
+        }
+        open={submitConfirmVisible}
+        onOk={handleSubmit}
+        onCancel={() => setSubmitConfirmVisible(false)}
+        confirmLoading={localLoading}
+        okText="Xác nhận"
+        cancelText="Hủy"
+        width={600}
+        centered
+        bodyStyle={{ padding: '24px' }}
+      >
+        <Paragraph>
+          Bạn có chắc chắn muốn đăng ký với các khung giờ đã chọn không?
+        </Paragraph>
+        <div style={{ background: '#f5f5f5', padding: '16px', borderRadius: '4px', marginTop: '12px', maxHeight: '350px', overflow: 'auto' }}>
+          {groupedSchedule.length > 0 ? (
+            <div className="schedule-confirmation-table">
+              <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 8px' }}>
+                <tbody>
+                  {groupedSchedule.map((item, idx) => (
+                    <tr key={idx} className="day-schedule-row">
+                      <td className="day-name-cell">
+                        <strong>{DAYS_OF_WEEK[item.day] || `Ngày ${item.day}`}</strong>
+                      </td>
+                      <td className="time-slots-cell">
+                        {item.slots.map((slot, slotIdx) => (
+                          <Tag 
+                            color="blue" 
+                            key={slotIdx}
+                            style={{ margin: '3px 5px', fontSize: '13px', padding: '2px 8px' }}
+                          >
+                            {slot.startTime} - {slot.endTime}
+                          </Tag>
+                        ))}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <style jsx="true">{`
+                .schedule-confirmation-table {
+                  border-radius: 4px;
+                  overflow: hidden;
+                }
+                .day-schedule-row {
+                  background-color: #fafafa;
+                }
+                .day-schedule-row:hover {
+                  background-color: #f5f5f5;
+                }
+                .day-name-cell {
+                  width: 100px;
+                  background-color: #f0f0f0;
+                  padding: 8px 12px;
+                  border-radius: 4px 0 0 4px;
+                  text-align: right;
+                  vertical-align: middle;
+                }
+                .time-slots-cell {
+                  padding: 8px 12px;
+                  border-radius: 0 4px 4px 0;
+                  display: flex;
+                  flex-wrap: wrap;
+                }
+              `}</style>
+            </div>
+          ) : (
+            <Empty description="Chưa có khung giờ nào được chọn" />
+          )}
+        </div>
+      </Modal>
     </Card>
   );
 };

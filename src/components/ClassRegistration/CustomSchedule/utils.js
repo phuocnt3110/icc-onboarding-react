@@ -167,18 +167,50 @@ import {
   
   /**
    * Nhóm lịch theo ngày
+   * Trả về mảng các đối tượng {day, slots} đã sắp xếp
    */
   export const getGroupedSchedule = (schedule) => {
-    const grouped = {};
     const scheduleList = getScheduleList(schedule);
     
-    WEEKDAYS.forEach(day => {
-      grouped[day] = scheduleList
-        .filter(item => item.day === day)
-        .sort((a, b) => a.start - b.start);
+    // Nhóm các lịch học theo ngày
+    const groupedByDay = {};
+    
+    // Phân nhóm lịch học theo ngày
+    scheduleList.forEach(slot => {
+      // Dùng giá trị dayIndex thay vì tên ngày để phù hợp với UI
+      const dayIndex = slot.dayIndex || WEEKDAYS.indexOf(slot.day);
+      
+      if (!groupedByDay[dayIndex]) {
+        groupedByDay[dayIndex] = [];
+      }
+      
+      groupedByDay[dayIndex].push({
+        startTime: slotToTime(slot.start),
+        endTime: slotToTime(slot.end)
+      });
     });
     
-    return grouped;
+    // Chuyển đổi từ object sang mảng để phù hợp với UI
+    const result = [];
+    
+    // Chỉ thêm các ngày có lịch vào kết quả
+    Object.keys(groupedByDay).forEach(dayIndex => {
+      if (groupedByDay[dayIndex].length > 0) {
+        result.push({
+          day: dayIndex,
+          slots: groupedByDay[dayIndex].sort((a, b) => {
+            // Sắp xếp các khung giờ theo thứ tự tăng dần
+            return a.startTime.localeCompare(b.startTime);
+          })
+        });
+      }
+    });
+    
+    // Sắp xếp kết quả theo thứ tự ngày trong tuần
+    result.sort((a, b) => parseInt(a.day) - parseInt(b.day));
+    
+    console.log('Grouped schedule result:', result);
+    return result;
   };
   
   /**

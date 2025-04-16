@@ -1,0 +1,152 @@
+/* Styles cho Success Screen */
+
+/* Container chính */
+.success-screen-container {
+  max-width: 900px !important;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  border-radius: 8px;
+}
+
+/* Tiêu đề của các phần (headers) */
+.section-header {
+  background-color: #00509f;
+  color: white;
+  padding: 12px 16px;
+  border-radius: 4px;
+  font-weight: bold;
+  margin-bottom: 16px;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Các item thông tin */
+.info-item {
+  padding: 12px;
+  background-color: white;
+  border-radius: 4px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  margin-bottom: 12px;
+  transition: all 0.2s ease;
+}
+
+.info-item:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+/* Nhãn và giá trị thông tin */
+.info-label {
+  font-weight: 600;
+  color: #333;
+  padding: 6px 0;
+  min-width: 130px;
+  white-space: nowrap;
+}
+
+.info-value {
+  padding: 6px 0;
+}
+
+/* Container chứa thông tin */
+.class-info-container {
+  padding: 20px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+/* Bảng lịch học */
+.schedule-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 8px;
+}
+
+.weekday-cell {
+  width: 110px;
+  padding-right: 15px;
+  font-weight: 500;
+  color: #444;
+  vertical-align: top;
+  padding-top: 5px;
+}
+
+.timeslots-cell {
+  vertical-align: top;
+}
+
+/* Tags */
+.ant-tag {
+  margin: 3px 5px 3px 0;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+/* Responsive styles */
+@media (min-width: 992px) {
+  .section-header {
+    font-size: 16px;
+    padding: 12px 24px;
+  }
+  
+  .info-item {
+    padding: 14px;
+  }
+}
+
+@media (max-width: 768px) {
+  .success-screen-container {
+    padding: 15px;
+  }
+  
+  .section-header {
+    font-size: 14px;
+    padding: 10px 16px;
+  }
+  
+  .info-label {
+    min-width: 110px;
+  }
+  
+  .class-info-container {
+    padding: 15px;
+  }
+  
+  .weekday-cell {
+    width: 90px;
+  }
+}
+
+/* Trên mobile, cho phép xuống dòng khi cần thiết */
+.success-screen-container .ant-col-xs-24 {
+  white-space: normal;
+}
+
+.success-screen-container .ant-result {
+  padding: 20px 0 0;
+  margin-bottom: 0 !important; /* Loại bỏ margin-bottom mặc định */
+}
+
+/* Giảm margin của phần subtitle */
+.success-screen-container .ant-result-subtitle {
+  margin-top: 4px !important;
+  margin-bottom: 10px !important;
+}
+
+/* Điều chỉnh tiêu đề "THÔNG TIN LỚP HỌC CỦA BẠN" */
+.success-screen-container h4.ant-typography {
+  margin-top: 50px !important; /* Giảm margin-top */
+  margin-bottom: 16px !important;
+}
+
+/* Đảm bảo container thông tin không có margin top thừa */
+.success-screen-container .class-info-container {
+  margin-top: 10px !important;
+}

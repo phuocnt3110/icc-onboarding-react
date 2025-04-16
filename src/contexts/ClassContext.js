@@ -53,7 +53,7 @@ export const ClassProvider = ({ children }) => {
       // Check if class is available
       const isAvailable = await checkClassAvailability(classCode);
       if (!isAvailable) {
-        throw new Error(MESSAGES.ERROR.CLASS_NOT_AVAILABLE);
+        throw new Error(MESSAGES.CLASS_NOT_AVAILABLE || 'Lớp học không khả dụng');
       }
 
       // Update class registration

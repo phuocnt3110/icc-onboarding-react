@@ -121,35 +121,83 @@ export const updateStudentClass = async (updateData) => {
     // Chuẩn bị dữ liệu cập nhật theo đúng format của NocoDB v2
     const mappedUpdateData = {};
 
-    // Map các trường dữ liệu sang tên trường trong database
+    // Log dữ liệu gốc để debug
+    console.log('Original complete update data:', updateData);
+    
+    console.log('Original fields before mapping:', Object.keys(updateData).join(', '));
+    
+    // Sử dụng trực tiếp tên trường mà database cần
+    // Không cần mapping ngược nữa - giữ nguyên tên trường tiếng Việt
     Object.entries(updateData).forEach(([key, value]) => {
       // Bỏ qua trường Id vì chúng ta sẽ sử dụng nó trong URL
       if (key !== 'Id') {
-        // Sử dụng tên trường gốc vì API endpoint đã được cấu hình để sử dụng tên trường trong code
+        // Giữ nguyên các tên trường - database cần các tên như maLop, lichHoc, trangThaiChonLop
         mappedUpdateData[key] = value;
+        console.log(`Using original field name ${key} with value:`, value);
       }
     });
-
-    console.log('\n2. Updating student record...');
-    console.log('Update URL:', `/tables/${STUDENT}/records`);
-    console.log('Mapped update data:', mappedUpdateData);
-
-    const response = await apiClient.patch(
-      `/tables/${STUDENT}/records`,
-      {
-        Id: recordId,
-        ...mappedUpdateData
-      }
-    );
     
-    if (!response.data) {
-      console.error('No data returned from update');
-      throw new Error('No data returned from update');
+    console.log('All field names after mapping:', Object.keys(mappedUpdateData).join(', '));
+    
+    // Kiểm tra xem các trường quan trọng có tồn tại không trong dữ liệu
+    // Lưu ý: Giải pháp mới giữ lại tên trường tiếng Việt
+    const expectedFields = ['billItemId', 'maLop', 'lichHoc', 'trangThaiChonLop'];
+    const missingFields = expectedFields.filter(field => !mappedUpdateData[field]);
+    
+    if (missingFields.length > 0) {
+      console.warn('Missing important fields in mapped update data:', missingFields);
     }
     
-    console.log('\n3. Update successful!');
-    console.log('Response data:', response.data);
-    return response.data;
+    // Kiểm tra độ đầy đủ của dữ liệu
+    console.log('Mapped fields available:', Object.keys(mappedUpdateData).join(', '));
+
+    console.log('\n2. Updating student record...');
+    // NocoDB v2 API endpoint cho cập nhật bản ghi cụ thể
+    const updateUrl = `/tables/${STUDENT}/records/${recordId}`;
+    console.log('Update URL:', updateUrl);
+    console.log('Mapped update data:', mappedUpdateData);
+
+    // Thử gửi request với cấu trúc khác (endpoint có id)
+    try {
+      const response = await apiClient.patch(
+        updateUrl,
+        mappedUpdateData  // Không bao gồm Id trong body vì đã có trong URL
+      );
+      
+      if (!response.data) {
+        console.error('No data returned from update');
+        throw new Error('No data returned from update');
+      }
+
+      console.log('\n3. Update successful!');
+      console.log('Response from first attempt:', response.data);
+      return response.data;
+    } catch (firstAttemptError) {
+      console.warn('First update attempt failed, trying alternate endpoint:', firstAttemptError.message);
+      
+      // Phương án dự phòng: Thử lại với endpoint khác (records và ID trong body)
+      try {
+        const fallbackResponse = await apiClient.patch(
+          `/tables/${STUDENT}/records`,
+          {
+            Id: recordId,
+            ...mappedUpdateData
+          }
+        );
+        
+        if (!fallbackResponse.data) {
+          console.error('No data returned from fallback update');
+          throw new Error('No data returned from fallback update');
+        }
+        
+        console.log('\n3. Update successful!');
+        console.log('Response from fallback attempt:', fallbackResponse.data);
+        return fallbackResponse.data;
+      } catch (fallbackError) {
+        console.error('Both update attempts failed');
+        throw fallbackError;
+      }
+    }
   } catch (error) {
     console.error('\n=== Error in updateStudentClass ===');
     console.error('Error object:', error);

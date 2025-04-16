@@ -7,6 +7,7 @@ const StudentContext = createContext();
 
 // Hook to use context
 export const useStudent = () => {
+  console.log('🔍 DEBUG - useStudent được gọi từ StudentContext.js');
   const context = useContext(StudentContext);
   if (!context) {
     throw new Error('useStudent must be used within a StudentProvider');
@@ -57,13 +58,22 @@ export const StudentProvider = ({ children }) => {
         throw new Error('Missing student data or ID');
       }
       
-      // Ensure ID is included
+      // Lấy BILL_ITEM_ID từ URL parameters
+      const urlParams = new URLSearchParams(window.location.search);
+      const billItemId = urlParams.get('id');
+      
+      if (!billItemId) {
+        throw new Error('Missing billItemId in URL parameters');
+      }
+      
+      // Ensure ID and billItemId are included (FIELD_MAPPINGS.STUDENT.BILL_ITEM_ID = "billItemId")
       const dataToUpdate = {
         ...updateData,
-        Id: student.Id
+        Id: student.Id,
+        billItemId: billItemId // Tên trường đúng cần là chữ thường (từ FIELD_MAPPINGS)
       };
       
-      console.log('[DEBUG] Updating student data:', dataToUpdate);
+      console.log('[DEBUG] Updating student data with BILL_ITEM_ID:', billItemId, dataToUpdate);
       const updatedData = await updateStudentClass(dataToUpdate);
       
       if (!updatedData) {
@@ -103,7 +113,7 @@ export const StudentProvider = ({ children }) => {
       error, 
       isInitialized,
       loadStudentData,
-      updateStudent 
+      updateStudent
     }}>
       {children}
     </StudentContext.Provider>

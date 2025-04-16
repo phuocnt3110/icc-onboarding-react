@@ -20,12 +20,20 @@ const { STUDENT: STUDENT_FIELDS } = FIELD_MAPPINGS;
 const ClassRegistration = () => {
   // Use contexts
   const { 
-    studentData, 
+    student, 
     loading: studentLoading, 
     error: studentError,
-    updateStudentClass,
+    updateStudent,
     loadStudentData: fetchStudentDataFromContext  // Đổi tên để tránh xung đột với hàm cùng tên trong component
   } = useStudent();
+
+  // Thêm log ở đây
+  console.log('🔍 DEBUG - student từ context:', {
+    hasData: !!student,
+    dataType: typeof student,
+    isEmpty: !student || Object.keys(student || {}).length === 0,
+    data: student
+  });
   
   const {
     classList,
@@ -36,7 +44,7 @@ const ClassRegistration = () => {
     setCurrentCase,
     checkReservation,
     loadClasses,        // Đây là hàm đúng từ context thay vì fetchAvailableClasses
-    updateClassRegistration
+    updateRegistration
   } = useClass();
   
   const navigate = useNavigate();
@@ -46,14 +54,30 @@ const ClassRegistration = () => {
   const [errorMessage, setErrorMessage] = useState('');
   const [processingAction, setProcessingAction] = useState(false);
 
+  // Đồng bộ URL với màn hình hiển thị thực tế để dễ debug
+  useEffect(() => {
+    // Chỉ cập nhật URL khi đã tải dữ liệu và xác định màn hình
+    if (currentScreen && currentScreen !== 'loading' && currentScreen !== 'error' && student?.Id) {
+      const queryParams = new URLSearchParams(window.location.search);
+      const existingScreen = queryParams.get('screen');
+      const id = queryParams.get('id');
+      
+      // Nếu URL screen khác với màn hình hiện tại, cập nhật lại URL
+      if (existingScreen !== currentScreen) {
+        // Sử dụng billItemId thay vì Id để giữ tính nhất quán
+        const billItemId = student[STUDENT_FIELDS.BILL_ITEM_ID] || id; // Sử dụng id hiện tại nếu không tìm thấy billItemId
+        const newUrl = window.location.pathname + `?screen=${currentScreen}&id=${billItemId}`;
+        // Sử dụng replaceState để không ảnh hưởng đến lịch sử navigation
+        window.history.replaceState({}, '', newUrl);
+        console.log(`🔄 Đã cập nhật URL từ screen=${existingScreen} sang screen=${currentScreen}`);
+      }
+    }
+  }, [currentScreen, student]);
+
   useEffect(() => {
     // Get params from URL
     const queryParams = new URLSearchParams(window.location.search);
     const id = queryParams.get('id');
-    const directSuccess = queryParams.get('direct_success');
-    const screen = queryParams.get('screen'); // Đọc tham số screen mới
-    
-    console.log('URL params:', {id, directSuccess, screen});
     
     if (!id) {
       setErrorMessage(MESSAGES.NO_ID_IN_URL);
@@ -61,178 +85,114 @@ const ClassRegistration = () => {
       return;
     }
     
-    // Xử lý theo thứ tự ưu tiên
-    // 1. direct_success (cao nhất)
-    // 2. screen parameter (trung bình)
-    // 3. loadStudentData thông thường (thấp nhất)
+    // Luồng xử lý thống nhất - không phụ thuộc vào các tham số URL khác
+    console.log('Bắt đầu xử lý flow ClassRegistration dựa trên logic mới');
     
-    // Nếu có tham số direct_success=true, chuyển thẳng đến Success Screen
-    if (directSuccess === 'true') {
-      console.log('direct_success=true, chuyển thẳng đến Success Screen');
-      setCurrentScreen('success');
-      // Nếu không có studentData, cần fetch lại
-      if (!studentData) {
-        (async () => {
-          try {
-            await fetchStudentDataFromContext(id);
-          } catch (error) {
-            console.error('Lỗi khi tải dữ liệu học viên:', error);
-            setErrorMessage(error.message || 'Không thể tải thông tin học viên');
-            setCurrentScreen('error');
-          }
-        })();
+    // Thêm async IIFE để xử lý Promise từ loadStudentData
+    (async () => {
+      try {
+        await loadStudentData(id);
+      } catch (error) {
+        console.error('Lỗi khi tải dữ liệu học viên:', error);
+        setErrorMessage(error.message || 'Không thể tải thông tin học viên');
+        setCurrentScreen('error');
       }
-    } 
-    // Xử lý tham số screen từ StudentInfo.jsx
-    else if (screen) {
-      console.log('Tìm thấy tham số screen:', screen);
-      
-      // Đơn giản hóa flow sử dụng với tham số screen
-      (async () => {
-        try {
-          // Đặt màn hình loading trước
-          setCurrentScreen('loading');
-          
-          // 1. Fetch dữ liệu học viên trước
-          console.log('Fetching student data for ID:', id);
-          // Sử dụng hàm được import từ context đã đổi tên để tránh xung đột
-          console.log('Calling fetchStudentDataFromContext from context');
-          const studentResponse = await fetchStudentDataFromContext(id);
-          console.log('Fetched student data using loadStudentData');
-          
-          // 2. Xử lý theo tham số screen
-          if (screen === 'reservation') {
-            console.log('Chuyển đến màn hình reservation theo tham số');
-            setCurrentScreen('reservation');
-          }
-          else if (screen === 'customSchedule') {
-            console.log('Chuyển đến màn hình customSchedule theo tham số');
-            setCurrentScreen('customSchedule');
-          }
-          else if (screen === 'selection') {
-            console.log('Chuyển đến màn hình danh sách lớp theo tham số');
-            // Load danh sách lớp sử dụng hàm loadClasses từ context với các tham số cần thiết từ dữ liệu học viên
-            const studentResponse = await fetchStudentDataFromContext(id);
-            await loadClasses({
-              sanPham: studentResponse[STUDENT_FIELDS.PRODUCT] || null,
-              loaiLop: studentResponse[STUDENT_FIELDS.CLASS_SIZE] || null,
-              loaiGV: studentResponse[STUDENT_FIELDS.TEACHER_TYPE] || null,
-              trinhDo: studentResponse[STUDENT_FIELDS.LEVEL] || null
-            });
-            setCurrentScreen('classList');
-          }
-        } catch (error) {
-          console.error('Lỗi khi xử lý tham số screen:', error);
-          setErrorMessage(error.message || 'Không thể tải thông tin học viên');
-          setCurrentScreen('error');
-        }
-      })();
-    } 
-    // Flow bình thường - không có tham số đặc biệt
-    else {
-      console.log('Không có tham số đặc biệt, thực hiện flow bình thường');
-      
-      // Thêm async IIFE để xử lý Promise từ loadStudentData
-      (async () => {
-        try {
-          await loadStudentData(id);
-        } catch (error) {
-          console.error('Lỗi khi tải dữ liệu học viên:', error);
-          setErrorMessage(error.message || 'Không thể tải thông tin học viên');
-          setCurrentScreen('error');
-        }
-      })();
-    }
+    })();
   }, []);
   
   /**
-   * Main function to load student data and determine the case
-   * @param {string} id - Bill Item ID from URL
-   * @returns {Object} - Student data loaded from API
+   * Hàm chính để tải dữ liệu học viên và xác định các trường hợp (case) hiển thị
+   * @param {string} id - Bill Item ID từ URL
+   * @returns {Object} - Dữ liệu học viên đã tải từ API
    */
   const loadStudentData = async (id) => {
     try {
-      console.log('🔍 loadStudentData - Start with ID:', id);
+      console.log('🔍 loadStudentData - Bắt đầu với ID:', id);
       
       // Reset error message
       setErrorMessage('');
+      setCurrentScreen('loading');
       
-      // Kiểm tra nếu đã có dữ liệu học viên
-      if (!studentData || studentData[STUDENT_FIELDS.BILL_ITEM_ID] !== id) {
-        // Cần tải lại dữ liệu học viên
-        setCurrentScreen('loading');
-        
-        // Gọi hàm fetch và đợi phản hồi trực tiếp
-        const fetchedStudent = await fetchStudentDataFromContext(id);
-        
-        // Kiểm tra dữ liệu trả về trực tiếp từ hàm fetch
-        if (!fetchedStudent) {
-          console.error('❌ loadStudentData - Hàm fetchStudentData không trả về dữ liệu');
-          throw new Error('Không thể tải thông tin học viên');
-        }
-        
-        console.log('📋 loadStudentData - Student data received directly:', fetchedStudent);
-        
-        // Sử dụng dữ liệu trả về trực tiếp từ hàm fetchStudentData thay vì đợi studentData cập nhật
-        console.log('🔑 loadStudentData - Checking for class code (maLop):', fetchedStudent?.[STUDENT_FIELDS.CLASS_CODE]);
-        
-        // Check if student has class code (maLop)
-        if (fetchedStudent?.[STUDENT_FIELDS.CLASS_CODE]) {
-          // Look for reservation in form_giu_cho where ma_order matches maLop
-          console.log('🔎 loadStudentData - Searching for reservation with ma_order:', fetchedStudent[STUDENT_FIELDS.CLASS_CODE]);
-          const foundReservation = await checkReservation(fetchedStudent[STUDENT_FIELDS.CLASS_CODE]);
-          
-          if (foundReservation) {
-            // Reservation data will be available in context after checkReservation
-            if (currentCase === 1) {
-              // Case 1: Valid reservation
-              setCurrentScreen('reservation');
-            } else if (currentCase === 2) {
-              // Case 2: Invalid reservation, proceed to Case 3 with warning
-              handleCase3(fetchedStudent, true);
-            }
-          } else {
-            // Case 2: Reservation not found, proceed to Case 3 with warning
-            setCurrentCase(2);
-            handleCase3(fetchedStudent, true);
-          }
-        } else {
-          // Case 3: No reservation
-          setCurrentCase(3);
-          handleCase3(fetchedStudent);
-        }
-      } else {
-        // Sử dụng dữ liệu đã có
-        console.log('📋 loadStudentData - Using existing student data:', studentData);
-        
-        console.log('🔑 loadStudentData - Checking for class code (maLop):', studentData?.[STUDENT_FIELDS.CLASS_CODE]);
-        
-        // Check if student has class code (maLop)
-        if (studentData?.[STUDENT_FIELDS.CLASS_CODE]) {
-          // Look for reservation in form_giu_cho where ma_order matches maLop
-          console.log('🔎 loadStudentData - Searching for reservation with ma_order:', studentData[STUDENT_FIELDS.CLASS_CODE]);
-          const foundReservation = await checkReservation(studentData[STUDENT_FIELDS.CLASS_CODE]);
-          
-          if (foundReservation) {
-            // Reservation data will be available in context after checkReservation
-            if (currentCase === 1) {
-              // Case 1: Valid reservation
-              setCurrentScreen('reservation');
-            } else if (currentCase === 2) {
-              // Case 2: Invalid reservation, proceed to Case 3 with warning
-              handleCase3(studentData, true);
-            }
-          } else {
-            // Case 2: Reservation not found, proceed to Case 3 with warning
-            setCurrentCase(2);
-            handleCase3(studentData, true);
-          }
-        } else {
-          // Case 3: No reservation
-          setCurrentCase(3);
-          handleCase3(studentData);
-        }
+      // Tải dữ liệu học viên
+      const fetchedStudent = await fetchStudentDataFromContext(id);
+      
+      // Kiểm tra dữ liệu trả về từ hàm fetch
+      if (!fetchedStudent) {
+        console.error('❌ loadStudentData - Hàm fetchStudentData không trả về dữ liệu');
+        throw new Error('Không thể tải thông tin học viên');
       }
+      
+      console.log('📋 loadStudentData - Dữ liệu học viên đã tải:', fetchedStudent);
+      
+      // CASE SUCCESS: student.trangThaiChonLop <> "HV Chưa chọn lịch"
+      if (fetchedStudent[STUDENT_FIELDS.STATUS] !== 'HV Chưa chọn lịch') {
+        console.log('🎯 Case SUCCESS: trangThaiChonLop khác "HV Chưa chọn lịch" - trangThaiChonLop =', 
+          fetchedStudent[STUDENT_FIELDS.STATUS]);
+        setCurrentScreen('success');
+        return fetchedStudent;
+      }
+      
+      // CASE NEW: student.trangThaiChonLop = "HV Chưa chọn lịch"
+      console.log('🎯 Case NEW: trangThaiChonLop = "HV Chưa chọn lịch"');
+      
+      // Kiểm tra điều kiện cho Case 1 & Case 1a
+      if (fetchedStudent[STUDENT_FIELDS.ASSIGNED_CLASS]) {
+        console.log('👉 Student có maLopBanGiao:', fetchedStudent[STUDENT_FIELDS.ASSIGNED_CLASS]);
+        
+        // Kiểm tra reservation với maLopBanGiao
+        const foundReservation = await checkReservation(fetchedStudent[STUDENT_FIELDS.ASSIGNED_CLASS]);
+        
+        // Case 1: maLopBanGiao có giá trị và tìm thấy reservation hợp lệ
+        if (foundReservation && currentCase === 1) {
+          console.log('🎯 Case 1: Tìm thấy reservation hợp lệ với mã lớp bàn giao');
+          setCurrentScreen('reservation');
+          return fetchedStudent;
+        }
+        
+        // Case 1a: maLopBanGiao có giá trị nhưng không tìm thấy reservation hợp lệ
+        console.log('🎯 Case 1a: Không tìm thấy reservation hợp lệ với mã lớp bàn giao');
+        
+        // Xác định màn hình dựa trên loại lớp
+        if (fetchedStudent[STUDENT_FIELDS.CLASS_SIZE] === '1:1') {
+          console.log('👉 Student có loại lớp 1:1, chuyển đến màn hình customSchedule');
+          setCurrentScreen('customSchedule');
+        } else {
+          console.log('👉 Student có loại lớp khác 1:1, chuyển đến màn hình classSelection');
+          // Load danh sách lớp học
+          await loadClasses({
+            sanPham: fetchedStudent[STUDENT_FIELDS.PRODUCT] || null,
+            loaiLop: fetchedStudent[STUDENT_FIELDS.CLASS_SIZE] || null,
+            loaiGV: fetchedStudent[STUDENT_FIELDS.TEACHER_TYPE] || null,
+            trinhDo: fetchedStudent[STUDENT_FIELDS.LEVEL] || null
+          });
+          setCurrentScreen('classList');
+        }
+        
+        return fetchedStudent;
+      }
+      
+      // Case 2 và Case 3: maLopBanGiao trống
+      console.log('👉 Student không có maLopBanGiao');
+      
+      // Case 2: maLopBanGiao trống && loaiLop = 1:1
+      if (fetchedStudent[STUDENT_FIELDS.CLASS_SIZE] === '1:1') {
+        console.log('🎯 Case 2: Student không có maLopBanGiao và loại lớp 1:1');
+        setCurrentScreen('customSchedule');
+        return fetchedStudent;
+      }
+      
+      // Case 3: maLopBanGiao trống && loaiLop <> 1:1
+      console.log('🎯 Case 3: Student không có maLopBanGiao và loại lớp khác 1:1');
+      // Load danh sách lớp học
+      await loadClasses({
+        sanPham: fetchedStudent[STUDENT_FIELDS.PRODUCT] || null,
+        loaiLop: fetchedStudent[STUDENT_FIELDS.CLASS_SIZE] || null,
+        loaiGV: fetchedStudent[STUDENT_FIELDS.TEACHER_TYPE] || null,
+        trinhDo: fetchedStudent[STUDENT_FIELDS.LEVEL] || null
+      });
+      setCurrentScreen('classList');
+      
+      return fetchedStudent;
     } catch (error) {
       console.error('❌ loadStudentData - Error:', error);
       setErrorMessage(error.message || MESSAGES.STUDENT_DATA_LOAD_ERROR);
@@ -323,7 +283,7 @@ const ClassRegistration = () => {
     }
     
     // Validate class selection
-    const validationResult = validateClassSelection(studentData, selectedClass);
+    const validationResult = validateClassSelection(student, selectedClass);
     if (!validationResult.valid) {
       message.error(validationResult.message);
       return;
@@ -358,13 +318,15 @@ const ClassRegistration = () => {
       
       // 2. Cập nhật thông tin học viên
       const updateData = {
+        Id: student.Id, // Thêm ID vào updateData thay vì truyền riêng
         [STUDENT_FIELDS.CLASS_CODE]: selectedClass[FIELD_MAPPINGS.CLASS.CODE],
         [STUDENT_FIELDS.SCHEDULE]: scheduleString,
         [STUDENT_FIELDS.START_DATE]: selectedClass[FIELD_MAPPINGS.CLASS.START_DATE],
         [STUDENT_FIELDS.STATUS]: "HV Chọn lịch hệ thống"
       };
       
-      const updated = await updateStudentClass(studentData.Id, updateData);
+      console.log('Dữ liệu cập nhật học viên:', updateData);
+      const updated = await updateStudent(updateData);
       
       if (updated) {
         // 3. Cập nhật số lượng đăng ký trong bảng Class
@@ -374,7 +336,7 @@ const ClassRegistration = () => {
           
           if (classCode) {
             // Gọi API để cập nhật số lượng đăng ký cho tất cả bản ghi của lớp
-            await updateClassRegistration(classCode);
+            await updateRegistration(classCode);
             console.log("Đã cập nhật số lượng đăng ký cho lớp:", classCode);
           } else {
             console.warn("Không tìm thấy mã lớp, không thể cập nhật số lượng đăng ký");
@@ -384,7 +346,20 @@ const ClassRegistration = () => {
           // Vẫn tiếp tục xử lý vì đã cập nhật thành công thông tin học viên
         }
         
-        // 5. Chuyển đến màn hình thành công
+        // 5. Tải lại dữ liệu học viên mới nhất trước khi chuyển màn hình
+        try {
+          console.log('Tải lại dữ liệu học viên sau khi cập nhật thành công');
+          // Lấy billItemId từ student hiện tại
+          const billItemId = student[STUDENT_FIELDS.BILL_ITEM_ID];
+          // Gọi lại hàm fetchStudentData để tải dữ liệu mới nhất vào context
+          const refreshedStudent = await fetchStudentDataFromContext(billItemId);
+          console.log('Dữ liệu học viên đã được làm mới:', refreshedStudent);
+        } catch (refreshError) {
+          console.warn('Không thể tải lại dữ liệu học viên, tiếp tục với dữ liệu hiện tại', refreshError);
+          // Vẫn tiếp tục vì đã cập nhật database thành công
+        }
+        
+        // 6. Chuyển đến màn hình thành công
         setCurrentScreen('success');
         message.success(MESSAGES.CLASS_REGISTRATION_SUCCESS);
       } else {
@@ -402,7 +377,7 @@ const ClassRegistration = () => {
    * Confirm reservation
    */
   const handleConfirmReservation = async () => {
-    if (!studentData || !studentData.Id || !reservationData) {
+    if (!student || !student.Id || !reservationData) {
       message.error(MESSAGES.MISSING_RESERVATION_INFO);
       return;
     }
@@ -423,9 +398,36 @@ const ClassRegistration = () => {
         [STUDENT_FIELDS.STATUS]: "HV Xác nhận lịch được giữ"
       };
       
-      const updated = await updateStudentClass(studentData.Id, updateData);
+      const updated = await updateStudent(student.Id, updateData);
       
       if (updated) {
+        // 3. Cập nhật số lượng đăng ký trong bảng Class
+        try {
+          if (classCode) {
+            // Gọi API để cập nhật số lượng đăng ký cho lớp học
+            await updateRegistration(classCode);
+            console.log("Đã cập nhật số lượng đăng ký cho lớp:", classCode);
+          } else {
+            console.warn("Không tìm thấy mã lớp, không thể cập nhật số lượng đăng ký");
+          }
+        } catch (classUpdateError) {
+          console.error("Lỗi khi cập nhật số lượng đăng ký:", classUpdateError);
+          // Vẫn tiếp tục xử lý vì đã cập nhật thành công thông tin học viên
+        }
+        
+        // Tải lại dữ liệu học viên mới nhất trước khi chuyển màn hình
+        try {
+          console.log('Tải lại dữ liệu học viên sau khi xác nhận reservation');
+          // Lấy billItemId từ student hiện tại
+          const billItemId = student[STUDENT_FIELDS.BILL_ITEM_ID];
+          // Gọi lại hàm fetchStudentData để tải dữ liệu mới nhất vào context
+          const refreshedStudent = await fetchStudentDataFromContext(billItemId);
+          console.log('Dữ liệu học viên đã được làm mới:', refreshedStudent);
+        } catch (refreshError) {
+          console.warn('Không thể tải lại dữ liệu học viên sau xác nhận reservation:', refreshError);
+          // Vẫn tiếp tục vì đã cập nhật database thành công
+        }
+        
         // Show success screen
         setCurrentScreen('success');
         message.success(MESSAGES.RESERVATION_CONFIRMATION_SUCCESS);
@@ -445,7 +447,7 @@ const ClassRegistration = () => {
    * @param {Array} selectedSchedules - Array of selected schedule objects
    */
   const handleCustomScheduleSubmit = async (selectedSchedules) => {
-    if (!studentData || !studentData.Id) {
+    if (!student || !student.Id) {
       message.error(MESSAGES.MISSING_STUDENT_INFO);
       return;
     }
@@ -481,10 +483,21 @@ const ClassRegistration = () => {
       };
       
       // Update student record
-      const updated = await updateStudentClass(studentData.Id, updateData);
+      const updated = await updateStudent(student.Id, updateData);
       
       if (updated) {
-        // Show success screen
+        try {
+          // Tải lại dữ liệu học viên từ server trước khi chuyển màn hình
+          console.log('Tải lại dữ liệu học viên sau khi cập nhật lịch tùy chỉnh...');
+          const billItemId = student[STUDENT_FIELDS.BILL_ITEM_ID]; 
+          const refreshedStudent = await fetchStudentDataFromContext(billItemId);
+          console.log('Dữ liệu học viên đã được làm mới:', refreshedStudent);
+        } catch (refreshError) {
+          console.warn('Lỗi khi tải lại dữ liệu học viên:', refreshError);
+          // Vẫn tiếp tục với dữ liệu hiện tại
+        }
+        
+        // Sau khi đã cố gắng làm mới dữ liệu, chuyển màn hình
         setCurrentScreen('success');
         message.success(MESSAGES.CUSTOM_SCHEDULE_SUCCESS);
       } else {
@@ -500,26 +513,34 @@ const ClassRegistration = () => {
   
   /**
    * Refresh class list data from API
+   * Lưu ý: Đảm bảo giữ lại các điều kiện lọc ban đầu
    */
   const refreshClassList = async () => {
-    if (!studentData) {
+    if (!student) {
       message.error(MESSAGES.MISSING_STUDENT_INFO);
       return;
     }
     
     try {
-      // Sử dụng loadClasses từ context thay vì fetchAvailableClasses trực tiếp
+      console.log("Làm mới danh sách lớp học với điều kiện lọc:", {
+        sanPham: student[STUDENT_FIELDS.PRODUCT],
+        loaiLop: student[STUDENT_FIELDS.CLASS_SIZE],
+        loaiGV: student[STUDENT_FIELDS.TEACHER_TYPE],
+        trinhDo: student[STUDENT_FIELDS.LEVEL]
+      });
+      
+      // Sử dụng loadClasses từ context với các tham số đúng định dạng của API
       await loadClasses({
-        sanPham: studentData[STUDENT_FIELDS.PRODUCT],
-        sizeLop: studentData[STUDENT_FIELDS.CLASS_SIZE],
-        loaiGv: studentData[STUDENT_FIELDS.TEACHER_TYPE],
-        goiMua: studentData[STUDENT_FIELDS.LEVEL]
+        sanPham: student[STUDENT_FIELDS.PRODUCT],
+        loaiLop: student[STUDENT_FIELDS.CLASS_SIZE],
+        loaiGV: student[STUDENT_FIELDS.TEACHER_TYPE],
+        trinhDo: student[STUDENT_FIELDS.LEVEL]
       });
       
       message.success('Đã tải lại danh sách lớp học');
       return Promise.resolve();
     } catch (error) {
-      console.error('Error refreshing class list:', error);
+      console.error('Lỗi khi làm mới danh sách lớp học:', error);
       message.error('Không thể tải lại danh sách lớp học');
       return Promise.reject(error);
     }
@@ -533,7 +554,7 @@ const ClassRegistration = () => {
   };
 
   const handleChooseAgain = () => {
-    if (studentData[STUDENT_FIELDS.CLASS_SIZE] === '1:1') {
+    if (student[STUDENT_FIELDS.CLASS_SIZE] === '1:1') {
       setCurrentScreen('customSchedule');
     } else {
       setCurrentScreen('classList');
@@ -541,7 +562,7 @@ const ClassRegistration = () => {
   };
 
   const handleCancelReservation = () => {
-    handleCase3(studentData);
+    handleCase3(student);
   };
 
   const handleCompleteRegistration = () => {
@@ -599,7 +620,7 @@ const ClassRegistration = () => {
         console.log('🎫 renderContent - Showing ReservationConfirmation screen');
         return (
           <ReservationConfirmation
-            studentData={studentData}
+            student={student}
             reservationData={reservationData}
             onConfirm={handleConfirmReservation}
             onCancel={handleCancelReservation}
@@ -608,9 +629,19 @@ const ClassRegistration = () => {
         );
         
       case 'classList':
+        // Thêm log ở đây
+        console.log('🔍 DEBUG - student trước khi truyền vào ClassSelection:', { 
+          hasData: !!student, 
+          dataType: typeof student,
+          isEmpty: !student || Object.keys(student || {}).length === 0,
+          studentId: student?.Id,
+          productInfo: student?.[STUDENT_FIELDS.PRODUCT],
+          classSize: student?.[STUDENT_FIELDS.CLASS_SIZE],
+          fullData: student
+        });
         return (
           <ClassSelection
-            studentData={studentData}
+            student={student}
             classList={classList}
             showWarning={currentCase === 2}
             onClassSelect={handleClassSelection}
@@ -623,9 +654,9 @@ const ClassRegistration = () => {
       case 'customSchedule':
         return (
           <CustomSchedule
-            studentData={studentData}
+            student={student}
             onSubmit={handleCustomScheduleSubmit}
-            onCancel={() => studentData[STUDENT_FIELDS.CLASS_SIZE] === '1:1' 
+            onCancel={() => student[STUDENT_FIELDS.CLASS_SIZE] === '1:1' 
               ? navigate(-1) 
               : setCurrentScreen('classList')}
             loading={processingAction}
@@ -636,7 +667,7 @@ const ClassRegistration = () => {
       case 'success':
         return (
           <SuccessScreen
-            studentData={studentData}
+            student={student}
             onChooseAgain={handleChooseAgain}
             onComplete={handleCompleteRegistration}
             loading={processingAction}

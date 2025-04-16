@@ -2298,14 +2298,7 @@ const StudentInfo = () => {
       </Card>
 
       <div className="form-actions">
-        <Button 
-          type="default"
-          onClick={logUpdateData}
-          icon={<BugOutlined />}
-          style={{ marginRight: '10px' }}
-        >
-          Kiểm tra dữ liệu
-        </Button>
+        {/* Đã xóa nút Kiểm tra dữ liệu */}
         <Button 
           type="primary" 
           onClick={showConfirmationModal}
