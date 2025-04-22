@@ -3,11 +3,16 @@
   width: 100%;
   max-width: 800px;
   margin: 0 auto;
-  padding: 1rem;
+  padding: 1.25rem;
   background-color: #fff;
+  background-image: linear-gradient(to bottom, #ffffff, #f9fcff);
   min-height: 800px;
   animation: fadeContainer 0.3s ease-in-out;
   opacity: 1;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  transition: all 0.4s ease;
+  border: 1px solid rgba(230, 240, 250, 0.8);
 }
 
 /* Animation cho container */
@@ -41,115 +46,11 @@
   .container {
     width: 80%;
   }
-
-/* Animation cho container */
-@keyframes fadeContainer {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-/* Animation cho content */
-.contentFadeIn {
-  animation: fadeIn 0.5s ease-in-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-}
-
-/* Animation cho container */
-@keyframes fadeContainer {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-/* Animation cho content */
-.contentFadeIn {
-  animation: fadeIn 0.5s ease-in-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
 }
 
 @media (min-width: 992px) {
   .container {
     width: 70%;
-  }
-
-/* Animation cho container */
-@keyframes fadeContainer {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-/* Animation cho content */
-.contentFadeIn {
-  animation: fadeIn 0.5s ease-in-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-}
-
-/* Animation cho container */
-@keyframes fadeContainer {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-/* Animation cho content */
-.contentFadeIn {
-  animation: fadeIn 0.5s ease-in-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
   }
 }
 
@@ -164,156 +65,30 @@
   background-color: #fff;
 }
 
-/* Animation cho container */
-@keyframes fadeContainer {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-/* Animation cho content */
-.contentFadeIn {
-  animation: fadeIn 0.5s ease-in-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
 .loadingMessage {
   margin-top: 1rem;
   font-size: 1.2rem;
   color: var(--text-secondary);
 }
 
-/* Animation cho container */
-@keyframes fadeContainer {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-/* Animation cho content */
-.contentFadeIn {
-  animation: fadeIn 0.5s ease-in-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
 /* Card styles */
 .card {
   margin-bottom: 24px;
-  border-radius: var(--border-radius-md);
-  box-shadow: var(--shadow-sm);
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
   transition: all 0.3s ease;
-}
-
-/* Animation cho container */
-@keyframes fadeContainer {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-/* Animation cho content */
-.contentFadeIn {
-  animation: fadeIn 0.5s ease-in-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  border: 1px solid rgba(230, 240, 250, 0.7);
+  overflow: hidden;
 }
 
 .card:hover {
-  box-shadow: var(--shadow-md);
-}
-
-/* Animation cho container */
-@keyframes fadeContainer {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-/* Animation cho content */
-.contentFadeIn {
-  animation: fadeIn 0.5s ease-in-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
 }
 
 .cardBody {
-  padding: 20px 24px;
-}
-
-/* Animation cho container */
-@keyframes fadeContainer {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-/* Animation cho content */
-.contentFadeIn {
-  animation: fadeIn 0.5s ease-in-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  padding: 22px 26px;
+  background-image: linear-gradient(to bottom, #ffffff, #f8fcff);
 }
 
 /* Section Title Styles */
@@ -322,32 +97,8 @@
   align-items: baseline;
   margin-bottom: 20px;
   position: relative;
-}
-
-/* Animation cho container */
-@keyframes fadeContainer {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-/* Animation cho content */
-.contentFadeIn {
-  animation: fadeIn 0.5s ease-in-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(0, 80, 159, 0.1);
 }
 
 .sectionLetter {
@@ -356,32 +107,7 @@
   color: var(--primary-color);
   margin-right: 8px;
   line-height: 1;
-}
-
-/* Animation cho container */
-@keyframes fadeContainer {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-/* Animation cho content */
-.contentFadeIn {
-  animation: fadeIn 0.5s ease-in-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  text-shadow: 0 1px 1px rgba(255, 255, 255, 0.8);
 }
 
 .sectionText {
@@ -390,32 +116,7 @@
   color: var(--primary-color);
   padding-bottom: 6px;
   position: relative;
-}
-
-/* Animation cho container */
-@keyframes fadeContainer {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-/* Animation cho content */
-.contentFadeIn {
-  animation: fadeIn 0.5s ease-in-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  text-shadow: 0 1px 1px rgba(255, 255, 255, 0.8);
 }
 
 /* Course Info */
@@ -424,32 +125,6 @@
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 16px;
   padding: 0 0 16px 0;
-}
-
-/* Animation cho container */
-@keyframes fadeContainer {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-/* Animation cho content */
-.contentFadeIn {
-  animation: fadeIn 0.5s ease-in-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
 }
 
 .courseInfoItem {
@@ -461,295 +136,62 @@
   border-radius: var(--border-radius-sm);
 }
 
-/* Animation cho container */
-@keyframes fadeContainer {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-/* Animation cho content */
-.contentFadeIn {
-  animation: fadeIn 0.5s ease-in-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
 .courseInfoLabel {
   font-size: 13px;
   color: var(--text-secondary);
   font-weight: 500;
 }
 
-/* Animation cho container */
-@keyframes fadeContainer {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-/* Animation cho content */
-.contentFadeIn {
-  animation: fadeIn 0.5s ease-in-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
 .courseInfoValue {
   font-size: 14px;
   color: var(--text-primary);
-  font-weight: 400;
+  font-weight: 500;
+  padding: 6px 10px;
   background-color: var(--background-light);
-  padding: 8px 12px;
   border-radius: var(--border-radius-sm);
-  position: relative;
-  min-height: 36px;
   box-shadow: 0 1.5px 0 rgba(0, 0, 0, 0.08);
 }
 
-/* Animation cho container */
-@keyframes fadeContainer {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-/* Animation cho content */
-.contentFadeIn {
-  animation: fadeIn 0.5s ease-in-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
 .displayValue {
-  padding: 8px 12px;
-  border-radius: var(--border-radius-sm);
-  background-color: var(--background-light);
+  padding: 10px 14px;
+  border-radius: 8px;
+  background-color: rgba(245, 250, 255, 0.8);
+  width: 100%;
   cursor: pointer;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
   min-height: 36px;
-  transition: all 0.2s;
-}
-
-/* Animation cho container */
-@keyframes fadeContainer {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-/* Animation cho content */
-.contentFadeIn {
-  animation: fadeIn 0.5s ease-in-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  line-height: 1.4;
+  transition: all 0.3s ease;
+  border: 1px solid rgba(230, 240, 250, 0.5);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.02);
 }
 
 .displayValue:hover {
-  background-color: var(--background-lighter);
-}
-
-/* Animation cho container */
-@keyframes fadeContainer {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-/* Animation cho content */
-.contentFadeIn {
-  animation: fadeIn 0.5s ease-in-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  background-color: rgba(240, 247, 255, 1);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.03);
+  border-color: rgba(210, 230, 250, 0.7);
+  transform: translateY(-1px);
 }
 
 /* Form styles */
 .form {
   background: rgba(255, 255, 255, 0.9);
-  padding: 1.5rem;
+  padding: 24px;
   border-radius: var(--border-radius-lg);
-}
-
-/* Animation cho container */
-@keyframes fadeContainer {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-/* Animation cho content */
-.contentFadeIn {
-  animation: fadeIn 0.5s ease-in-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
 }
 
 .formRow {
   margin-bottom: 0 !important;
 }
 
-/* Animation cho container */
-@keyframes fadeContainer {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-/* Animation cho content */
-.contentFadeIn {
-  animation: fadeIn 0.5s ease-in-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
 .formItem {
   margin-bottom: 16px !important;
-}
-
-/* Animation cho container */
-@keyframes fadeContainer {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-/* Animation cho content */
-.contentFadeIn {
-  animation: fadeIn 0.5s ease-in-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
 }
 
 .formItemLabel {
   font-size: 13px;
   color: var(--text-secondary);
   font-weight: 500;
-  height: 22px;
   margin-bottom: 6px;
-}
-
-/* Animation cho container */
-@keyframes fadeContainer {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-/* Animation cho content */
-.contentFadeIn {
-  animation: fadeIn 0.5s ease-in-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
 }
 
 .formItemInput {
@@ -759,196 +201,51 @@
   border-radius: var(--border-radius-sm);
 }
 
-/* Animation cho container */
-@keyframes fadeContainer {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-/* Animation cho content */
-.contentFadeIn {
-  animation: fadeIn 0.5s ease-in-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
 /* Form actions */
 .formActions {
   display: flex;
   justify-content: center;
   margin-top: 24px;
-}
-
-/* Animation cho container */
-@keyframes fadeContainer {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-/* Animation cho content */
-.contentFadeIn {
-  animation: fadeIn 0.5s ease-in-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  flex-wrap: wrap;
 }
 
 .primaryButton {
-  min-width: 200px;
-  height: 40px;
-  font-size: 16px;
+  min-width: 180px;
+  height: 42px;
+  font-weight: 500;
+  white-space: normal !important;
+  text-align: center;
+  padding: 0 20px;
+  border-radius: 8px !important;
+  box-shadow: 0 2px 8px rgba(0, 90, 190, 0.2) !important;
+  transition: all 0.3s ease !important;
 }
 
-/* Animation cho container */
-@keyframes fadeContainer {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-/* Animation cho content */
-.contentFadeIn {
-  animation: fadeIn 0.5s ease-in-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.primaryButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 90, 190, 0.3) !important;
 }
 
 /* Confirmation section */
 .confirmationSection {
   margin: 16px 0;
-  padding: 16px;
-  background-color: var(--background-light);
+  padding: 10px 12px;
+  background-color: var(--background-lightest);
   border-radius: var(--border-radius-sm);
-}
-
-/* Animation cho container */
-@keyframes fadeContainer {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-/* Animation cho content */
-.contentFadeIn {
-  animation: fadeIn 0.5s ease-in-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
 }
 
 .confirmationText {
   font-size: 13px;
   color: var(--text-secondary);
-  font-weight: 500;
+  font-weight: 400;
   margin-bottom: 8px;
-}
-
-/* Animation cho container */
-@keyframes fadeContainer {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-/* Animation cho content */
-.contentFadeIn {
-  animation: fadeIn 0.5s ease-in-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
 }
 
 .required:after {
   content: ' *';
   display: inline-block;
-  margin-left: 4px;
-  color: var(--danger-color);
+  color: #ff4d4f;
   font-weight: bold;
-}
-
-/* Animation cho container */
-@keyframes fadeContainer {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-/* Animation cho content */
-.contentFadeIn {
-  animation: fadeIn 0.5s ease-in-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
 }
 
 /* Inline editing */
@@ -956,72 +253,18 @@
   position: relative;
 }
 
-/* Animation cho container */
-@keyframes fadeContainer {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-/* Animation cho content */
-.contentFadeIn {
-  animation: fadeIn 0.5s ease-in-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
 .editButton {
   position: absolute;
   top: 50%;
-  right: 8px;
+  right: 10px;
   transform: translateY(-50%);
-  color: var(--text-light);
-  background-color: transparent;
-  border: none;
   font-size: 14px;
-  cursor: pointer;
-  transition: color 0.2s;
-  opacity: 0;
-  padding: 4px;
+  opacity: 0.5;
+  color: var(--text-secondary);
+  padding: 2px 4px;
+  background-color: transparent;
+  transition: all 0.2s;
   border-radius: var(--border-radius-sm);
-}
-
-/* Animation cho container */
-@keyframes fadeContainer {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-/* Animation cho content */
-.contentFadeIn {
-  animation: fadeIn 0.5s ease-in-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
 }
 
 .editableField:hover .editButton {
@@ -1029,575 +272,38 @@
   color: var(--primary-color);
 }
 
-/* Animation cho container */
-@keyframes fadeContainer {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-/* Animation cho content */
-.contentFadeIn {
-  animation: fadeIn 0.5s ease-in-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
 .editButton:hover {
   color: var(--primary-color-dark);
   background-color: rgba(0, 80, 159, 0.1);
-}
-
-/* Animation cho container */
-@keyframes fadeContainer {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-/* Animation cho content */
-.contentFadeIn {
-  animation: fadeIn 0.5s ease-in-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
 }
 
 /* Phone Input */
 .phoneInputContainer {
   display: flex;
   flex-direction: column;
-}
-
-/* Animation cho container */
-@keyframes fadeContainer {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-/* Animation cho content */
-.contentFadeIn {
-  animation: fadeIn 0.5s ease-in-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  width: 100%;
 }
 
 .phoneInputGroup {
   display: flex;
   align-items: center;
-}
-
-/* Animation cho container */
-@keyframes fadeContainer {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-/* Animation cho content */
-.contentFadeIn {
-  animation: fadeIn 0.5s ease-in-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  width: 100%;
 }
 
 .countryCodeSelect {
   width: 100px;
   flex-shrink: 0;
-}
-
-/* Animation cho container */
-@keyframes fadeContainer {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-/* Animation cho content */
-.contentFadeIn {
-  animation: fadeIn 0.5s ease-in-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  margin-right: 8px;
 }
 
 .phoneNumberInput {
   flex-grow: 1;
 }
 
-/* Animation cho container */
-@keyframes fadeContainer {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-/* Animation cho content */
-.contentFadeIn {
-  animation: fadeIn 0.5s ease-in-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
 .phoneInputHint {
   font-size: 12px;
   color: var(--text-light);
   margin-top: 4px;
-}
-
-/* Animation cho container */
-@keyframes fadeContainer {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-/* Animation cho content */
-.contentFadeIn {
-  animation: fadeIn 0.5s ease-in-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* Media Queries */
-@media (max-width: 992px) {
-  .container {
-    width: 70%;
-  }
-
-/* Animation cho container */
-@keyframes fadeContainer {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-/* Animation cho content */
-.contentFadeIn {
-  animation: fadeIn 0.5s ease-in-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-  
-  .courseInfoGrid {
-    grid-template-columns: 1fr 1fr;
-  }
-
-/* Animation cho container */
-@keyframes fadeContainer {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-/* Animation cho content */
-.contentFadeIn {
-  animation: fadeIn 0.5s ease-in-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-}
-
-/* Animation cho container */
-@keyframes fadeContainer {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-/* Animation cho content */
-.contentFadeIn {
-  animation: fadeIn 0.5s ease-in-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@media (max-width: 768px) {
-  .container {
-    width: 80%;
-  }
-
-/* Animation cho container */
-@keyframes fadeContainer {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-/* Animation cho content */
-.contentFadeIn {
-  animation: fadeIn 0.5s ease-in-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-  
-  .courseInfoGrid {
-    grid-template-columns: 1fr;
-  }
-
-/* Animation cho container */
-@keyframes fadeContainer {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-/* Animation cho content */
-.contentFadeIn {
-  animation: fadeIn 0.5s ease-in-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-  
-  .formActions {
-    flex-direction: column;
-    align-items: center;
-  }
-
-/* Animation cho container */
-@keyframes fadeContainer {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-/* Animation cho content */
-.contentFadeIn {
-  animation: fadeIn 0.5s ease-in-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-  
-  .formActions button {
-    margin-bottom: 10px;
-    width: 100%;
-  }
-
-/* Animation cho container */
-@keyframes fadeContainer {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-/* Animation cho content */
-.contentFadeIn {
-  animation: fadeIn 0.5s ease-in-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-}
-
-/* Animation cho container */
-@keyframes fadeContainer {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-/* Animation cho content */
-.contentFadeIn {
-  animation: fadeIn 0.5s ease-in-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@media (max-width: 576px) {
-  .container {
-    width: 95%;
-    padding: 0.5rem;
-  }
-
-/* Animation cho container */
-@keyframes fadeContainer {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-/* Animation cho content */
-.contentFadeIn {
-  animation: fadeIn 0.5s ease-in-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-  
-  .card {
-    margin-bottom: 16px;
-  }
-
-/* Animation cho container */
-@keyframes fadeContainer {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-/* Animation cho content */
-.contentFadeIn {
-  animation: fadeIn 0.5s ease-in-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-  
-  .cardBody {
-    padding: 16px;
-  }
-
-/* Animation cho container */
-@keyframes fadeContainer {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-/* Animation cho content */
-.contentFadeIn {
-  animation: fadeIn 0.5s ease-in-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-}
-
-/* Animation cho container */
-@keyframes fadeContainer {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-/* Animation cho content */
-.contentFadeIn {
-  animation: fadeIn 0.5s ease-in-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
 }
 
 /* Animation for loading screen */
@@ -1613,525 +319,75 @@
   }
 }
 
-/* Animation cho container */
-@keyframes fadeContainer {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-/* Animation cho content */
-.contentFadeIn {
-  animation: fadeIn 0.5s ease-in-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-  50% {
-    opacity: 1;
-  }
-}
-
-/* Animation cho container */
-@keyframes fadeContainer {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-/* Animation cho content */
-.contentFadeIn {
-  animation: fadeIn 0.5s ease-in-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-  100% {
-    opacity: 0.6;
-  }
-}
-
-/* Animation cho container */
-@keyframes fadeContainer {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-/* Animation cho content */
-.contentFadeIn {
-  animation: fadeIn 0.5s ease-in-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-
-/* Animation cho container */
-@keyframes fadeContainer {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-/* Animation cho content */
-.contentFadeIn {
-  animation: fadeIn 0.5s ease-in-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
 .loadingPulse {
-  animation: pulse 1.5s infinite ease-in-out;
+  animation: pulse 1.5s infinite;
 }
 
-/* Animation cho container */
-@keyframes fadeContainer {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+/* Content Transition Styles */
+.contentContainer {
+  opacity: 0;
+  min-height: 700px; 
+  transition: opacity 0.5s ease-in-out;
 }
 
-/* Animation cho content */
-.contentFadeIn {
-  animation: fadeIn 0.5s ease-in-out;
+.contentLoaded {
+  opacity: 1;
 }
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
+/* Media Queries */
+@media (max-width: 992px) {
+  .container {
+    width: 90%;
   }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+  
+  .courseInfoGrid {
+    grid-template-columns: 1fr 1fr;
   }
 }
 
-/* Styles for detail view modal */
-.detailModal :global(.ant-modal-content) {
-  border-radius: var(--border-radius-md);
-  overflow: hidden;
-}
-
-/* Animation cho container */
-@keyframes fadeContainer {
-  from {
-    opacity: 0;
+@media (max-width: 768px) {
+  .container {
+    width: 95%;
   }
-  to {
-    opacity: 1;
-  }
-}
-
-/* Animation cho content */
-.contentFadeIn {
-  animation: fadeIn 0.5s ease-in-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.detailModal :global(.ant-modal-header) {
-  background-color: var(--primary-color-light);
-  padding: var(--spacing-md) var(--spacing-lg);
-}
-
-/* Animation cho container */
-@keyframes fadeContainer {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-/* Animation cho content */
-.contentFadeIn {
-  animation: fadeIn 0.5s ease-in-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.detailModal :global(.ant-modal-title) {
-  color: var(--primary-color);
-  font-weight: 500;
-}
-
-/* Animation cho container */
-@keyframes fadeContainer {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-/* Animation cho content */
-.contentFadeIn {
-  animation: fadeIn 0.5s ease-in-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.detailModal :global(.ant-modal-body) {
-  padding: var(--spacing-lg);
-}
-
-/* Animation cho container */
-@keyframes fadeContainer {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-/* Animation cho content */
-.contentFadeIn {
-  animation: fadeIn 0.5s ease-in-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.detailModal :global(.ant-modal-footer) {
-  border-top: 1px solid var(--border-color-light);
-  padding: var(--spacing-md) var(--spacing-lg);
-}
-
-/* Animation cho container */
-@keyframes fadeContainer {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-/* Animation cho content */
-.contentFadeIn {
-  animation: fadeIn 0.5s ease-in-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.detailInfoContainer {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-md);
-}
-
-/* Animation cho container */
-@keyframes fadeContainer {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-/* Animation cho content */
-.contentFadeIn {
-  animation: fadeIn 0.5s ease-in-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.detailInfoSection {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: var(--spacing-md);
-}
-
-/* Animation cho container */
-@keyframes fadeContainer {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-/* Animation cho content */
-.contentFadeIn {
-  animation: fadeIn 0.5s ease-in-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.viewDetailButton {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-left: auto;
-  color: var(--primary-color);
-  font-size: var(--font-size-sm);
-  cursor: pointer;
-  transition: all 0.3s ease;
-  border-radius: var(--border-radius-sm);
-  padding: 4px 12px;
-  background-color: transparent;
-  border: 1px solid var(--primary-color);
-}
-
-/* Animation cho container */
-@keyframes fadeContainer {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-/* Animation cho content */
-.contentFadeIn {
-  animation: fadeIn 0.5s ease-in-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.viewDetailButton:hover {
-  background-color: rgba(var(--primary-color-rgb), 0.05);
-}
-
-/* Animation cho container */
-@keyframes fadeContainer {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-/* Animation cho content */
-.contentFadeIn {
-  animation: fadeIn 0.5s ease-in-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.sectionHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-}
-
-/* Animation cho container */
-@keyframes fadeContainer {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-/* Animation cho content */
-.contentFadeIn {
-  animation: fadeIn 0.5s ease-in-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* For mobile screens */
-@media (max-width: 576px) {
-  .detailInfoSection {
+  
+  .courseInfoGrid {
     grid-template-columns: 1fr;
   }
-
-/* Animation cho container */
-@keyframes fadeContainer {
-  from {
-    opacity: 0;
+  
+  .formActions {
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
   }
-  to {
-    opacity: 1;
-  }
-}
-
-/* Animation cho content */
-.contentFadeIn {
-  animation: fadeIn 0.5s ease-in-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-}
-
-/* Animation cho container */
-@keyframes fadeContainer {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
+  
+  .formActions button {
+    margin-bottom: 10px;
+    width: 100%;
+    white-space: normal !important;
+    height: auto !important;
+    min-height: 40px;
+    padding: 8px 16px !important;
+    line-height: 1.4 !important;
+    font-size: 14px !important;
   }
 }
 
-/* Animation cho content */
-.contentFadeIn {
-  animation: fadeIn 0.5s ease-in-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
+@media (max-width: 576px) {
+  .container {
+    width: 98% !important;
+    padding: 0.5rem;
+    max-width: 100% !important;
   }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+  
+  .card {
+    margin-bottom: 16px;
+  }
+  
+  .cardBody {
+    padding: 16px;
+  }
+
+  .formActions button {
+    font-size: 13px !important;
   }
 }

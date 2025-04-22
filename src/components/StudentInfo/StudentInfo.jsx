@@ -2352,16 +2352,16 @@ const StudentInfo = () => {
 
       <div className="form-actions">
         <Button 
-          type="default"
-          onClick={logUpdateData}
-          icon={<BugOutlined />}
-          style={{ marginRight: '10px' }}
-        >
-          Kiểm tra dữ liệu
-        </Button>
-        <Button 
           type="primary" 
           onClick={showConfirmationModal}
+          style={{ 
+            whiteSpace: 'normal', 
+            height: 'auto', 
+            minHeight: '40px',
+            padding: '8px 16px',
+            lineHeight: '1.4'
+          }}
+          className={styles.primaryButton}
         >
           Xác nhận thông tin đăng ký
         </Button>
