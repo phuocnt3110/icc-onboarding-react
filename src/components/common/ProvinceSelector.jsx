@@ -119,12 +119,24 @@ const ProvinceSelector = ({
   const filterOption = (input, option) => {
     if (!input || !option) return true;
     
-    // Chuẩn hóa giá trị tìm kiếm và option để không phân biệt dấu tiếng Việt
-    const normalizedInput = normalizeVietnamese(input.toLowerCase());
-    const normalizedOption = normalizeVietnamese(option.children.props.children[1].toLowerCase());
-    
-    // Kiểm tra xem giá trị tìm kiếm có trong tên tỉnh thành không
-    return normalizedOption.includes(normalizedInput);
+    try {
+      // Chuẩn hóa giá trị tìm kiếm và option để không phân biệt dấu tiếng Việt
+      const normalizedInput = normalizeVietnamese(input.toLowerCase());
+      
+      // Kiểm tra cẩn thận các thuộc tính của option để tránh lỗi undefined
+      if (!option.children || !option.children.props) return false;
+      
+      const provinceText = option.children.props.children[1];
+      if (!provinceText) return false;
+      
+      const normalizedOption = normalizeVietnamese(provinceText.toLowerCase());
+      
+      // Kiểm tra xem giá trị tìm kiếm có trong tên tỉnh thành không
+      return normalizedOption.includes(normalizedInput);
+    } catch (error) {
+      console.error('Lỗi khi lọc tùy chọn:', error);
+      return false; // Trả về false để an toàn
+    }
   };
   
   // Custom dropdown header
