@@ -1,54 +1,71 @@
 import React from 'react';
-import { Card, Skeleton, Row, Col } from 'antd';
-import '../../styles/student-info.css';
+import { Card } from 'antd';
+import styles from './StudentInfoSkeleton.module.css';
 
 const StudentInfoSkeleton = () => {
   return (
-    <div className="student-info-container">
+    <div className={styles.skeletonContainer}>
       {/* Course Information Skeleton */}
-      <Card className="info-card">
-        <div className="section-title">
-          <span className="section-letter">A</span> Thông tin khóa học
+      <Card className={styles.card}>
+        <div className={styles.cardBody}>
+          <div className={styles.headerRow}>
+            <div className={styles.sectionTitle}></div>
+          </div>
+          <div className={styles.formRow}>
+            <div className={styles.formItem}>
+              <div className={styles.label}></div>
+              <div className={styles.input}></div>
+            </div>
+            <div className={styles.formItem}>
+              <div className={styles.label}></div>
+              <div className={styles.input}></div>
+            </div>
+            <div className={styles.formItem}>
+              <div className={styles.label}></div>
+              <div className={styles.input}></div>
+            </div>
+          </div>
         </div>
-        <Row gutter={[16, 16]}>
-          <Col xs={24} sm={12}>
-            <Skeleton.Input active block />
-          </Col>
-          <Col xs={24} sm={12}>
-            <Skeleton.Input active block />
-          </Col>
-        </Row>
       </Card>
 
       {/* Student Information Skeleton */}
-      <Card className="info-card">
-        <div className="section-title">
-          <span className="section-letter">B</span> Thông tin học viên
+      <Card className={styles.card}>
+        <div className={styles.cardBody}>
+          <div className={styles.headerRow}>
+            <div className={styles.sectionTitle}></div>
+          </div>
+          <div className={styles.formRow}>
+            {[...Array(6)].map((_, index) => (
+              <div className={styles.formItem} key={index}>
+                <div className={styles.label}></div>
+                <div className={styles.input}></div>
+              </div>
+            ))}
+          </div>
         </div>
-        <Row gutter={[16, 16]}>
-          {[...Array(6)].map((_, index) => (
-            <Col xs={24} sm={12} key={index}>
-              <Skeleton.Input active block />
-            </Col>
-          ))}
-        </Row>
       </Card>
 
       {/* Guardian Information Skeleton */}
-      <Card className="info-card">
-        <div className="section-title">
-          <span className="section-letter">C</span> Thông tin người đại diện
+      <Card className={styles.card}>
+        <div className={styles.cardBody}>
+          <div className={styles.headerRow}>
+            <div className={styles.sectionTitle}></div>
+          </div>
+          <div className={styles.formRow}>
+            {[...Array(4)].map((_, index) => (
+              <div className={styles.formItem} key={index}>
+                <div className={styles.label}></div>
+                <div className={styles.input}></div>
+              </div>
+            ))}
+          </div>
+          <div className={styles.buttonRow}>
+            <div className={styles.button}></div>
+          </div>
         </div>
-        <Row gutter={[16, 16]}>
-          {[...Array(4)].map((_, index) => (
-            <Col xs={24} sm={12} key={index}>
-              <Skeleton.Input active block />
-            </Col>
-          ))}
-        </Row>
       </Card>
     </div>
   );
 };
 
-export default StudentInfoSkeleton; 
+export default StudentInfoSkeleton;

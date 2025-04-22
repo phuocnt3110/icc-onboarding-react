@@ -1,0 +1,121 @@
+/* CSS Module cho StudentInfoSkeleton - scope cô lập tránh xung đột CSS */
+
+.skeletonContainer {
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 1rem;
+  animation: fadeIn 0.5s ease-in;
+}
+
+.card {
+  margin-bottom: 24px;
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.cardBody {
+  padding: 20px 24px;
+}
+
+.headerRow {
+  margin-bottom: 20px;
+}
+
+.sectionTitle {
+  height: 24px;
+  width: 30%;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: var(--border-radius-sm);
+}
+
+.formRow {
+  margin-bottom: 16px;
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.formItem {
+  padding: 0 12px;
+  flex: 0 0 33.333333%;
+  margin-bottom: 16px;
+}
+
+.label {
+  height: 16px;
+  width: 60%;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  margin-bottom: 8px;
+  border-radius: var(--border-radius-sm);
+}
+
+.input {
+  height: 36px;
+  width: 100%;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: var(--border-radius-sm);
+}
+
+.buttonRow {
+  margin-top: 24px;
+  display: flex;
+  justify-content: center;
+}
+
+.button {
+  height: 40px;
+  width: 160px;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: var(--border-radius-sm);
+}
+
+/* Animations */
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .formItem {
+    flex: 0 0 50%;
+  }
+}
+
+@media (max-width: 576px) {
+  .formItem {
+    flex: 0 0 100%;
+  }
+  
+  .skeletonContainer {
+    padding: 0.5rem;
+  }
+  
+  .cardBody {
+    padding: 16px;
+  }
+}

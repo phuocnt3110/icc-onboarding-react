@@ -1,16 +1,16 @@
-import React, { useState, useEffect, useRef, useReducer, memo } from 'react';
+import React, { useState, useEffect, useContext, useRef, useReducer } from 'react';
 import { Card, Form, Input, Button, Typography, Row, Col, Divider, message, Spin, Alert, Result, Radio, Select, Checkbox, DatePicker, Modal } from 'antd';
+import StudentInfoSkeleton from './StudentInfoSkeleton';
 import moment from 'moment';
 import { useNavigate } from 'react-router-dom';
-import { EditOutlined, CheckOutlined, CloseOutlined, ReloadOutlined, EnvironmentOutlined, BugOutlined } from '@ant-design/icons';
+import { EditOutlined, CheckOutlined, CloseOutlined, ReloadOutlined, EnvironmentOutlined, BugOutlined, UserOutlined, PhoneOutlined, MailOutlined, HomeOutlined, CalendarOutlined, InfoCircleOutlined, CreditCardOutlined, BookOutlined, TeamOutlined, ClockCircleOutlined } from '@ant-design/icons';
 import { useStudent } from '../../contexts/StudentContext';
 import { useProgressStep } from '../../contexts/ProgressStepContext';
 import { FIELD_MAPPINGS, MESSAGES, ROUTES, THEME, SECTION_TITLES, COUNTRY_CODES, VIETNAM_PROVINCES, GUARDIAN_RELATIONS, TABLE_IDS } from '../../config';
-import { ProvinceSelector } from '../common';
-import StudentInfoSkeleton from './StudentInfoSkeleton';
+import { ProvinceSelector, InfoDisplay } from '../common';
 import apiClient from '../../services/api/client';
 import { updateStudentClass } from '../../services/api/student';
-import '../../styles/student-info.css';
+import styles from './StudentInfo.module.css';
 import '../../styles/index.css';
 
 const { Option } = Select;
@@ -219,17 +219,21 @@ const formatDateString = (dateString) => {
 const { STUDENT: STUDENT_FIELDS } = FIELD_MAPPINGS;
 
 // Modern Section Title component
-const SectionTitle = ({ letter, title }) => (
-  <div className="section-title-container">
-    <div className="section-letter">{letter}.</div>
-    <div className="section-text">{title}</div>
-  </div>
-);
+const SectionTitle = ({ letter, title }) => {
+  return (
+    <div className={styles.sectionHeader}>
+      <div className={styles.sectionTitleContainer}>
+        <div className={styles.sectionLetter}>{letter}</div>
+        <div className={styles.sectionTitle}>{title}</div>
+      </div>
+    </div>
+  );
+};
 
 // Custom form label component that only shows asterisk at the end
-const RequiredLabel = ({ text }) => (
-  <span>{text} <span style={{ color: 'red' }}>*</span></span>
-);
+const RequiredLabel = ({ text }) => {
+  return <span className={styles.required}>{text}</span>;
+};
 
 const StudentInfo = () => {
   const navigate = useNavigate();
@@ -237,11 +241,15 @@ const StudentInfo = () => {
   const [form] = Form.useForm();
   const { STUDENT: STUDENT_FIELDS, STUDENT_INFO: STUDENT_INFO_FIELDS } = FIELD_MAPPINGS;
   
+  // State cho lazy loading content (chỉ cần contentVisible)
+  const [contentVisible, setContentVisible] = useState(false);
+  
   // Add loaded state
   const [isLoaded, setIsLoaded] = useState(false);
   const [dateValues, setDateValues] = useState({ day: null, month: null, year: null });
   const [dateError, setDateError] = useState(null);
   const [originalData, setOriginalData] = useState({});
+  const [localLoading, setLocalLoading] = useState(false); // Di chuyển lên đầu file
   
   // Optimize state management
   const [state, dispatch] = useReducer(reducer, initialState);
@@ -262,12 +270,18 @@ const StudentInfo = () => {
   // Combine loading states
   const isDataLoading = studentLoading || isLoading;
 
-  // Set loaded state after initialization
+  // Đơn giản hóa logic hiển thị loading
   useEffect(() => {
-    if (formInitialized && student && !isDataLoading) {
-      setTimeout(() => setIsLoaded(true), 100);
+    // Chỉ kiểm tra các điều kiện cơ bản nhất
+    // Nếu student đã load và form đã khởi tạo, hiển thị content chính
+    if (student && formInitialized && !localLoading) {
+      console.log('LOADED: Hiển thị content chính');
+      setIsLoaded(true);
+    } else {
+      console.log('LOADING: Hiển thị skeleton', { student, formInitialized, localLoading });
+      setIsLoaded(false);
     }
-  }, [formInitialized, student, isDataLoading]);
+  }, [student, formInitialized, localLoading]);
 
   useEffect(() => {
     if (student && !Object.keys(originalData).length) {
@@ -395,7 +409,6 @@ const StudentInfo = () => {
       }
     }
   }, [student]);
-  const [localLoading, setLocalLoading] = useState(false);
   
   // Access student context
   const { 
@@ -602,8 +615,10 @@ const StudentInfo = () => {
     dispatch({ type: 'SET_FORM_VALUES', payload: updatedValues });
   };
 
-  // Cải tiến: Thêm function để reload data
+  // Cải tiến: Thêm function để reload data với skeleton loading
   const reloadStudentData = async () => {
+    // Hiển thị skeleton loading bằng cách đặt isLoaded = false
+    setIsLoaded(false);
     setLocalLoading(true);
     dispatch({ type: 'SET_FORM_INITIALIZED', payload: false });
     
@@ -612,17 +627,17 @@ const StudentInfo = () => {
       const billItemId = urlParams.get('id');
       
       if (billItemId) {
-        // Disable console logging to reduce render issues
-        // console.log('[DEBUG] Reloading student data for ID:', billItemId);
+        // Tải lại dữ liệu
         await contextLoadStudentData(billItemId);
-        message.success('Đã tải lại thông tin học viên');
-      } else {
-        throw new Error('Không tìm thấy ID học viên');
+        
+        // Hiển thị thông báo thành công
+        message.success('Dữ liệu đã được cập nhật');
       }
-    } catch (err) {
-      console.error('[DEBUG] Error reloading data:', err);
-      message.error('Không thể tải lại dữ liệu: ' + err.message);
+    } catch (error) {
+      console.error('Error reloading student data:', error);
+      message.error('Không thể tải lại dữ liệu: ' + (error.message || 'Lỗi không xác định'));
     } finally {
+      // setLocalLoading(false) sẽ được gọi, sau đó useEffect sẽ tự động cập nhật isLoaded
       setLocalLoading(false);
     }
   };
@@ -1411,9 +1426,28 @@ const StudentInfo = () => {
            formValues.sdtHocVien === contextStudent[STUDENT_FIELDS.PHONE];
   };
 
+  // Quản lý hiển thị nội dung theo thời gian (container luôn hiển thị)
+  useEffect(() => {
+    // Chỉ hiển thị nội dung khi data đã sẵn sàng
+    if (isLoaded && student) {
+      // Dùng setTimeout trực tiếp để đơn giản hóa và tránh race condition
+      const timeoutId = setTimeout(() => {
+        setContentVisible(true);
+      }, 300);
+      
+      return () => {
+        clearTimeout(timeoutId);
+      };
+    }
+  }, [isLoaded, student]);
+
   // Optimize render conditions
   if (isDataLoading) {
-    return <StudentInfoSkeleton />;
+    return (
+      <div className={styles.container} style={{ backgroundColor: '#fff', minHeight: '800px' }}>
+        <StudentInfoSkeleton />
+      </div>
+    );
   }
 
   if (error) {
@@ -1430,33 +1464,34 @@ const StudentInfo = () => {
       />
     );
   }
-
-  if (!student) {
+  
+  if (!isLoaded) {
     return (
-      <Result
-        status="warning"
-        title="Không tìm thấy thông tin học viên"
-        subTitle="Vui lòng kiểm tra lại đường dẫn hoặc liên hệ hỗ trợ"
-        extra={[
-          <Button type="primary" key="retry" onClick={reloadStudentData}>
-            Thử lại
-          </Button>
-        ]}
-      />
+      <div className={styles.container} style={{ backgroundColor: '#fff', minHeight: '800px', opacity: 1 }}>
+        <StudentInfoSkeleton />
+      </div>
     );
   }
 
   return (
-    <div className={`student-info-container ${isLoaded ? 'loaded' : ''}`}>
-      {readOnly && (
-        <Alert
-          message="Chế độ chỉ đọc"
-          description="API token hiện tại chỉ có quyền đọc dữ liệu, không thể cập nhật thông tin. Bạn vẫn có thể tiếp tục đến bước tiếp theo."
-          type="info"
-          showIcon
-          style={{ marginBottom: '20px' }}
-        />
-      )}
+    <div className={styles.container} style={{ backgroundColor: '#fff', minHeight: '800px', opacity: 1 }}>
+      {/* Container luôn hiển thị với nền trắng */}
+      
+      {/* Hiển thị nội dung hoặc skeleton tùy thuộc vào trạng thái */}
+      <div style={{ 
+        opacity: contentVisible ? 1 : 0,
+        transition: 'opacity 0.5s ease-in-out'
+      }}>
+        {/* Các alerts và thông báo */}
+        {readOnly && (
+          <Alert
+            message="Chế độ chỉ đọc"
+            description="API token hiện tại chỉ có quyền đọc dữ liệu, không thể cập nhật thông tin. Bạn vẫn có thể tiếp tục đến bước tiếp theo."
+            type="info"
+            showIcon
+            style={{ marginBottom: '20px' }}
+          />
+        )}
 
       {submitError && (
         <Alert
@@ -1493,8 +1528,11 @@ const StudentInfo = () => {
       >
         {/* Course Information */}
         <Card className="info-card">
-          <SectionTitle letter="A" title={SECTION_TITLES.COURSE_INFO} />
-          <div className="course-info-grid">
+          <SectionTitle 
+            letter="A" 
+            title={SECTION_TITLES.COURSE_INFO} 
+          />
+          <div className={styles.courseInfoGrid}>
             <div className="course-info-item">
               <div className="course-info-label">Khóa học đã đăng ký:</div>
               <div className="course-info-value">{student.sanPham || '-'}</div>
@@ -1527,7 +1565,10 @@ const StudentInfo = () => {
         
         {/* Student Information */}
         <Card className="info-card">
-          <SectionTitle letter="B" title={SECTION_TITLES.STUDENT_INFO} />
+          <SectionTitle 
+            letter="B" 
+            title={SECTION_TITLES.STUDENT_INFO}
+          />
           
           <Row gutter={[16, 16]} className="form-row">
             <Col xs={24} sm={12}>
@@ -1870,7 +1911,7 @@ const StudentInfo = () => {
             </Col>
  
             <Col xs={24}>
-              <div className="confirmation-section">
+              <div className={styles.confirmationSection}>
                 <div className="confirmation-text required">
                   Xác nhận sử dụng Số điện thoại học viên để mở tài khoản học trực tuyến
                 </div>
@@ -2337,7 +2378,7 @@ const StudentInfo = () => {
       cancelText="Hủy"
       width={450}
       centered
-      styles={{ body: { padding: '16px' }}}
+      styles={{ body: { padding: '16px' } }}
       maskClosable={false}
     >
       <div className="confirm-modal-content">
@@ -2376,7 +2417,8 @@ const StudentInfo = () => {
       </div>
     </Modal>
   </div>
- );
+  </div>
+  );
 };
 
 // Add reducer

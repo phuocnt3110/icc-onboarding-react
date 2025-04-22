@@ -11,6 +11,8 @@ import SuccessScreen from '../Confirmation/SuccessScreen';
 import { MESSAGES, FIELD_MAPPINGS, ROUTES, TABLE_IDS } from '../../config';
 import { checkClassAvailability } from '../../services/api/class';
 import apiClient from '../../services/api/client';
+import styles from './ClassRegistration.module.css';
+import '../../styles/index.css';
 
 // Extract field mappings and table IDs for easier access
 const { STUDENT: STUDENT_FIELDS } = FIELD_MAPPINGS;
@@ -778,8 +780,9 @@ const ClassRegistration = () => {
     // Show loading spinner when waiting for data
     if ((studentLoading || classLoading) && currentScreen === 'loading') {
       return (
-        <div style={{ display: 'flex', justifyContent: 'center', padding: '50px' }}>
+        <div className={styles.loadingContainer}>
           <Spin size="large" tip="Đang tải thông tin..." />
+          <div className={styles.loadingMessage}>Đang kiểm tra thông tin lớp học</div>
         </div>
       );
     }
@@ -787,19 +790,27 @@ const ClassRegistration = () => {
     // Show error screen if there is an error
     if (currentScreen === 'error' || studentError || (classError && !classList.length)) {
       return (
-        <Result
-          status="error"
-          title="Có lỗi xảy ra"
-          subTitle={errorMessage || studentError || classError || MESSAGES.STUDENT_DATA_LOAD_ERROR}
-          extra={[
-            <Button key="retry" onClick={handleRetry}>
-              Thử lại
-            </Button>,
-            <Button key="back" type="primary" onClick={() => navigate(-1)}>
-              Quay lại
-            </Button>
-          ]}
-        />
+        <div className={styles.card}>
+          <Result
+            status="error"
+            title="Có lỗi xảy ra"
+            subTitle={errorMessage || studentError || classError || MESSAGES.STUDENT_DATA_LOAD_ERROR}
+            extra={[
+              <Button key="retry" onClick={handleRetry} className={styles.secondaryButton}>
+                Thử lại
+              </Button>,
+              <Button key="back" type="primary" onClick={() => navigate(-1)} className={styles.primaryButton}>
+                Quay lại
+              </Button>
+            ]}
+          />
+          {(errorMessage || studentError || classError) && (
+            <div className={styles.errorContainer}>
+              <div className={styles.errorMessage}>Chi tiết lỗi:</div>
+              <div className={styles.errorDetail}>{errorMessage || studentError || classError}</div>
+            </div>
+          )}
+        </div>
       );
     }
 
@@ -878,16 +889,23 @@ const ClassRegistration = () => {
         
       default:
         return (
-          <Result
-            status="info"
-            title="Đang phát triển"
-            subTitle="Tính năng đặt lịch học đang được phát triển"
-            extra={
-              <Button type="primary" onClick={() => navigate(-1)}>
-                Quay lại
-              </Button>
-            }
-          />
+          <div className={styles.card}>
+            <Result
+              status="info"
+              title="Đang phát triển"
+              subTitle="Tính năng đặt lịch học đang được phát triển"
+              extra={
+                <Button 
+                  type="primary" 
+                  onClick={() => navigate(-1)}
+                  className={styles.primaryButton}
+                >
+                  Quay lại
+                </Button>
+              }
+              className={styles.resultContainer}
+            />
+          </div>
         );
     }
   };
@@ -909,17 +927,10 @@ const ClassRegistration = () => {
     }
   };
 
-  // Sử dụng inline style để ghi đè toàn bộ CSS class từ theme chung
+  // Sử dụng CSS Modules thay cho inline styles
   return (
     <div 
-      className="form-container class-registration-wide"
-      style={{
-        width: '70%',
-        maxWidth: '80%',
-        marginLeft: 'auto',
-        marginRight: 'auto',
-        padding: '1rem'
-      }}
+      className={`${styles.container} ${styles.wideContainer}`}
     >
       {/* Modal thông báo lớp đã hết chỗ */}
       <Modal
@@ -929,6 +940,7 @@ const ClassRegistration = () => {
         onCancel={handleClassFullModalOk}
         okText="Đóng"
         cancelButtonProps={{ style: { display: 'none' } }}
+        className={styles.confirmModal}
       >
         <p>Rất tiếc, lớp học đã hết chỗ trong lúc bạn đang xác nhận. Chúng tôi sẽ tải lại danh sách lớp học để bạn có thể chọn lớp khác.</p>
       </Modal>

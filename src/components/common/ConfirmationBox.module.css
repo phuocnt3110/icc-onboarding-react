@@ -1,0 +1,138 @@
+/* CSS Module cho ConfirmationBox component */
+
+.container {
+  margin-bottom: var(--spacing-md);
+}
+
+.alert {
+  border-radius: var(--border-radius-md);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  border: 1px solid transparent;
+  margin-bottom: var(--spacing-md);
+}
+
+.infoAlert {
+  border-color: rgba(var(--info-color-rgb), 0.3);
+}
+
+.successAlert {
+  border-color: rgba(var(--success-color-rgb), 0.3);
+}
+
+.warningAlert {
+  border-color: rgba(var(--warning-color-rgb), 0.3);
+}
+
+.errorAlert {
+  border-color: rgba(var(--danger-color-rgb), 0.3);
+}
+
+.alertContent {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.description {
+  margin-bottom: var(--spacing-xs);
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+.confirmationText {
+  background-color: rgba(var(--primary-color-rgb), 0.05);
+  padding: var(--spacing-sm);
+  border-radius: var(--border-radius-sm);
+  margin: var(--spacing-xs) 0;
+  font-size: var(--font-size-md);
+  line-height: 1.5;
+  border-left: 3px solid var(--primary-color);
+}
+
+.checkboxContainer {
+  margin-top: var(--spacing-sm);
+  padding: var(--spacing-sm) 0;
+  border-top: 1px dashed rgba(var(--border-color-rgb), 0.5);
+}
+
+.checkbox {
+  font-size: var(--font-size-sm);
+}
+
+.checkboxLabel {
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.required::after {
+  content: '*';
+  color: var(--danger-color);
+  margin-left: 4px;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: var(--spacing-md);
+}
+
+.confirmButton {
+  min-width: 100px;
+}
+
+.declineButton {
+  min-width: 100px;
+}
+
+.additionalContent {
+  margin: var(--spacing-sm) 0;
+  padding: var(--spacing-sm);
+  background-color: rgba(var(--background-color-rgb), 0.5);
+  border-radius: var(--border-radius-sm);
+  font-size: var(--font-size-sm);
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+.showMoreButton {
+  padding: 0;
+  height: auto;
+  font-size: var(--font-size-sm);
+}
+
+.collapsePanel {
+  margin: var(--spacing-xs) 0;
+  border: none;
+}
+
+.collapseHeader {
+  color: var(--primary-color);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+}
+
+/* Responsive styles */
+@media (max-width: 576px) {
+  .alert {
+    padding: var(--spacing-sm);
+  }
+  
+  .confirmationText {
+    font-size: var(--font-size-sm);
+  }
+  
+  .actions {
+    flex-direction: column;
+    gap: var(--spacing-sm);
+  }
+  
+  .confirmButton,
+  .declineButton {
+    width: 100%;
+  }
+  
+  .checkbox {
+    height: auto;
+    line-height: 1.5;
+  }
+}

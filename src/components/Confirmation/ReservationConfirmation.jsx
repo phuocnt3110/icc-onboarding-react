@@ -27,6 +27,8 @@ import { useStudent } from '../../contexts/StudentContext';
 import { ROUTES } from '../../config';
 import { FIELD_MAPPINGS } from '../../config';
 import { useProgressStep } from '../../contexts/ProgressStepContext';
+import { InfoDisplay, ScheduleDisplay } from '../common';
+import styles from './ReservationConfirmation.module.css';
 import '../../styles/index.css';
 
 const { Title, Text, Paragraph } = Typography;
@@ -103,9 +105,11 @@ const ReservationConfirmation = ({
   if (loading) {
     console.log('🔍 DEBUG - ReservationConfirmation đang loading...');
     return (
-      <Card style={{ borderRadius: '8px', marginBottom: '20px' }}>
-        <Skeleton active paragraph={{ rows: 6 }} />
-      </Card>
+      <div className={styles.confirmationContainer}>
+        <Card className={styles.card}>
+          <Skeleton active paragraph={{ rows: 6 }} />
+        </Card>
+      </div>
     );
   }
 
@@ -118,13 +122,15 @@ const ReservationConfirmation = ({
   if (!hasAnyData) {
     console.log('🔍 DEBUG - ReservationConfirmation không có dữ liệu student hay reservation');
     return (
-      <Card style={{ borderRadius: '8px', marginBottom: '20px' }}>
-        <Result
-          status="warning"
-          title="Không có dữ liệu học viên hoặc giữ chỗ"
-          subTitle="Vui lòng quay lại màn hình trước"
-        />
-      </Card>
+      <div className={styles.confirmationContainer}>
+        <Card className={styles.card}>
+          <Result
+            status="warning"
+            title="Không có dữ liệu học viên hoặc giữ chỗ"
+            subTitle="Vui lòng quay lại màn hình trước"
+          />
+        </Card>
+      </div>
     );
   }
 
@@ -137,109 +143,15 @@ const ReservationConfirmation = ({
   
   console.log('🔍 DEBUG - hasReservationData:', hasReservationData);
   
-  // Format schedule for better display
-  const formatScheduleDisplay = (schedule) => {
-    if (!schedule) return null;
-    console.log('🔍 DEBUG - Xử lý lịch học:', schedule);
-    
-    // Mapping thứ để sắp xếp theo đúng thứ tự
-    const weekdayOrder = {
-      'Thứ 2': 1,
-      'Thứ 3': 2,
-      'Thứ 4': 3, 
-      'Thứ 5': 4,
-      'Thứ 6': 5,
-      'Thứ 7': 6,
-      'Chủ nhật': 7
-    };
-    
-    // Split schedules by slash separator
-    const schedules = schedule.split(' / ');
-    console.log('🔍 DEBUG - Danh sách lịch học sau khi tách:', schedules);
-    
-    // Group schedules by weekday
-    const weekdaySchedules = {};
-    
-    schedules.forEach(item => {
-      console.log('🔍 DEBUG - Xử lý phần lịch học:', item);
-      let weekday, timeRange;
-      
-      // Kiểm tra xem định dạng có dấu '-' hay không
-      if (item.includes(' - ')) {
-        // Trường hợp có dấu '-' (ví dụ: "Thứ 2 - 09:00 : 10:00")
-        const parts = item.split(' - ');
-        weekday = parts[0];
-        timeRange = parts[1];
-      } else {
-        // Trường hợp không có dấu '-' (ví dụ: "Thứ 5 18:00 : 19:00")
-        // Tìm chỉ số của "Thứ" trong chuỗi
-        const weekdayMatch = item.match(/Thứ \d|Chủ nhật/);
-        
-        if (weekdayMatch && weekdayMatch.index === 0) {
-          // Tách weekday (Thứ 2, Thứ 3, ...) từ phần đầu chuỗi
-          weekday = weekdayMatch[0];
-          // Nếu là "Thứ" (không có số), thêm số vào
-          if (weekday === 'Thứ ') {
-            const nextChar = item.charAt(weekdayMatch.index + 4);
-            weekday = `Thứ ${nextChar}`;
-          }
-          
-          // Lấy phần còn lại làm timeRange, loại bỏ khoảng trắng đầu tiên
-          timeRange = item.substring(weekday.length).trim();
-        } else {
-          // Không tìm thấy định dạng thứ, bỏ qua
-          console.log('🔍 DEBUG - Không nhận dạng được định dạng thứ:', item);
-          return;
-        }
-      }
-      
-      console.log('🔍 DEBUG - Đã xử lý:', { weekday, timeRange });
-      
-      if (!weekdaySchedules[weekday]) {
-        weekdaySchedules[weekday] = [];
-      }
-      
-      weekdaySchedules[weekday].push(timeRange);
-    });
-    
-    // Sort weekdays by order
-    const sortedWeekdays = Object.keys(weekdaySchedules).sort((a, b) => {
-      return (weekdayOrder[a] || 99) - (weekdayOrder[b] || 99);
-    });
-    
-    return (
-      <table className="schedule-table">
-        <tbody>
-          {sortedWeekdays.map((weekday, index) => (
-            <tr key={index}>
-              <td className="weekday-cell">{weekday}</td>
-              <td className="timeslots-cell">
-                {weekdaySchedules[weekday].map((timeSlot, timeIndex) => (
-                  <Tag 
-                    key={timeIndex}
-                    color="blue"
-                    style={{ margin: '2px 4px 2px 0' }}
-                  >
-                    <ClockCircleOutlined style={{ marginRight: '4px' }} />
-                    {timeSlot}
-                  </Tag>
-                ))}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    );
-  };
-  
   return (
-    <Card style={{ borderRadius: '8px', marginBottom: '20px', maxWidth: '650px', margin: '0 auto' }}>
-      <div style={{ marginBottom: '16px' }}>
-        <Title level={5} className="card-title" style={{ margin: 0 }}>
-          Xác nhận lịch học đã được giữ chỗ
-        </Title>
-      </div>
-      <Divider />
+    <div className={styles.confirmationContainer}>
+      <Card className={styles.card}>
+        <Space direction="vertical" size={16} style={{ width: '100%' }}>
+          <Title level={5} className={styles.cardTitle}>
+            <CheckCircleOutlined style={{ color: '#52c41a', marginRight: '8px' }} />
+            Xác nhận lịch học đã được giữ chỗ
+          </Title>
+          <Divider />
       
       <Space direction="vertical" size="small" style={{ width: '100%' }}>
         <div>
@@ -256,30 +168,30 @@ const ReservationConfirmation = ({
             type="warning"
             showIcon
             icon={<InfoCircleOutlined />}
-            style={{ marginBottom: '20px' }}
+            className={styles.warningAlert}
           />
         )}
         
-        <div className="class-info-container" style={{ padding: '12px' }}>
+        <div className={styles.infoContainer}>
           <Row gutter={[12, 12]}>
             {/* Course info */}
             <Col xs={24}>
-              <div className="column-header" style={{ marginBottom: '10px' }}>
+              <div className={styles.columnHeader}>
                 <BookOutlined />
                 <span>THÔNG TIN KHÓA HỌC</span>
               </div>
               
               <Space direction="vertical" size={6} style={{ width: '100%' }}>
                 {/* Sản phẩm */}
-                <div className="info-item" style={{ padding: '8px' }}>
+                <div className={styles.infoItem}>
                   <Row align="middle">
                     <Col span={8} xs={24} md={8}>
-                      <div className="info-label">
+                      <div className={styles.infoLabel}>
                         <BookOutlined style={{ marginRight: '5px' }} /> Sản phẩm
                       </div>
                     </Col>
                     <Col span={16} xs={24} md={16}>
-                      <div className="info-value">
+                      <div className={styles.infoValue}>
                         {studentData && (studentData[STUDENT_FIELDS.PRODUCT] || studentData.sanPham) || 'Không có thông tin'}
                       </div>
                     </Col>
@@ -287,15 +199,15 @@ const ReservationConfirmation = ({
                 </div>
                 
                 {/* Trình độ bắt đầu */}
-                <div className="info-item">
+                <div className={styles.infoItem}>
                   <Row align="middle">
                     <Col span={8} xs={24} md={8}>
-                      <div className="info-label">
+                      <div className={styles.infoLabel}>
                         <BookOutlined style={{ marginRight: '5px' }} /> Trình độ bắt đầu
                       </div>
                     </Col>
                     <Col span={16} xs={24} md={16}>
-                      <div className="info-value">
+                      <div className={styles.infoValue}>
                         {studentData && (studentData[STUDENT_FIELDS.LEVEL] || studentData.trinhDo) || 'Không có thông tin'}
                       </div>
                     </Col>
@@ -303,15 +215,15 @@ const ReservationConfirmation = ({
                 </div>
                 
                 {/* Loại lớp */}
-                <div className="info-item">
+                <div className={styles.infoItem}>
                   <Row align="middle">
                     <Col span={8} xs={24} md={8}>
-                      <div className="info-label">
+                      <div className={styles.infoLabel}>
                         <TeamOutlined style={{ marginRight: '5px' }} /> Loại lớp
                       </div>
                     </Col>
                     <Col span={16} xs={24} md={16}>
-                      <div className="info-value">
+                      <div className={styles.infoValue}>
                         <Tag color="cyan">
                           {studentData && (studentData[STUDENT_FIELDS.CLASS_SIZE] || studentData.loaiLop) || 'Không có thông tin'}
                         </Tag>
@@ -321,15 +233,15 @@ const ReservationConfirmation = ({
                 </div>
                 
                 {/* Loại giáo viên */}
-                <div className="info-item">
+                <div className={styles.infoItem}>
                   <Row align="middle">
                     <Col span={8} xs={24} md={8}>
-                      <div className="info-label">
+                      <div className={styles.infoLabel}>
                         <UserOutlined style={{ marginRight: '5px' }} /> Loại giáo viên
                       </div>
                     </Col>
                     <Col span={16} xs={24} md={16}>
-                      <div className="info-value">
+                      <div className={styles.infoValue}>
                         <Tag color="geekblue">
                           {studentData && (studentData[STUDENT_FIELDS.TEACHER_TYPE] || studentData.loaiGV) || 'Không có thông tin'}
                         </Tag>
@@ -339,15 +251,15 @@ const ReservationConfirmation = ({
                 </div>
                 
                 {/* Số buổi theo trình độ */}
-                <div className="info-item">
+                <div className={styles.infoItem}>
                   <Row align="middle">
                     <Col span={8} xs={24} md={8}>
-                      <div className="info-label">
+                      <div className={styles.infoLabel}>
                         <ClockCircleOutlined style={{ marginRight: '5px' }} /> Số buổi
                       </div>
                     </Col>
                     <Col span={16} xs={24} md={16}>
-                      <div className="info-value">
+                      <div className={styles.infoValue}>
                         {studentData && (studentData[STUDENT_FIELDS.SESSIONS] || studentData.soBuoi) || 'Không có thông tin'}
                       </div>
                     </Col>
@@ -358,22 +270,22 @@ const ReservationConfirmation = ({
             
             {/* Schedule info */}
             <Col xs={24}>
-              <div className="column-header" style={{ marginBottom: '10px' }}>
+              <div className={styles.columnHeader}>
                 <CalendarOutlined />
                 <span>THÔNG TIN LỊCH HỌC</span>
               </div>
               
               <Space direction="vertical" size={6} style={{ width: '100%' }}>
                 {/* Mã lớp */}
-                <div className="info-item">
+                <div className={styles.infoItem}>
                   <Row align="middle">
                     <Col span={8} xs={24} md={8}>
-                      <div className="info-label">
+                      <div className={styles.infoLabel}>
                         <TeamOutlined style={{ marginRight: '5px' }} /> Mã lớp
                       </div>
                     </Col>
                     <Col span={16} xs={24} md={16}>
-                      <div className="info-value">
+                      <div className={styles.infoValue}>
                         <Tag color="purple">
                           {(reservationData && (reservationData[RESERVATION_FIELDS.CLASS_CODE] || reservationData.maLop))
                             ? (reservationData[RESERVATION_FIELDS.CLASS_CODE] || reservationData.maLop)
@@ -385,15 +297,15 @@ const ReservationConfirmation = ({
                 </div>
                 
                 {/* Ngày khai giảng */}
-                <div className="info-item">
+                <div className={styles.infoItem}>
                   <Row align="middle">
                     <Col span={8} xs={24} md={8}>
-                      <div className="info-label">
+                      <div className={styles.infoLabel}>
                         <CalendarOutlined style={{ marginRight: '5px' }} /> Ngày khai giảng
                       </div>
                     </Col>
                     <Col span={16} xs={24} md={16}>
-                      <div className="info-value">
+                      <div className={styles.infoValue}>
                         {formatDate((reservationData && (
                           reservationData[RESERVATION_FIELDS.START_DATE] || 
                           reservationData.ngayKhaiGiangDuKien
@@ -403,21 +315,24 @@ const ReservationConfirmation = ({
                   </Row>
                 </div>
                 
-                {/* Lịch học */}
-                <div className="info-item">
+                {/* Lịch học - Sử dụng ScheduleDisplay component mới */}
+                <div className={styles.infoItem}>
                   <Row align="middle">
-                    <Col span={8} xs={24} md={8}>
-                      <div className="info-label">
-                        <CalendarOutlined style={{ marginRight: '5px' }} /> Lịch học
-                      </div>
-                    </Col>
-                    <Col span={16} xs={24} md={16}>
-                      <div className="info-value">
-                        {reservationData && (reservationData[RESERVATION_FIELDS.SCHEDULE] || reservationData.lichHoc)
-                          ? formatScheduleDisplay(reservationData[RESERVATION_FIELDS.SCHEDULE] || reservationData.lichHoc)
-                          : <Text type="secondary" style={{ fontWeight: 'normal' }}>Không có thông tin</Text>
-                        }
-                      </div>
+                    <Col span={24}>
+                      <ScheduleDisplay 
+                        schedule={reservationData && (reservationData[RESERVATION_FIELDS.SCHEDULE] || reservationData.lichHoc)}
+                        startDate={formatDate((reservationData && (reservationData[RESERVATION_FIELDS.START_DATE] || reservationData.ngayKhaiGiangDuKien)))}
+                        compact={true}
+                        showHeader={true}
+                        showTeacher={true}
+                        showVenue={true}
+                        showClassCode={false}
+                        colorScheme="pastel"
+                        size="default"
+                        emptyText="Không có thông tin lịch học"
+                        loading={loading}
+                        className={styles.scheduleDisplay}
+                      />
                     </Col>
                   </Row>
                 </div>
@@ -426,7 +341,7 @@ const ReservationConfirmation = ({
           </Row>
         </div>
         
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '20px' }}>
+        <div className={styles.confirmationActions}>
           <Space size="small">
             <Button onClick={onCancel} disabled={loading}>
               Xem danh sách các lớp khác
@@ -486,136 +401,9 @@ const ReservationConfirmation = ({
         </div>
       </Modal>
       
-      <style jsx>{`
-        .class-info-container {
-          padding: 16px;
-          background-color: #f5f5f5;
-          border-radius: 8px;
-          max-width: 100%;
-          margin: 0 auto;
-        }
-        .column-header {
-          background-color: #00509f;
-          color: white;
-          padding: 8px 12px;
-          border-radius: 4px;
-          font-weight: bold;
-          margin-bottom: 12px;
-          font-size: 14px;
-          display: flex;
-          align-items: center;
-          gap: 8px;
-        }
-        .info-item {
-          padding: 6px 10px;
-          background-color: white;
-          border-radius: 4px;
-          box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
-          margin-bottom: 6px;
-        }
-        .info-label {
-          font-weight: bold;
-          color: #333;
-          padding: 2px 0;
-          font-size: 14px;
-          display: flex;
-          align-items: center;
-          min-height: 28px;
-        }
-        .info-value {
-          padding: 2px 0;
-          font-size: 14px;
-          min-height: 28px;
-          display: flex;
-          align-items: center;
-        }
-        .schedule-table {
-          width: 100%;
-          border-collapse: separate;
-          border-spacing: 0 4px;
-          max-width: 100%;
-        }
-        .weekday-cell {
-          width: 80px;
-          padding-right: 12px;
-          font-weight: 500;
-          color: #444;
-          vertical-align: top;
-          padding-top: 4px;
-          font-size: 14px;
-        }
-        .timeslots-cell {
-          vertical-align: top;
-          font-size: 14px;
-        }
-      `}</style>
-      
-      {/* Additional CSS to force progress steps visibility */}
-      <style jsx global>{`
-        /* Progress steps visibility */
-        .progress-steps {
-          display: flex !important;
-          visibility: visible !important;
-          z-index: 1000 !important;
-          position: relative !important;
-        }
-        
-        /* Ensure first step is active, not completed */
-        .progress-steps .step:first-child {
-          color: #00509f !important;
-        }
-        .progress-steps .step:first-child .circle {
-          background-color: #00509f !important;
-          color: white !important;
-        }
-        .progress-steps .step:nth-child(3) {
-          color: #bfbfbf !important;
-        }
-        .progress-steps .step:nth-child(3) .circle {
-          background-color: #f0f0f0 !important;
-          color: #bfbfbf !important;
-        }
-        
-        /* Modify main containers to be narrower */
-        .form-container.class-registration-wide {
-          width: 60% !important;
-          max-width: 70% !important;
-          padding: 0.75rem !important;
-          margin-left: auto !important;
-          margin-right: auto !important;
-          display: flex !important;
-          justify-content: center !important;
-          align-items: center !important;
-        }
-        
-        /* Target the direct div child of form-container */
-        .form-container.class-registration-wide > div {
-          width: 100% !important;
-          max-width: 100% !important;
-          display: flex !important;
-          justify-content: center !important;
-          align-items: center !important;
-          flex-direction: column !important;
-        }
-        
-        /* Target the div inside that div */
-        .form-container.class-registration-wide > div > div {
-          width: 100% !important;
-          max-width: 100% !important;
-          display: flex !important;
-          justify-content: center !important;
-          align-items: center !important;
-          flex-direction: column !important;
-        }
-        
-        /* Override ant-card styles for this screen */
-        .form-container.class-registration-wide .ant-card {
-          width: 100% !important;
-          max-width: 700px !important;
-          margin: 0 auto !important;
-        }
-      `}</style>
-    </Card>
+        </Space>
+      </Card>
+    </div>
   );
 };
 

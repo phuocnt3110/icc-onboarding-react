@@ -1,6 +1,17 @@
 /* Import all CSS files */
+/* 1. Biến và thiết lập cơ bản */
+@import './variables.css';
+@import './utility-classes.css'; /* Utility classes cho lập trình nhanh */
+@import './animations.css'; /* Animations và transitions */
+
+/* 2. Layout và style components */
 @import './layout.css';
 @import './student-info.css';
 @import './class-selection.css';
 @import './success-screen.css';
-@import './custom-schedule.css'; 
+@import './custom-schedule.css';
+@import './confirmation.css';
+
+/* 3. Media queries và overrides */
+@import './media-queries.css'; /* Thống nhất các media query */
+@import './ant-design-overrides.css'; /* Ghi đè style Ant Design */

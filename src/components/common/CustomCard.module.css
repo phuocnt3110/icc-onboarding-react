@@ -1,0 +1,122 @@
+/* CSS Module cho CustomCard component */
+
+.card {
+  border-radius: var(--border-radius-md);
+  box-shadow: var(--shadow-sm);
+  margin-bottom: var(--spacing-md);
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.hoverable:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+/* Card variants */
+.default {
+  border-color: var(--border-color);
+}
+
+.primary {
+  border-top: 3px solid var(--primary-color);
+}
+
+.primary .cardTitle {
+  color: var(--primary-color);
+}
+
+.info {
+  border-top: 3px solid var(--info-color);
+}
+
+.info .cardTitle {
+  color: var(--info-color);
+}
+
+.success {
+  border-top: 3px solid var(--success-color);
+}
+
+.success .cardTitle {
+  color: var(--success-color);
+}
+
+.warning {
+  border-top: 3px solid var(--warning-color);
+}
+
+.warning .cardTitle {
+  color: var(--warning-color);
+}
+
+.danger {
+  border-top: 3px solid var(--danger-color);
+}
+
+.danger .cardTitle {
+  color: var(--danger-color);
+}
+
+/* Card title styling */
+.cardTitle {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  font-size: var(--font-size-lg);
+  font-weight: 500;
+}
+
+.titleIcon {
+  display: flex;
+  align-items: center;
+  font-size: 18px;
+}
+
+/* Card sections */
+.cardHeader {
+  padding: var(--spacing-md);
+  border-bottom: 1px solid var(--border-color-light);
+  background-color: var(--background-light);
+}
+
+.cardBody {
+  padding: var(--spacing-lg);
+}
+
+.cardFooter {
+  padding: var(--spacing-md);
+  border-top: 1px solid var(--border-color-light);
+  background-color: var(--background-light);
+}
+
+/* Custom ant-design overrides */
+.card :global(.ant-card-head) {
+  border-bottom: 1px solid var(--border-color-light);
+  padding: 0 var(--spacing-md);
+  min-height: 48px;
+}
+
+.card :global(.ant-card-head-title) {
+  padding: var(--spacing-sm) 0;
+}
+
+.card :global(.ant-card-body) {
+  padding: 0; /* We use our own padding in cardBody */
+}
+
+/* Media queries */
+@media (max-width: 576px) {
+  .card {
+    border-radius: var(--border-radius-sm);
+    margin-bottom: var(--spacing-sm);
+  }
+  
+  .cardBody {
+    padding: var(--spacing-md);
+  }
+  
+  .cardTitle {
+    font-size: var(--font-size-md);
+  }
+}

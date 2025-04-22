@@ -1,0 +1,160 @@
+/* Styles for Confirmation Components */
+/* ReservationConfirmation và SuccessScreen */
+
+/* Container styles - sử dụng specificity cao thay vì !important */
+.ant-layout .ant-layout-content .confirmation-container {
+  width: 60%;
+  max-width: 500px;
+  margin: 0 auto;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Card styles */
+.ant-layout .ant-layout-content .confirmation-container .ant-card {
+  width: 100%;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Thông tin lớp học */
+.class-info-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px;
+  border-radius: 4px;
+  background-color: #fafafa;
+  margin-bottom: 10px;
+  width: 100%;
+}
+
+.info-label {
+  font-size: 13px;
+  color: #666;
+  font-weight: 500;
+}
+
+.info-value {
+  font-size: 14px;
+  color: #333;
+  font-weight: 400;
+}
+
+.column-header {
+  font-size: 16px;
+  font-weight: 500;
+  color: #00509f;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Lịch học */
+.schedule-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 12px 0;
+}
+
+.schedule-table tr {
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.weekday-cell {
+  width: 30%;
+  padding: 8px;
+  font-weight: 500;
+  color: #333;
+}
+
+.timeslots-cell {
+  padding: 8px;
+  color: #666;
+}
+
+/* Buttons */
+.confirmation-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+  justify-content: center;
+}
+
+.card-title {
+  color: #00509f;
+  font-size: 18px;
+  margin-bottom: 16px;
+}
+
+/* Responsive styles cho màn hình nhỏ */
+@media (max-width: 768px) {
+  .ant-layout .ant-layout-content .confirmation-container {
+    width: 95%;
+    padding: 0.5rem;
+  }
+  
+  .class-info-container {
+    flex-direction: column;
+  }
+  
+  .info-item {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 8px;
+  }
+  
+  .column-header {
+    font-size: 15px;
+    margin-bottom: 12px;
+  }
+  
+  .weekday-cell, .timeslots-cell {
+    padding: 6px;
+    font-size: 14px;
+  }
+  
+  .card-title {
+    font-size: 16px;
+    margin-bottom: 12px;
+  }
+  
+  /* Nút bấm trên mobile */
+  .confirmation-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  .confirmation-actions .ant-btn {
+    width: 100%;
+    margin-bottom: 8px;
+    height: 42px;
+  }
+}
+
+/* Ultra-small screens (dưới 375px) */
+@media (max-width: 375px) {
+  .ant-layout .ant-layout-content .confirmation-container {
+    width: 100%;
+    padding: 0.25rem;
+  }
+  
+  .info-label {
+    font-size: 12px;
+  }
+  
+  .info-value {
+    font-size: 13px;
+  }
+}

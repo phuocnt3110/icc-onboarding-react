@@ -1,0 +1,154 @@
+/* CSS Module cho ClassRegistration component */
+
+.container {
+  width: 60%;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: var(--spacing-md);
+}
+
+.wideContainer {
+  width: 80%;
+  max-width: 1200px;
+}
+
+.card {
+  border-radius: var(--border-radius-md);
+  box-shadow: var(--shadow-sm);
+  margin-bottom: var(--spacing-lg);
+  transition: all 0.3s ease;
+}
+
+.card:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.loadingContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  text-align: center;
+}
+
+.loadingMessage {
+  margin-top: var(--spacing-md);
+  color: var(--text-secondary);
+  font-size: var(--font-size-md);
+}
+
+.sectionTitle {
+  color: var(--primary-color);
+  font-size: var(--font-size-lg);
+  font-weight: 500;
+  margin-bottom: var(--spacing-md);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.titleIcon {
+  font-size: 20px;
+  color: var(--primary-color);
+}
+
+.errorContainer {
+  padding: var(--spacing-md);
+  background-color: var(--background-light);
+  border-radius: var(--border-radius-md);
+  margin: var(--spacing-md) 0;
+  border-left: 4px solid var(--danger-color);
+}
+
+.errorMessage {
+  color: var(--danger-color);
+  margin-bottom: var(--spacing-sm);
+  font-weight: 500;
+}
+
+.errorDetail {
+  color: var(--text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+.actionButtons {
+  display: flex;
+  justify-content: center;
+  gap: var(--spacing-md);
+  margin-top: var(--spacing-lg);
+}
+
+.primaryButton {
+  min-width: 150px;
+}
+
+.secondaryButton {
+  min-width: 120px;
+}
+
+.confirmModal :global(.ant-modal-content) {
+  border-radius: var(--border-radius-md);
+  overflow: hidden;
+}
+
+.confirmModal :global(.ant-modal-header) {
+  background-color: var(--primary-color-light);
+  padding: var(--spacing-md) var(--spacing-lg);
+}
+
+.confirmModal :global(.ant-modal-title) {
+  color: var(--primary-color);
+  font-weight: 500;
+}
+
+.confirmModal :global(.ant-modal-body) {
+  padding: var(--spacing-lg);
+}
+
+.confirmModal :global(.ant-modal-footer) {
+  border-top: 1px solid var(--border-color-light);
+  padding: var(--spacing-md) var(--spacing-lg);
+}
+
+/* Media Queries */
+@media (max-width: 992px) {
+  .container {
+    width: 75%;
+  }
+  
+  .wideContainer {
+    width: 90%;
+  }
+}
+
+@media (max-width: 768px) {
+  .container {
+    width: 85%;
+  }
+  
+  .wideContainer {
+    width: 95%;
+  }
+  
+  .actionButtons {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .actionButtons button {
+    width: 100%;
+    margin-bottom: var(--spacing-sm);
+  }
+}
+
+@media (max-width: 576px) {
+  .container {
+    width: 95%;
+    padding: var(--spacing-sm);
+  }
+  
+  .sectionTitle {
+    font-size: var(--font-size-md);
+  }
+}

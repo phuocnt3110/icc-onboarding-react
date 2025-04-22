@@ -66,8 +66,8 @@ const ProvinceSelector = ({
     if (!showRegionGroups) {
       return allProvinces.map(province => (
         <Option key={province.code} value={province.name} onClick={() => console.log("Option clicked:", province.name)}>
-          <div className="province-option">
-            <EnvironmentOutlined style={{ marginRight: '8px', color: '#00509f' }} />
+          <div className="d-flex align-items-center">
+            <EnvironmentOutlined className="text-primary mr-2" />
             {province.name}
           </div>
         </Option>
@@ -79,8 +79,8 @@ const ProvinceSelector = ({
         <OptGroup label="Miền Bắc">
           {provincesByRegion.north.map(province => (
             <Option key={province.code} value={province.name} onClick={() => console.log("Option clicked:", province.name)}>
-              <div className="province-option">
-                <EnvironmentOutlined style={{ marginRight: '8px', color: '#00509f' }} />
+              <div className="d-flex align-items-center">
+                <EnvironmentOutlined className="text-primary mr-2" />
                 {province.name}
               </div>
             </Option>
@@ -89,8 +89,8 @@ const ProvinceSelector = ({
         <OptGroup label="Miền Trung">
           {provincesByRegion.central.map(province => (
             <Option key={province.code} value={province.name} onClick={() => console.log("Option clicked:", province.name)}>
-              <div className="province-option">
-                <EnvironmentOutlined style={{ marginRight: '8px', color: '#00509f' }} />
+              <div className="d-flex align-items-center">
+                <EnvironmentOutlined className="text-primary mr-2" />
                 {province.name}
               </div>
             </Option>
@@ -99,8 +99,8 @@ const ProvinceSelector = ({
         <OptGroup label="Miền Nam">
           {provincesByRegion.south.map(province => (
             <Option key={province.code} value={province.name} onClick={() => console.log("Option clicked:", province.name)}>
-              <div className="province-option">
-                <EnvironmentOutlined style={{ marginRight: '8px', color: '#00509f' }} />
+              <div className="d-flex align-items-center">
+                <EnvironmentOutlined className="text-primary mr-2" />
                 {province.name}
               </div>
             </Option>
@@ -131,9 +131,9 @@ const ProvinceSelector = ({
   const dropdownRender = (menu) => (
     <div>
       {fetching ? (
-        <div style={{ padding: '10px', textAlign: 'center' }}>
+        <div className="p-3 text-center">
           <Spin size="small" />
-          <Text style={{ marginLeft: 8 }}>Đang tải...</Text>
+          <Text className="ml-2">Đang tải...</Text>
         </div>
       ) : null}
       {menu}
@@ -148,15 +148,15 @@ const ProvinceSelector = ({
       onChange={handleSelect}
       filterOption={filterOption}
       onSearch={handleSearch}
-      style={{ width: '100%', ...style }}
+      className="w-100 province-selector"
+      style={style}
       dropdownRender={dropdownRender}
       popupClassName="province-dropdown"
       autoFocus={autoFocus}
       disabled={disabled}
       open={dropdownOpen}
       onDropdownVisibleChange={setDropdownOpen}
-      className="province-selector"
-      suffixIcon={<EnvironmentOutlined style={{ color: '#00509f' }} />}
+      suffixIcon={<EnvironmentOutlined className={disabled ? 'text-light-gray' : 'text-primary'} />}
       {...rest}
     >
       {renderProvinces()}

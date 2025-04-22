@@ -1,25 +1,26 @@
 /* ClassSelection Styles */
-.class-selection-container {
-  width: 70% !important;
-  max-width: 80% !important; /* Thay đổi từ 1000px để tận dụng toàn bộ chiều rộng màn hình */
-  margin: 0 auto !important;
-  padding: 1rem !important;
+/* Sử dụng specificity cao hơn thay vì !important */
+.ant-layout .ant-layout-content .class-selection-container {
+  width: 70%;
+  max-width: 80%; /* Thay đổi từ 1000px để tận dụng toàn bộ chiều rộng màn hình */
+  margin: 0 auto;
+  padding: 1rem;
 }
 
 /* Override form-container cho màn hình Class Registration */
-.form-container.class-registration-wide {
-  width: 70% !important;
-  max-width: 80% !important;
-  padding: 1rem !important;
-  margin-left: auto !important;
-  margin-right: auto !important;
+.ant-layout .ant-layout-content .form-container.class-registration-wide {
+  width: 70%;
+  max-width: 80%;
+  padding: 1rem;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 /* Mở rộng card trong Class Selection */
-.class-registration-wide .ant-card,
-.form-container.class-registration-wide .ant-card {
-  width: 70% !important;
-  max-width: 80% !important;
+.ant-layout .ant-layout-content .class-registration-wide .ant-card,
+.ant-layout .ant-layout-content .form-container.class-registration-wide .ant-card {
+  width: 70%;
+  max-width: 80%;
 }
 
 .class-selection-card {
@@ -29,27 +30,27 @@
 }
 
 /* Table styles with improved scrolling */
-.class-selection-table {
+.ant-layout .ant-layout-content .class-selection-table {
   width: 100%;
   overflow-x: auto;
   margin: 0 auto;
 }
 
-.class-selection-table .ant-table {
+.ant-layout .ant-layout-content .class-selection-table .ant-table {
   width: 100%;
 }
 
-.class-selection-table .ant-table-cell {
+.ant-layout .ant-layout-content .class-selection-table .ant-table-cell {
   white-space: normal;
   word-break: break-word;
 }
 
 /* Filter styles */
-.filter-group {
+.ant-layout .ant-layout-content .filter-group {
   margin-bottom: 15px;
 }
 
-.filter-label {
+.ant-layout .ant-layout-content .filter-label {
   font-weight: 500;
   margin-bottom: 8px;
   display: flex;
@@ -57,14 +58,14 @@
   gap: 6px;
 }
 
-.ant-checkbox-group {
+.ant-layout .ant-layout-content .ant-checkbox-group {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
 }
 
-.ant-checkbox-wrapper {
-  margin-right: 8px !important;
+.ant-layout .ant-layout-content .ant-checkbox-wrapper {
+  margin-right: 8px;
 }
 
 /* Mobile optimizations */
@@ -73,16 +74,22 @@
     display: none;
   }
   
-  .ant-table-cell {
-    padding: 8px 6px !important;
+  .ant-layout .ant-layout-content .class-selection-container .ant-table-cell {
+    padding: 8px 6px;
   }
   
-  .ant-checkbox-group {
+  .ant-layout .ant-layout-content .class-selection-container .ant-checkbox-group {
     flex-direction: column;
   }
   
-  .ant-pagination-options {
-    display: none !important;
+  .ant-layout .ant-layout-content .class-selection-container .ant-pagination-options {
+    display: none;
+  }
+  
+  /* Thêm tối ưu cho mobile */
+  .ant-layout .ant-layout-content .class-selection-container {
+    width: 95%;
+    padding: 0.5rem;
   }
 }
 
@@ -96,22 +103,31 @@
     padding: 0 8px;
   }
   
-  .filter-group {
+  .ant-layout .ant-layout-content .filter-group {
     margin-bottom: 12px;
   }
 }
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
-  .class-selection-container {
+  .ant-layout .ant-layout-content .class-selection-container {
+    width: 90%;
     padding: 0.5rem;
   }
   
-  .class-selection-card {
+  .ant-layout .ant-layout-content .class-selection-card {
     padding: 1rem;
   }
   
-  .class-selection-table .ant-table-cell {
+  .ant-layout .ant-layout-content .class-selection-table .ant-table-cell {
     white-space: normal;
+    padding: 10px 8px; /* Tăng padding cho dễ tương tác */
+    font-size: 14px; /* Điều chỉnh kích thước font phù hợp */
   }
-} 
+  
+  /* Tối ưu thêm cho nút bấm trên mobile */
+  .ant-layout .ant-layout-content .class-selection-container .ant-btn {
+    height: 36px;
+    min-width: 80px;
+  }
+}

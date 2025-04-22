@@ -1,0 +1,81 @@
+/* CSS Module cho StatusTag component */
+
+.statusTag {
+  border-radius: var(--border-radius-sm);
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border: none;
+  transition: all 0.3s;
+}
+
+/* Size variants */
+.small {
+  font-size: 12px;
+  padding: 0 6px;
+  height: 20px;
+  line-height: 20px;
+}
+
+.default {
+  font-size: 14px;
+  padding: 2px 8px;
+  height: 24px;
+  line-height: 24px;
+}
+
+.large {
+  font-size: 16px;
+  padding: 4px 12px;
+  height: 32px;
+  line-height: 32px;
+}
+
+/* Status variants - additional styling beyond Ant Design colors */
+.success {
+  background-color: var(--success-color-light) !important;
+}
+
+.error {
+  background-color: var(--danger-color-light) !important;
+}
+
+.warning {
+  background-color: var(--warning-color-light) !important;
+}
+
+.info {
+  background-color: var(--info-color-light) !important;
+}
+
+.pending {
+  background-color: var(--background-light) !important;
+  color: var(--text-secondary) !important;
+}
+
+/* Animations */
+.statusTag:hover {
+  transform: translateY(-1px);
+  filter: brightness(105%);
+}
+
+/* Icon styling */
+.statusTag:global(.ant-tag) :global(.anticon) {
+  font-size: inherit;
+  margin-right: 0; /* Remove default margin, we use gap instead */
+}
+
+/* Media Queries */
+@media (max-width: 576px) {
+  .default {
+    font-size: 12px;
+    padding: 1px 6px;
+  }
+  
+  .large {
+    font-size: 14px;
+    padding: 3px 10px;
+  }
+}

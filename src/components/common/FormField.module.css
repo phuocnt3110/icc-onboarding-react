@@ -1,0 +1,89 @@
+/* CSS Module cho FormField component */
+
+.formItem {
+  margin-bottom: 16px !important;
+}
+
+.formItem :global(.ant-form-item-label) > label {
+  font-size: 13px;
+  color: var(--text-secondary);
+  font-weight: 500;
+  height: 22px;
+  margin-bottom: 6px;
+}
+
+.formItem :global(.ant-input),
+.formItem :global(.ant-select-selector),
+.formItem :global(.ant-picker) {
+  height: 36px !important;
+  font-size: 14px;
+  color: var(--text-primary);
+  border-radius: var(--border-radius-sm);
+  border-color: var(--border-color);
+  box-shadow: var(--shadow-xs);
+  transition: all 0.3s;
+}
+
+.formItem :global(.ant-input:hover),
+.formItem :global(.ant-select-selector:hover),
+.formItem :global(.ant-picker:hover) {
+  border-color: var(--primary-color-light);
+}
+
+.formItem :global(.ant-input:focus),
+.formItem :global(.ant-select-selector:focus),
+.formItem :global(.ant-picker:focus) {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(0, 80, 159, 0.2);
+}
+
+.formItem :global(.ant-input-affix-wrapper) {
+  padding: 0 11px;
+}
+
+.formItem :global(.ant-form-item-explain-error) {
+  font-size: 12px;
+  margin-top: 2px;
+}
+
+/* Input types */
+.formItem :global(.ant-input-number) {
+  width: 100%;
+}
+
+.formItem :global(.ant-input-textarea) textarea {
+  min-height: 80px;
+  font-size: 14px;
+}
+
+/* Required label styling */
+.requiredLabel::after {
+  content: ' *';
+  display: inline-block;
+  margin-left: 4px;
+  color: var(--danger-color);
+  font-weight: bold;
+}
+
+.tooltipIcon {
+  margin-left: 6px;
+  color: var(--text-light);
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.tooltipIcon:hover {
+  color: var(--primary-color);
+}
+
+/* Mobile responsive styling */
+@media (max-width: 576px) {
+  .formItem {
+    margin-bottom: 12px !important;
+  }
+  
+  .formItem :global(.ant-form-item-label) > label {
+    font-size: 12px;
+    margin-bottom: 4px;
+  }
+}

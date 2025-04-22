@@ -1,0 +1,133 @@
+/* Thống nhất media query breakpoints cho toàn bộ ứng dụng */
+
+/* Mobile extra small - Điện thoại cỡ nhỏ */
+@media (max-width: 375px) {
+  .ant-layout .ant-layout-content .form-container,
+  .ant-layout .ant-layout-content .student-info-container,
+  .ant-layout .ant-layout-content .class-selection-container,
+  .ant-layout .ant-layout-content .confirmation-container {
+    width: 100%;
+    padding: 0.25rem;
+  }
+  
+  /* Giảm font size cho mobile nhỏ */
+  .ant-layout .ant-layout-content .card-title,
+  .ant-layout .ant-layout-content .section-title {
+    font-size: 15px;
+  }
+}
+
+/* Mobile - Điện thoại thông thường */
+@media (min-width: 376px) and (max-width: 576px) {
+  .ant-layout .ant-layout-content .form-container,
+  .ant-layout .ant-layout-content .student-info-container,
+  .ant-layout .ant-layout-content .class-selection-container,
+  .ant-layout .ant-layout-content .confirmation-container {
+    width: 95%;
+    padding: 0.5rem;
+  }
+  
+  /* Tối ưu form controls */
+  .ant-layout .ant-layout-content .ant-form-item .ant-input,
+  .ant-layout .ant-layout-content .ant-form-item .ant-select-selector,
+  .ant-layout .ant-layout-content .ant-form-item .ant-picker {
+    height: 44px !important;
+    font-size: 16px;
+  }
+  
+  /* Tối ưu bảng */
+  .ant-layout .ant-layout-content .ant-table-cell {
+    padding: 12px 8px;
+  }
+}
+
+/* Tablet - Máy tính bảng */
+@media (min-width: 577px) and (max-width: 768px) {
+  .ant-layout .ant-layout-content .form-container {
+    width: 85%;
+    max-width: 600px;
+  }
+  
+  .ant-layout .ant-layout-content .student-info-container {
+    width: 85%;
+    max-width: 650px;
+  }
+  
+  .ant-layout .ant-layout-content .class-selection-container {
+    width: 90%;
+    max-width: 700px;
+  }
+  
+  .ant-layout .ant-layout-content .confirmation-container {
+    width: 80%;
+    max-width: 600px;
+  }
+}
+
+/* Desktop - Máy tính để bàn cỡ vừa */
+@media (min-width: 769px) and (max-width: 992px) {
+  .ant-layout .ant-layout-content .form-container {
+    width: 60%;
+    max-width: 500px;
+  }
+  
+  .ant-layout .ant-layout-content .student-info-container {
+    width: 75%;
+    max-width: 750px;
+  }
+  
+  .ant-layout .ant-layout-content .class-selection-container {
+    width: 85%;
+    max-width: 900px;
+  }
+  
+  .ant-layout .ant-layout-content .confirmation-container {
+    width: 70%;
+    max-width: 600px;
+  }
+}
+
+/* Large Desktop - Màn hình lớn */
+@media (min-width: 993px) {
+  .ant-layout .ant-layout-content .form-container {
+    width: 35%;
+    max-width: 400px;
+  }
+  
+  .ant-layout .ant-layout-content .student-info-container {
+    width: 55%;
+    max-width: 800px;
+  }
+  
+  .ant-layout .ant-layout-content .class-selection-container {
+    width: 70%;
+    max-width: 1000px;
+  }
+  
+  .ant-layout .ant-layout-content .confirmation-container {
+    width: 50%;
+    max-width: 500px;
+  }
+}
+
+/* Mobile Form Controls - Tối ưu cho touch interaction */
+@media (max-width: 768px) {
+  /* Tăng kích thước nút để dễ nhấn */
+  .ant-layout .ant-layout-content .ant-btn {
+    height: 40px;
+    min-width: 88px;
+    font-size: 14px;
+  }
+  
+  /* Tăng kích thước vùng checkbox, radio */
+  .ant-layout .ant-layout-content .ant-checkbox-wrapper,
+  .ant-layout .ant-layout-content .ant-radio-wrapper {
+    padding: 4px 0;
+    margin-bottom: 4px;
+  }
+  
+  /* Tăng khoảng cách giữa các form element */
+  .ant-layout .ant-layout-content .ant-form-item {
+    margin-bottom: 20px;
+  }
+}
