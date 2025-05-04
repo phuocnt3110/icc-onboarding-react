@@ -384,8 +384,8 @@ const StudentInfo = () => {
   const [submitError, setSubmitError] = useState(null);
   const [editingFields, setEditingFields] = useState([]);
   const [savingFields, setSavingFields] = useState([]);
-  const [confirmStudentInfo, setConfirmStudentInfo] = useState(undefined);
-  const [confirmGuardianInfo, setConfirmGuardianInfo] = useState(undefined);
+  const [confirmStudentInfo, setConfirmStudentInfo] = useState(null);
+  const [confirmGuardianInfo, setConfirmGuardianInfo] = useState(null);
 
   // Update confirm states when student data changes
   useEffect(() => {
@@ -1922,11 +1922,16 @@ const StudentInfo = () => {
                 >
                   <Select
                     onChange={(value) => {
-                      const stringValue = String(value || '');
-                      setConfirmStudentInfo(stringValue || undefined);
+                      const stringValue = value ? String(value) : null;
+                      setConfirmStudentInfo(stringValue);
                     }}
+                    value={form.getFieldValue('confirmStudentInfo') || null}
+                    allowClear
+                    showSearch={false}
                     disabled={readOnly}
-                    placeholder="Chọn xác nhận"
+                    placeholder="Chọn xác nhận sử dụng SĐT học viên cho ClassIn"
+                    style={{ width: '100%' }}
+                    dropdownStyle={{ minWidth: '250px' }}
                   >
                     <Select.Option value="1">Có</Select.Option>
                     <Select.Option value="0">Không</Select.Option>
@@ -2238,11 +2243,16 @@ const StudentInfo = () => {
           >
             <Select
               onChange={(value) => {
-                const stringValue = String(value || '');
-                setConfirmGuardianInfo(stringValue || undefined);
+                const stringValue = value ? String(value) : null;
+                setConfirmGuardianInfo(stringValue);
               }}
+              value={form.getFieldValue('confirmGuardianInfo') || null}
+              allowClear
+              showSearch={false}
               disabled={readOnly}
-              placeholder="Chọn xác nhận"
+              placeholder="Chọn xác nhận sử dụng SĐT đại diện cho Zalo"
+              style={{ width: '100%' }}
+              dropdownStyle={{ minWidth: '250px' }}
             >
               <Select.Option value="1">Có</Select.Option>
               <Select.Option value="0">Không, tôi sử dụng Zalo với số điện thoại khác</Select.Option>

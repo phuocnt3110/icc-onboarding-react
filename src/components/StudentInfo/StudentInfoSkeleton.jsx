@@ -1,69 +1,34 @@
 import React from 'react';
-import { Card } from 'antd';
-import styles from './StudentInfoSkeleton.module.css';
+import { Skeleton, Card } from 'antd';
+import './styles/LazyLoadAnimations.css';
 
 const StudentInfoSkeleton = () => {
   return (
-    <div className={styles.skeletonContainer}>
-      {/* Course Information Skeleton */}
-      <Card className={styles.card}>
-        <div className={styles.cardBody}>
-          <div className={styles.headerRow}>
-            <div className={styles.sectionTitle}></div>
-          </div>
-          <div className={styles.formRow}>
-            <div className={styles.formItem}>
-              <div className={styles.label}></div>
-              <div className={styles.input}></div>
-            </div>
-            <div className={styles.formItem}>
-              <div className={styles.label}></div>
-              <div className={styles.input}></div>
-            </div>
-            <div className={styles.formItem}>
-              <div className={styles.label}></div>
-              <div className={styles.input}></div>
-            </div>
-          </div>
-        </div>
+    <div className="white-container">
+      {/* Course Info Card - Animation with delay */}
+      <Card className="card-fade-in delay-1" style={{ marginBottom: '20px', borderRadius: '12px' }}>
+        <Skeleton active paragraph={{ rows: 3 }} title={{ width: '40%' }} />
       </Card>
-
-      {/* Student Information Skeleton */}
-      <Card className={styles.card}>
-        <div className={styles.cardBody}>
-          <div className={styles.headerRow}>
-            <div className={styles.sectionTitle}></div>
-          </div>
-          <div className={styles.formRow}>
-            {[...Array(6)].map((_, index) => (
-              <div className={styles.formItem} key={index}>
-                <div className={styles.label}></div>
-                <div className={styles.input}></div>
-              </div>
-            ))}
-          </div>
-        </div>
+      
+      {/* Personal Info Card - Animation with delay */}
+      <Card className="card-fade-in delay-2" style={{ marginBottom: '20px', borderRadius: '12px' }}>
+        <Skeleton active paragraph={{ rows: 5 }} title={{ width: '50%' }} />
       </Card>
-
-      {/* Guardian Information Skeleton */}
-      <Card className={styles.card}>
-        <div className={styles.cardBody}>
-          <div className={styles.headerRow}>
-            <div className={styles.sectionTitle}></div>
-          </div>
-          <div className={styles.formRow}>
-            {[...Array(4)].map((_, index) => (
-              <div className={styles.formItem} key={index}>
-                <div className={styles.label}></div>
-                <div className={styles.input}></div>
-              </div>
-            ))}
-          </div>
-          <div className={styles.buttonRow}>
-            <div className={styles.button}></div>
-          </div>
-        </div>
+      
+      {/* Guardian Info Card - Animation with delay */}
+      <Card className="card-fade-in delay-3" style={{ marginBottom: '20px', borderRadius: '12px' }}>
+        <Skeleton active paragraph={{ rows: 4 }} title={{ width: '45%' }} />
       </Card>
+      
+      {/* Button Placeholder */}
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        marginTop: '20px',
+        marginBottom: '20px' 
+      }}>
+        <Skeleton.Button active size="large" shape="round" style={{ width: '180px' }} />
+      </div>
     </div>
   );
 };
