@@ -2,7 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Layout, ConfigProvider } from 'antd';
 import viVN from 'antd/lib/locale/vi_VN';
-import StudentInfo from './components/StudentInfo/StudentInfo';
+import StudentInfo from './components/StudentInfo'; // Sử dụng StudentInfoMaster qua index.js
 import ClassRegistration from './components/ClassRegistration/ClassRegistration';
 import { StudentProvider } from './contexts/StudentContext';
 import { ClassProvider } from './contexts/ClassContext';
@@ -106,16 +106,16 @@ const App = () => {
                   {/* QR Code Support Card */}
                   <QRCodeCard />
                   
-                  {/* Content with added top padding to prevent overlap with fixed header */}
+                  {/* Content without padding and completely transparent */}
                   <Content style={{ 
-                    padding: '20px 20px', // Tăng padding ngang để có khoảng cách mềm hơn với rìa màn hình
+                    padding: '0',
                     background: 'transparent',
-                    marginTop: '64px',
-                    marginBottom: '50px',
+                    marginTop: '0',         // Xóa hoặc về 0
+                    marginBottom: '0',      // Xóa hoặc về 0
                     position: 'relative',
                     zIndex: 1,
                     width: '100%',
-                    maxWidth: '100%', // Đảm bảo sử dụng toàn bộ không gian ngang
+                    maxWidth: '100%',
                   }}>
                     {/* Horizontal Progress Steps */}
                     <ProgressSteps steps={steps} />

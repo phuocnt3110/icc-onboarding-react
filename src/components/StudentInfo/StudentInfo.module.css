@@ -1,18 +1,18 @@
 /* StudentInfo Styles Module */
 .container {
-  width: 100%;
-  max-width: 800px;
-  margin: 0 auto;
-  padding: 1.25rem;
+  width: 100vw;
+  max-width: 100vw;
+  margin: 0;
+  padding: 0;
   background-color: #fff;
-  background-image: linear-gradient(to bottom, #ffffff, #f9fcff);
-  min-height: 800px;
+  background-image: none;
+  min-height: 100vh;
   animation: fadeContainer 0.3s ease-in-out;
   opacity: 1;
-  border-radius: 16px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  border-radius: 0;
+  box-shadow: none;
   transition: all 0.4s ease;
-  border: 1px solid rgba(230, 240, 250, 0.8);
+  border: none;
 }
 
 /* Animation cho container */
@@ -82,17 +82,10 @@
   position: relative;
 }
 
-/* Thêm điểm nhấn màu bên trái cho các card */
+/* Viền bên trái đã bị loại bỏ theo yêu cầu */
 .card::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0;
-  height: 100%;
-  width: 5px;
-  background: linear-gradient(to bottom, #3a7bd5, #00d2ff);
-  border-top-left-radius: 12px;
-  border-bottom-left-radius: 12px;
+  content: none; /* Vô hiệu hóa pseudo-element */
+  display: none; /* Đảm bảo không hiển thị */
 }
 
 .card:hover {
@@ -412,7 +405,14 @@
 
 @media (max-width: 768px) {
   .container {
-    width: 95%;
+    width: 100vw !important;
+    max-width: 100vw !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    min-height: 100vh !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
   }
   
   .courseInfoGrid {
