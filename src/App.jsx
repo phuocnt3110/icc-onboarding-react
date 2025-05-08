@@ -8,8 +8,8 @@ import { StudentProvider } from './contexts/StudentContext';
 import { ClassProvider } from './contexts/ClassContext';
 import { ProgressStepProvider } from './contexts/ProgressStepContext';
 import ProgressSteps from './components/common/ProgressSteps.jsx';
-// Import phương án QR code (Card)
-import QRCodeCard from './components/common/QRCodeCard.jsx';
+// Import phương án QR code thông minh (Card trên desktop, Float trên mobile)
+import QRCodeSupport from './components/common/QRCodeSupport.jsx';
 import { ROUTES } from './config';
 import './index.css';
 
@@ -103,15 +103,15 @@ const App = () => {
                     />
                   </Header>
                   
-                  {/* QR Code Support Card */}
-                  <QRCodeCard />
+                  {/* QR Code Support - tự động chọn Card hoặc Float tùy thiết bị */}
+                  <QRCodeSupport />
                   
                   {/* Content without padding and completely transparent */}
                   <Content style={{ 
                     padding: '0',
                     background: 'transparent',
-                    marginTop: '0',         // Xóa hoặc về 0
-                    marginBottom: '0',      // Xóa hoặc về 0
+                    marginTop: '76px',      // Điều chỉnh lại để tạo khoảng cách cân đối
+                    marginBottom: '0',      
                     position: 'relative',
                     zIndex: 1,
                     width: '100%',
@@ -128,21 +128,11 @@ const App = () => {
                     </Routes>
                   </Content>
                   
-                  {/* Fixed Footer */}
-                  <Footer style={{ 
-                    textAlign: 'center',
-                    background: '#001529',
-                    color: 'rgba(255, 255, 255, 0.7)',
-                    position: 'fixed',
-                    bottom: 0,
-                    left: 0,
-                    right: 0,
-                    zIndex: 100,
-                    padding: '15px 0',
-                    height: '50px',
-                  }}>
-                    <span>ICANCONNECT 2023. All rights reserved.</span>
-                  </Footer>
+                  {/* Khoảng trắng cuối trang */}
+                  <div style={{ 
+                    height: '50px', // Chiều cao khoảng trắng
+                    width: '100%',
+                  }} />
                 </Layout>
               </Router>
             </ProgressStepProvider>

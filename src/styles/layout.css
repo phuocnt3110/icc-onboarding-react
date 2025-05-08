@@ -29,10 +29,82 @@
   background-color: transparent;
 }
 
-/* Progress steps */
+/* Progress steps - Cải tiến giao diện */
 .progress-steps {
+  display: flex;
+  justify-content: center;
+  align-items: center;
   background: transparent;
-  margin-bottom: 24px;
+  margin: 16px auto 16px; /* Cân bằng khoảng cách trên dưới */
+  padding: 12px 24px; 
+  max-width: 600px;
+}
+
+.progress-steps .step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  flex: 1;
+  text-align: center;
+  font-size: 13px;
+  color: #9aa3af;
+  font-weight: 500;
+  height: 60px; /* Cố định chiều cao để đảm bảo căn đối */
+  justify-content: flex-start; /* Căn đầu */
+}
+
+.progress-steps .step.active {
+  color: #1890ff;
+  font-weight: 600;
+}
+
+.progress-steps .step.completed {
+  color: #52c41a;
+}
+
+.progress-steps .circle {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background-color: #f0f0f0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 6px; /* Giảm khoảng cách với text bên dưới */
+  font-weight: 600;
+  color: #8c8c8c;
+  border: 2px solid #e6e6e6;
+  transition: all 0.3s ease;
+  position: relative;
+  z-index: 2;
+}
+
+.progress-steps .step.active .circle {
+  background-color: #e6f7ff;
+  color: #1890ff;
+  border-color: #1890ff;
+  box-shadow: 0 0 0 4px rgba(24, 144, 255, 0.1);
+}
+
+.progress-steps .step.completed .circle {
+  background-color: #f6ffed;
+  color: #52c41a;
+  border-color: #52c41a;
+}
+
+.progress-steps .divider {
+  flex: 1;
+  height: 2px;
+  background-color: #e6e6e6;
+  margin: 0 8px;
+  position: relative;
+  top: -2px; /* Đặt lại vị trí để căn giữa theo tổng thể (cả chữ và số) */
+  z-index: 1;
+}
+
+.progress-steps .step.completed + .divider {
+  background-color: #52c41a;
 }
 
 /* Responsive adjustments */
@@ -46,10 +118,36 @@
     max-width: 100%;
     padding: 0.5rem;
   }
+  
+  /* Mobile responsive adjustments for progress steps */
+  .progress-steps {
+    padding: 0px 8px;
+    margin: 4px auto 8px;
+    max-width: 100%;
+  }
+  
+  .progress-steps .step {
+    font-size: 10px;
+    font-weight: 500;
+    line-height: 1.1;
+  }
+  
+  .progress-steps .circle {
+    width: 22px;
+    height: 22px;
+    margin-bottom: 2px;
+    font-size: 12px;
+    border-width: 1.5px;
+  }
+  
+  .progress-steps .divider {
+    top: -1px; /* Điều chỉnh vị trí divider trên mobile */
+    height: 1.5px;
+  }
 }
 
 @media (min-width: 1600px) {
   .form-container {
     max-width: 400px;
   }
-} 
+}

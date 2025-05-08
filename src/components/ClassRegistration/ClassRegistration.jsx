@@ -5,7 +5,7 @@ import { useStudent } from '../../contexts/StudentContext';
 import { useClass } from '../../contexts/ClassContext';
 import { validateScheduleSelection, validateClassSelection } from './utils';
 import ReservationConfirmation from '../Confirmation/ReservationConfirmation';
-import ClassSelection from './ClassSelection/ClassSelection';
+import ClassSelectionNew from './ClassSelection/ClassSelectionNew';
 import CustomSchedule from './CustomSchedule/index';
 import SuccessScreen from '../Confirmation/SuccessScreen';
 import { MESSAGES, FIELD_MAPPINGS, ROUTES, TABLE_IDS } from '../../config';
@@ -852,13 +852,13 @@ const ClassRegistration = () => {
           fullData: student
         });
         return (
-          <ClassSelection
+          <ClassSelectionNew
             student={student}
             classList={classList}
             showWarning={currentCase === '1a' || currentCase === 2}
             onClassSelect={handleClassSelection}
             onSwitchToCustomSchedule={handleSwitchToCustomSchedule}
-            loading={processingAction || classLoading}
+            loading={classLoading}
             onRefresh={refreshClassList}
           />
         );
