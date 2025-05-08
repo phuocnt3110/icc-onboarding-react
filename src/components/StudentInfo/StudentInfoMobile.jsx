@@ -87,9 +87,7 @@ const StudentInfoMobile = () => {
     console.log('Mobile: Modal được đóng...');
     setSimpleModalVisible(false);
   };
-  
-
-  
+   
   return (
     <div style={{ 
       backgroundColor: 'transparent',

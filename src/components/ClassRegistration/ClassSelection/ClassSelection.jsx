@@ -90,19 +90,23 @@ const ClassSelection = ({
     rawData: student
   });
   console.log('🔍 DEBUG - ClassSelection - showWarning:', showWarning);
-  const [selectedClass, setSelectedClass] = useState(null);
-  const [selectedSchedule, setSelectedSchedule] = useState(null);
-  const [searchText, setSearchText] = useState('');
-  const [filteredClasses, setFilteredClasses] = useState([]);
-  const [groupedClasses, setGroupedClasses] = useState([]);
+  const {
+    selectedClass, setSelectedClass,
+    selectedSchedule, setSelectedSchedule,
+    searchText, setSearchText,
+    filteredClasses, groupedClasses,
+    weekdayFilter, setWeekdayFilter,
+    timeFilter, setTimeFilter,
+    startDateRange, setStartDateRange,
+    selectedQuickDate, setSelectedQuickDate,
+    handleQuickDateSelect,
+    resetAllFilters
+  } = useClassSelectionLogic({ student, classList });
   const [tableLoading, setTableLoading] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [classToConfirm, setClassToConfirm] = useState(null);
   
-  // Thêm các state mới cho filter
-  const [weekdayFilter, setWeekdayFilter] = useState([]);
-  const [timeFilter, setTimeFilter] = useState([]);
-  const [startDateRange, setStartDateRange] = useState(null);
+  // State local lưu bản sao của filtered data sau khi đã apply tất cả filter
   const [filteredData, setFilteredData] = useState([]);
   
   // Hook xử lý responsive
@@ -124,6 +128,10 @@ const ClassSelection = ({
   // Hàm xử lý thay đổi thứ học
   const handleWeekdayChange = (values) => {
     console.log('Chọn thứ học:', values);
+    // Ghi log chi tiết các giá trị đã chọn để kiểm tra
+    values.forEach(day => {
+      console.log(`🔍 FILTER DEBUG - Đã chọn thứ học: "${day}" (type: ${typeof day})`);
+    });
     setWeekdayFilter(values);
   };
   
@@ -135,11 +143,7 @@ const ClassSelection = ({
   
   // Hàm đặt lại tất cả bộ lọc
   const handleResetFilters = () => {
-    console.log('Đặt lại tất cả bộ lọc');
-    setWeekdayFilter([]);
-    setTimeFilter([]);
-    setStartDateRange(null);
-    setSearchText('');
+    resetAllFilters();
   };
 
   // Process and group classes when classList changes
@@ -154,14 +158,29 @@ const ClassSelection = ({
     // Log thông tin tổng quan về danh sách lớp học cần hiển thị
     console.log(`DISPLAY - Đã nhận ${classList.length} lớp học để hiển thị trong danh sách`);
     
+    // Kiểm tra dữ liệu weekday của các lớp học
+    console.log('🔍 DATA DEBUG - Kiểm tra trường weekday trong 3 lớp đầu tiên:');
+    classList.slice(0, 3).forEach((cls, index) => {
+      console.log(`Lớp ${index + 1} (${cls[CLASS_FIELDS.CODE]}):`, {
+        'weekday_raw': cls[CLASS_FIELDS.WEEKDAY],
+        'weekday_type': typeof cls[CLASS_FIELDS.WEEKDAY],
+        'has_schedules': !!cls.schedules,
+        'schedules_length': cls.schedules?.length || 0,
+        'schedules': cls.schedules
+      });
+    });
+    
     // Ensure all classes have schedules property
     const classesWithSchedules = classList.map(classItem => {
       if (!classItem.schedules || classItem.schedules.length === 0) {
         
+        // Lấy giá trị ngayHoc trực tiếp từ dữ liệu gốc
+        const weekdayValue = classItem.ngayHoc || '';
+        console.log(`🔍 MAPPING DEBUG - Tạo schedules cho lớp ${classItem[CLASS_FIELDS.CODE]} với weekday="${weekdayValue}" (từ trường ngayHoc)`);
         return {
           ...classItem,
           schedules: [{
-            weekday: classItem[CLASS_FIELDS.WEEKDAY] || '',
+            weekday: weekdayValue,
             time: `${classItem[CLASS_FIELDS.START_TIME] || ''} - ${classItem[CLASS_FIELDS.END_TIME] || ''}`
           }]
         };
@@ -225,11 +244,52 @@ const ClassSelection = ({
     // Lọc theo thứ học trong tuần (điều kiện AND)
     if (weekdayFilter.length > 0) {
       filtersApplied = true;
+      
+      console.log('🔍 FILTER DEBUG - Bắt đầu kiểm tra bộ lọc thứ học');
+      console.log(`🔍 FILTER DEBUG - Đang lọc ${result.length} lớp với ${weekdayFilter.length} thứ học`);
+      console.log('🔍 FILTER DEBUG - Danh sách thứ học đã chọn:', weekdayFilter);
+      
+      // Kiểm tra và log tất cả thứ học từ tất cả lớp học trước khi lọc
+      const allWeekdaysInSchedules = new Set();
+      result.forEach(classItem => {
+        if (classItem.allSchedules && classItem.allSchedules.length > 0) {
+          classItem.allSchedules.forEach(schedule => {
+            if (schedule.weekday) {
+              allWeekdaysInSchedules.add(schedule.weekday);
+            }
+          });
+        }
+      });
+      console.log('🔍 FILTER DEBUG - Tất cả các thứ có trong lịch học:', [...allWeekdaysInSchedules]);
+      
+      // Log kiểm tra xem mỗi lớp có thứ học nào
+      result.forEach((classItem, index) => {
+        if (index < 5) { // Chỉ log 5 lớp đầu tiên để tránh quá nhiều log
+          const weekdays = classItem.allSchedules?.map(s => s.weekday).filter(Boolean) || [];
+          console.log(`🔍 FILTER DEBUG - Lớp ${classItem[CLASS_FIELDS.CODE]} có các thứ học:`, weekdays);
+        }
+      });
+      
       result = result.filter(classItem => {
         // Kiểm tra tất cả các thứ được chọn đều tồn tại trong lịch học của lớp
-        return weekdayFilter.every(day => {
-          return classItem.allSchedules?.some(schedule => schedule.weekday === day);
+        const matchesFilter = weekdayFilter.every(day => {
+          const hasMatch = classItem.allSchedules?.some(schedule => {
+            const exactMatch = schedule.weekday === day;
+            // Log chi tiết để phân tích
+            if (classItem[CLASS_FIELDS.CODE] === result[0]?.[CLASS_FIELDS.CODE]) { // chỉ log lớp đầu tiên
+              console.log(`🔍 FILTER DEBUG - So sánh: "${schedule.weekday}" === "${day}" => ${exactMatch}`);
+            }
+            return exactMatch;
+          });
+          return hasMatch;
         });
+        
+        // Log kết quả với vài lớp đầu tiên
+        if (classItem === result[0] || classItem === result[1]) {
+          console.log(`🔍 FILTER DEBUG - Lớp ${classItem[CLASS_FIELDS.CODE]} ${matchesFilter ? 'KHỚP' : 'KHÔNG KHỚP'} với bộ lọc thứ học`);
+        }
+        
+        return matchesFilter;
       });
       console.log(`Sau khi lọc theo thứ học (${weekdayFilter.join(', ')}): ${result.length} lớp`);
     }
@@ -753,16 +813,34 @@ const ClassSelection = ({
               </Button>
             </Popover>
             
-            {/* 3. Ngày khai giảng */}
+            {/* 3. Ngày khai giảng - sử dụng preset thay vì date range picker */}
             <Popover
               content={
-                <div style={{ padding: '8px 0' }}>
-                  <RangePicker 
-                    style={{ width: '230px' }} 
-                    format="DD/MM/YYYY"
-                    value={startDateRange}
-                    onChange={setStartDateRange}
-                  />
+                <div style={{ padding: '8px 0', display: 'flex', flexDirection: 'column', gap: '8px', minWidth: '180px' }}>
+                  {[
+                    { label: 'Hôm nay', key: 'today' },
+                    { label: 'Ngày mai', key: 'tomorrow' },
+                    { label: 'Tuần này', key: 'thisWeek' },
+                    { label: 'Tuần sau', key: 'nextWeek' },
+                    { label: 'Tháng này', key: 'thisMonth' },
+                    { label: 'Tháng sau', key: 'nextMonth' }
+                  ].map(opt => {
+                    console.log('Rendering date preset option:', opt.key, 'selected?', selectedQuickDate === opt.key);
+                    return (
+                      <Button
+                        key={opt.key}
+                        block
+                        type={selectedQuickDate === opt.key ? 'primary' : 'default'}
+                        onClick={() => {
+                          console.log('Date preset clicked:', opt.key);
+                          handleQuickDateSelect(opt.key);
+                        }}
+                        style={{ textAlign: 'left', padding: '4px 12px' }}
+                      >
+                        {opt.label}
+                      </Button>
+                    );
+                  })}
                 </div>
               }
               title="Chọn ngày khai giảng"
@@ -771,7 +849,7 @@ const ClassSelection = ({
             >
               <Button 
                 icon={<CalendarOutlined />}
-                type={startDateRange ? 'primary' : 'default'}
+                type={selectedQuickDate ? 'primary' : 'default'}
                 size="small"
               >
                 Ngày KG
@@ -781,10 +859,12 @@ const ClassSelection = ({
             {/* 4. Nút reset */}
             <Button 
               size="small"
+              type="text"
               icon={<ReloadOutlined />}
               onClick={handleResetFilters}
               disabled={!(weekdayFilter.length > 0 || timeFilter.length > 0 || startDateRange)}
               title="Đặt lại bộ lọc"
+              style={{ minWidth: '32px', width: '32px', padding: '0 4px' }}
             />
           </Space>
         </div>
@@ -811,7 +891,7 @@ const ClassSelection = ({
       {groupedClasses && groupedClasses.length > 0 ? (
         <div className="table-responsive" style={{ width: '100%', overflow: 'auto' }}>
           <Table 
-            dataSource={filteredData.length > 0 || (weekdayFilter.length > 0 || timeFilter.length > 0 || startDateRange) ? filteredData : groupedClasses} 
+            dataSource={weekdayFilter.length > 0 || timeFilter.length > 0 || startDateRange ? filteredData : groupedClasses} 
             columns={columns} 
             rowKey={(record) => record[CLASS_FIELDS.CODE]} 
             pagination={false} // Tắt pagination ở trong bảng vì đã chuyển lên trên

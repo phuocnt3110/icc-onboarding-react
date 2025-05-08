@@ -1,0 +1,44 @@
+/* CSS cho QRCodeSupport */
+.dragging {
+  cursor: grabbing !important;
+  opacity: 0.8;
+  transition: none !important;
+}
+
+/* Thêm hiệu ứng transition mượt mà cho di chuyển */
+.qr-float-container {
+  transition: all 0.2s ease;
+}
+
+/* Hiệu ứng khi không đang kéo */
+.qr-float-container:not(.dragging) {
+  transition: all 0.3s ease;
+}
+
+/* Ẩn hiệu ứng khi đang mở modal */
+.qr-float-container.expanded {
+  transition: none;
+}
+
+/* Thêm tooltip nhắc nhở người dùng */
+.qr-float-tip {
+  position: absolute;
+  bottom: 100%;
+  right: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 5px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  margin-bottom: 8px;
+  white-space: nowrap;
+  opacity: 0;
+  transform: translateY(5px);
+  transition: opacity 0.3s, transform 0.3s;
+  pointer-events: none;
+}
+
+.qr-float-container:hover .qr-float-tip {
+  opacity: 1;
+  transform: translateY(0);
+}

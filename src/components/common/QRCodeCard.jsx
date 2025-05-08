@@ -21,7 +21,12 @@ const QRCodeCard = () => {
   };
 
   return (
-    <div className="qr-card-container">
+    <div className="qr-card-container" style={{
+      position: 'fixed',
+      right: '20px',
+      bottom: '20px',
+      zIndex: 999
+    }}>
       <div 
         className={`qr-card ${expanded ? 'expanded' : ''} ${showTooltip ? 'with-tooltip' : ''}`} 
         onClick={toggleExpanded}
