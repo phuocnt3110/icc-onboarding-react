@@ -56,11 +56,14 @@ const StudentGuardianInfoCard = ({ form, readOnly = false }) => {
   };
 
   return (
-    <Card className={`info-card ${styles.card}`}>
-      <SectionTitle 
-        letter="C" 
-        title={SECTION_TITLES.GUARDIAN_INFO}
-      />
+    <Card className="card card-md card-primary">
+      <div className="card-header">
+        <SectionTitle 
+          letter="C" 
+          title={SECTION_TITLES.GUARDIAN_INFO} 
+        />
+      </div>
+      <div className="card-body">
       
       <Row gutter={[16, 16]} className="form-row">
         <Col xs={24} sm={12}>
@@ -266,7 +269,7 @@ const StudentGuardianInfoCard = ({ form, readOnly = false }) => {
         </Col>
 
         {confirmGuardianInfo === '0' && (
-          <Col xs={24} sm={12}>
+          <Col xs={24} md={24}>
             <Form.Item preserve={true}
               name="newGuardianPhone"
               label={<RequiredLabel text="SĐT đăng ký Zalo" />}
@@ -316,6 +319,7 @@ const StudentGuardianInfoCard = ({ form, readOnly = false }) => {
           </Col>
         )}
       </Row>
+      </div>
     </Card>
   );
 };

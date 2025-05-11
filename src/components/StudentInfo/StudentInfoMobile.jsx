@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Form, Button, Alert, message, Spin, Modal, List, Typography, Divider } from 'antd';
-import { CheckCircleFilled } from '@ant-design/icons';
+import { CheckCircleFilled, PhoneOutlined, MailOutlined } from '@ant-design/icons';
 import { useStudentInfo } from './context/StudentInfoContext';
 import useStudentInfoForm from './hooks/useStudentInfoForm';
 import styles from './styles/StudentInfoMobile.module.css';
@@ -89,16 +89,7 @@ const StudentInfoMobile = () => {
   };
    
   return (
-    <div style={{ 
-      backgroundColor: 'transparent',
-      backgroundImage: 'none',
-      minHeight: '800px',
-      width: '100%',
-      maxWidth: '100%',
-      margin: '0',
-      padding: '0',
-      position: 'relative'
-    }}>
+    <>
       {/* Alerts and notifications */}
       {submitError && (
         <Alert
@@ -126,21 +117,20 @@ const StudentInfoMobile = () => {
       )}
       
       {/* Main content with fade-in effect */}
-      <div style={{ 
-        opacity: contentVisible ? 1 : 0,
-        transition: 'opacity 0.5s ease-in-out',
-        backgroundColor: 'transparent'
-      }}>
-        <Form
-          form={form}
-          layout="vertical"
-          size="middle"
-          requiredMark={false}
-          className="student-info-form"
-          onValuesChange={handleValuesChange}
-          onFinish={handleShowConfirmationModal}
-          style={{ backgroundColor: 'transparent' }}
-        >
+      <Form
+        form={form}
+        layout="vertical"
+        size="middle"
+        requiredMark={false}
+        className="student-info-form"
+        onValuesChange={handleValuesChange}
+        onFinish={handleShowConfirmationModal}
+        style={{ 
+          backgroundColor: 'transparent',
+          opacity: contentVisible ? 1 : 0,
+          transition: 'opacity 0.5s ease-in-out'
+        }}
+      >
           <MobileMultiStepForm
             form={form}
             student={student}
@@ -148,22 +138,17 @@ const StudentInfoMobile = () => {
             submitError={submitError}
           />
         </Form>
-      </div>
 
       {/* Modal Xác nhận - triển khai trực tiếp, không dùng lazy loading */}
       <Modal
-        title="Xác nhận thông tin đăng ký"
-        visible={simpleModalVisible}
+        title={<div style={{ color: 'var(--primary-color)' }}><CheckCircleFilled style={{ color: 'var(--success-color)', marginRight: 8 }} /> Xác nhận thông tin</div>}
         open={simpleModalVisible}
         closable={true}
-        maskClosable={true}
+        maskClosable={false}
         onCancel={handleCancel}
         footer={[
           <Button key="back" onClick={handleCancel} disabled={localLoading}>
             Quay lại
-          </Button>,
-          <Button type="primary" htmlType="submit" onClick={handleShowConfirmationModal}>
-            Xác nhận thông tin
           </Button>,
           <Button 
             key="submit" 
@@ -174,64 +159,62 @@ const StudentInfoMobile = () => {
             Xác nhận
           </Button>
         ]}
-        width="95%" // Modal rộng hơn trên mobile
-        style={{ top: '10px' }} // Hiển thị gần phía trên màn hình
+        width="95%" 
+        style={{ top: '50px', maxWidth: '450px' }}
+        centered
       >
-        <Typography.Title level={5} style={{ fontSize: '16px', marginBottom: '12px' }}>
-          Thông tin học viên
-        </Typography.Title>
-        <List
-          itemLayout="horizontal"
-          size="small"
-          dataSource={[
-            { field: 'hoTenHocVien', label: 'Họ tên học viên' },
-            { field: 'sdtHocVien', label: 'Số điện thoại học viên' },
-            { field: 'emailHocVien', label: 'Email học viên' }
-          ]}
-          renderItem={item => (
-            <List.Item style={{ padding: '8px 0' }}>
-              <List.Item.Meta
-                avatar={<CheckCircleFilled style={{ color: '#52c41a', fontSize: '16px' }} />}
-                title={<span style={{ fontSize: '14px' }}>{item.label}</span>}
-                description={
-                  <Typography.Text strong style={{ fontSize: '14px' }}>
-                    {form.getFieldValue(item.field) || '-'}
-                  </Typography.Text>
-                }
-              />
-            </List.Item>
-          )}
-        />
-        
-        <Divider style={{ margin: '12px 0' }} />
-        
-        <Typography.Title level={5} style={{ fontSize: '16px', marginBottom: '12px', marginTop: '8px' }}>
-          Thông tin người đại diện
-        </Typography.Title>
-        <List
-          itemLayout="horizontal"
-          size="small"
-          dataSource={[
-            { field: 'hoTenDaiDien', label: 'Họ tên người đại diện' },
-            { field: 'sdtDaiDien', label: 'Số điện thoại người đại diện' },
-            { field: 'emailDaiDien', label: 'Email người đại diện' }
-          ]}
-          renderItem={item => (
-            <List.Item style={{ padding: '8px 0' }}>
-              <List.Item.Meta
-                avatar={<CheckCircleFilled style={{ color: '#52c41a', fontSize: '16px' }} />}
-                title={<span style={{ fontSize: '14px' }}>{item.label}</span>}
-                description={
-                  <Typography.Text strong style={{ fontSize: '14px' }}>
-                    {form.getFieldValue(item.field) || '-'}
-                  </Typography.Text>
-                }
-              />
-            </List.Item>
-          )}
-        />
+        <div className="confirmation-content">
+          <Typography.Title level={5} style={{ marginBottom: 16, color: 'var(--primary-color)', fontSize: '16px' }}>
+            Vui lòng xác nhận thông tin liên lạc
+          </Typography.Title>
+          
+          <div className="confirm-info-section">
+            {/* SĐT ClassIn */}
+            <div className="confirm-info-item">
+              <span className="confirm-info-label">
+                <PhoneOutlined style={{ color: 'var(--primary-color)' }} /> 
+                <Typography.Text style={{ fontSize: '14px' }}>SĐT ClassIn</Typography.Text>
+              </span>
+              <Typography.Text strong className="confirm-info-value" style={{ fontSize: '14px' }}>
+                {form.getFieldValue('confirmStudentInfo') === '1' 
+                  ? form.getFieldValue('sdtHocVien') 
+                  : form.getFieldValue('sdtHocVienMoi') || '-'}
+              </Typography.Text>
+            </div>
+
+            {/* SĐT Zalo */}
+            <div className="confirm-info-item">
+              <span className="confirm-info-label">
+                <PhoneOutlined style={{ color: 'var(--primary-color)' }} /> 
+                <Typography.Text style={{ fontSize: '14px' }}>SĐT Zalo</Typography.Text>
+              </span>
+              <Typography.Text strong className="confirm-info-value" style={{ fontSize: '14px' }}>
+                {form.getFieldValue('confirmGuardianInfo') === '1' 
+                  ? form.getFieldValue('sdtDaiDien') 
+                  : form.getFieldValue('newGuardianPhone') || '-'}
+              </Typography.Text>
+            </div>
+
+            {/* Email người đại diện */}
+            <div className="confirm-info-item">
+              <span className="confirm-info-label">
+                <MailOutlined style={{ color: 'var(--primary-color)' }} /> 
+                <Typography.Text style={{ fontSize: '14px' }}>Email người đại diện</Typography.Text>
+              </span>
+              <Typography.Text strong className="confirm-info-value" style={{ fontSize: '14px' }}>
+                {form.getFieldValue('emailDaiDien') || '-'}
+              </Typography.Text>
+            </div>
+          </div>
+          
+          <Divider style={{ margin: '16px 0' }} />
+            
+          <Typography.Text type="secondary" style={{ display: 'block', textAlign: 'center', fontSize: '13px' }}>
+            Nhấn "Xác nhận" để lưu thông tin và chuyển sang bước tiếp theo
+          </Typography.Text>
+        </div>
       </Modal>
-    </div>
+    </>
   );
 };
 

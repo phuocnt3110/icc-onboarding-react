@@ -124,39 +124,26 @@ const ScheduleDisplay = ({
         'Thứ 3': 'cyan',
         'Thứ 4': 'green',
         'Thứ 5': 'lime',
-        'Thứ 6': 'gold',
+        'Thứ 6': 'gold', 
         'Thứ 7': 'orange',
         'Chủ nhật': 'red',
         'CN': 'red'
       },
-      pastel: {
-        'Thứ 2': 'geekblue',
-        'Thứ 3': 'purple',
-        'Thứ 4': 'magenta',
-        'Thứ 5': 'volcano',
-        'Thứ 6': 'orange',
-        'Thứ 7': 'gold',
-        'Chủ nhật': 'red',
-        'CN': 'red'
-      },
-      monochrome: {
-        'Thứ 2': 'default',
-        'Thứ 3': 'default',
-        'Thứ 4': 'default',
-        'Thứ 5': 'default',
-        'Thứ 6': 'default',
-        'Thứ 7': 'default',
-        'Chủ nhật': 'default',
-        'CN': 'default'
+      primary: {
+        'Thứ 2': 'blue',
+        'Thứ 3': 'blue',
+        'Thứ 4': 'blue',
+        'Thứ 5': 'blue',
+        'Thứ 6': 'blue',
+        'Thứ 7': 'blue',
+        'Chủ nhật': 'blue',
+        'CN': 'blue'
       }
     };
     
-    const tagColor = colorMap[colorScheme]?.[weekday] || 'blue';
-    
+    const color = colorMap[colorScheme]?.[weekday] || 'blue';
     return (
-      <Tag color={tagColor} className={styles.weekdayTag}>
-        {weekday}
-      </Tag>
+      <Tag color={color} className={styles.weekdayTag}>{weekday}</Tag>
     );
   };
   
@@ -181,23 +168,32 @@ const ScheduleDisplay = ({
           
           return (
             <div key={`day-${index}`} className={styles.scheduleItem}>
-              {getWeekdayTag(item.weekday)}
-              <Text className={styles.timeRange}>
-                <ClockCircleOutlined className={styles.timeIcon} />
-                {item.startTime} - {item.endTime}
-              </Text>
-              {showVenue && item.venue && (
-                <Text type="secondary" className={styles.venue}>
-                  <EnvironmentOutlined className={styles.venueIcon} />
-                  {item.venue}
-                </Text>
-              )}
-              {showTeacher && item.teacher && (
-                <Text type="secondary" className={styles.teacher}>
-                  <UserOutlined className={styles.teacherIcon} />
-                  {item.teacher}
-                </Text>
-              )}
+              <div className={styles.scheduleItemContent}>
+                <div className={styles.dayColumn}>
+                  {getWeekdayTag(item.weekday)}
+                </div>
+                <div className={styles.detailsColumn}>
+                  <Text className={styles.timeRange}>
+                    {item.startTime} - {item.endTime}
+                  </Text>
+                  {(showVenue && item.venue) || (showTeacher && item.teacher) ? (
+                    <div className={styles.extraInfo}>
+                      {showVenue && item.venue && (
+                        <Text type="secondary" className={styles.venue}>
+                          <EnvironmentOutlined className={styles.venueIcon} />
+                          {item.venue}
+                        </Text>
+                      )}
+                      {showTeacher && item.teacher && (
+                        <Text type="secondary" className={styles.teacher}>
+                          <UserOutlined className={styles.teacherIcon} />
+                          {item.teacher}
+                        </Text>
+                      )}
+                    </div>
+                  ) : null}
+                </div>
+              </div>
             </div>
           );
         })}

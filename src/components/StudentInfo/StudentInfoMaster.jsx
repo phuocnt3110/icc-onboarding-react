@@ -67,7 +67,7 @@ const StudentInfoMaster = () => {
     return (
       <div style={{ 
         backgroundColor: '#fff', 
-        minHeight: '800px',
+        minHeight: 'auto',
         width: '100%',
         maxWidth: '800px',
         margin: '0 auto',
@@ -101,13 +101,16 @@ const StudentInfoMaster = () => {
   const forceMobile = false; // Đã tắt chế độ bắt buộc hiển thị giao diện mobile
   
   // Clean white container styles
+  // Responsive padding dựa trên kích thước màn hình
+  const isMobileViewport = window.innerWidth <= 768;
+  
   const containerStyle = {
     backgroundColor: '#fff', 
-    minHeight: '800px',
+    minHeight: 'auto',
     width: '100%',
     maxWidth: '800px',
     margin: '0 auto',
-    padding: '1.25rem',
+    padding: isMobileViewport ? '0.75rem' : '1.25rem',
     borderRadius: '16px',
     boxShadow: '0 4px 20px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04)',
     position: 'relative'
@@ -121,7 +124,7 @@ const StudentInfoMaster = () => {
             display: 'flex', 
             justifyContent: 'center', 
             alignItems: 'center', 
-            minHeight: '700px',
+            minHeight: 'auto',
             flexDirection: 'column'
           }}>
             <Spin size="large" />

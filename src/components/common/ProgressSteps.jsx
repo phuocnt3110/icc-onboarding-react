@@ -22,7 +22,7 @@ const ProgressSteps = ({ steps }) => {
             <div 
               className={`step ${isActive ? 'active' : ''} ${isCompleted ? 'completed' : ''}`}
             >
-              <div className="circle">{stepNumber}</div>
+              <div className={`circle circle-${stepNumber}`}>{stepNumber}</div>
               <div>{step.label}</div>
             </div>
             

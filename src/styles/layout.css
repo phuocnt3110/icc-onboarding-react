@@ -1,14 +1,143 @@
-/* Layout Styles */
+/* 
+ * Layout Styles - Định dạng layout cho toàn bộ ứng dụng
+ * Chuẩn hóa layout container cho cả desktop và mobile
+ */
+
+/* Main Layout */
 .layout-container {
   min-height: 100vh;
   background: transparent;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  overflow-x: hidden;
 }
 
 .layout-content {
-  padding: 24px;
   background: transparent;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  width: 100%;
 }
 
+/* Main Container System - Standardized for both Desktop and Mobile */
+/* Container tối ưu theo nội dung - cân đối kích thước */
+.container {
+  margin-left: auto;
+  margin-right: auto;
+  padding: var(--spacing-sm);
+  width: 100%;
+  max-width: 900px; /* giảm max-width để phù hợp hơn */
+  box-sizing: border-box;
+  overflow: visible;
+}
+
+/* Fit content container variant - Optimized to fit content */
+.container-fit {
+  width: fit-content !important;
+  min-width: 320px;
+  max-width: 90%;
+  margin-left: auto;
+  margin-right: auto;
+  padding: var(--spacing-sm);
+  box-sizing: border-box;
+}
+
+/* Card container that fits content */
+.card-container-fit {
+  width: fit-content !important;
+  min-width: 300px;
+  max-width: 95%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Tối ưu không gian cho form và trường nhập liệu */
+.form-item-fit {
+  width: fit-content !important;
+  min-width: 250px;
+  max-width: 100%;
+}
+
+/* Cải thiện căn chỉnh và khoảng cách cho form item */
+.ant-form-item {
+  margin-bottom: 16px;
+}
+
+.ant-form-item-label {
+  padding-bottom: 6px !important;
+}
+
+/* Đảm bảo nội dung trường thông tin không bị xuống dòng */
+.ant-form-item-control-input-content {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+/* Căn chỉnh giá trị hiển thị */
+.display-value, .StudentInfo_displayValue__s9UDG {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  padding: 4px 0;
+  font-size: var(--font-size-md);
+  display: block;
+  min-height: 32px;
+  line-height: 1.4;
+  position: relative;
+  box-sizing: border-box;
+}
+
+/* Tối ưu hiển thị label */
+.ant-form-item-label > label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  display: block;
+  font-weight: 500;
+  height: auto;
+  line-height: 1.4;
+}
+
+/* Tối ưu khoảng cách form row */
+.form-row {
+  margin-bottom: 0 !important;
+}
+
+/* Styles for display only fields have been removed */
+
+/* Container sizes - Desktop */
+.container-sm {
+  max-width: var(--container-sm);
+}
+
+.container-md {
+  max-width: var(--container-md);
+}
+
+.container-lg {
+  max-width: var(--container-lg);
+}
+
+.container-xl {
+  max-width: var(--container-xl);
+}
+
+/* Container for mobile views */
+.container-mobile {
+  max-width: 100% !important;
+  padding-left: var(--spacing-sm);
+  padding-right: var(--spacing-sm);
+}
+
+/* Legacy form container - giữ để tương thích ngược */
 .form-container {
   width: 35%;
   max-width: 400px;
@@ -29,15 +158,21 @@
   background-color: transparent;
 }
 
-/* Progress steps - Cải tiến giao diện */
+/* Progress steps - Standardized for both desktop and mobile */
 .progress-steps {
   display: flex;
   justify-content: center;
   align-items: center;
   background: transparent;
-  margin: 16px auto 16px; /* Cân bằng khoảng cách trên dưới */
-  padding: 12px 24px; 
+  margin-left: auto !important;
+  margin-right: auto !important;
+  margin-top: var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+  padding: var(--spacing-md) var(--spacing-lg); 
   max-width: 600px;
+  width: 100%;
+  position: relative;
+  z-index: 10;
 }
 
 .progress-steps .step {
@@ -71,13 +206,15 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-bottom: 6px; /* Giảm khoảng cách với text bên dưới */
+  margin-bottom: 6px;
   font-weight: 600;
   color: #8c8c8c;
   border: 2px solid #e6e6e6;
   transition: all 0.3s ease;
   position: relative;
   z-index: 2;
+  aspect-ratio: 1 / 1;
+  box-sizing: border-box;
 }
 
 .progress-steps .step.active .circle {
@@ -85,12 +222,18 @@
   color: #1890ff;
   border-color: #1890ff;
   box-shadow: 0 0 0 4px rgba(24, 144, 255, 0.1);
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
 }
 
 .progress-steps .step.completed .circle {
   background-color: #f6ffed;
   color: #52c41a;
   border-color: #52c41a;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
 }
 
 .progress-steps .divider {
@@ -119,30 +262,78 @@
     padding: 0.5rem;
   }
   
-  /* Mobile responsive adjustments for progress steps */
+  /* Standardized mobile responsive adjustments for progress steps */
   .progress-steps {
-    padding: 0px 8px;
-    margin: 4px auto 8px;
+    padding: var(--spacing-sm) 12px;
+    margin-top: var(--spacing-xs);
+    margin-bottom: var(--spacing-sm);
     max-width: 100%;
+    width: 95% !important;
+    justify-content: space-between;
   }
   
   .progress-steps .step {
-    font-size: 10px;
+    font-size: var(--font-size-xs);
     font-weight: 500;
-    line-height: 1.1;
+    line-height: 1.2;
+    height: 56px;
+    padding: 0 2px;
+  }
+  
+  .progress-steps .step.active {
+    font-weight: 600;
   }
   
   .progress-steps .circle {
-    width: 22px;
-    height: 22px;
-    margin-bottom: 2px;
-    font-size: 12px;
+    width: 28px;
+    height: 28px;
+    margin-bottom: 5px;
+    font-size: 14px;
     border-width: 1.5px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    line-height: 1;
+    box-sizing: border-box;
+  }
+  
+  /* Đặc biệt cho số 1 để đảm bảo hình tròn hoàn hảo */
+  .progress-steps .circle-1 {
+    width: 28px !important;
+    height: 28px !important;
+    border-radius: 50% !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    box-sizing: border-box !important;
+    min-width: 28px !important;
+    min-height: 28px !important;
+    max-width: 28px !important;
+    max-height: 28px !important;
+  }
+  
+  /* Style cho số 2 để đảm bảo tương đồng */
+  .progress-steps .circle-2 {
+    width: 28px !important;
+    height: 28px !important;
+    border-radius: 50% !important;
+    padding: 0 !important;
+    box-sizing: border-box !important;
+    min-width: 28px !important;
+    min-height: 28px !important;
+    max-width: 28px !important;
+    max-height: 28px !important;
+    overflow: hidden !important;
   }
   
   .progress-steps .divider {
-    top: -1px; /* Điều chỉnh vị trí divider trên mobile */
+    top: -1px;
     height: 1.5px;
+    margin: 0 4px;
   }
 }
 

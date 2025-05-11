@@ -40,29 +40,112 @@
 .compactSchedule {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-sm);
+  gap: 0; /* Loại bỏ gap giữa các dòng */
 }
 
 .scheduleItem {
   display: flex;
-  align-items: flex-start;
-  flex-wrap: wrap;
-  gap: var(--spacing-xs) var(--spacing-sm);
-  padding: var(--spacing-xs) 0;
+  align-items: center;
+  padding: 4px 0;
+  border-bottom: 1px dashed var(--border-color-base);
+}
+
+.scheduleItem:last-child {
+  border-bottom: none;
+}
+
+.scheduleItemContent {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  width: 100%;
+}
+
+.dayColumn {
+  width: 75px;
+  flex-shrink: 0;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  padding-left: 8px;
+}
+
+.detailsColumn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.timeRange {
+  font-size: var(--font-size-md);
+  color: var(--text-color);
+  white-space: nowrap;
+}
+
+/* Tag styles for thứ */
+.weekdayTag {
+  border-radius: 4px;
+  padding: 2px 8px;
+  min-width: 64px;
+  text-align: center;
+  display: inline-block;
+}
+
+@media (max-width: 767px) {
+  .scheduleItem {
+    height: 32px;
+  }
+
+  .scheduleItemContent {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .dayColumn {
+    width: 80px;
+    margin: 0;
+    padding-left: 12px;
+  }
+  
+  .detailsColumn {
+    padding-left: 0;
+    padding-right: 12px;
+  }
+  
+  .weekdayTag {
+    min-width: 56px;
+  }
+}
+
+.extraInfo {
+  margin-left: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .weekdayTag {
   font-weight: 500;
   min-width: 70px;
   text-align: center;
-  margin-right: 0;
+  margin: 0;
+  padding: 2px 4px;
+  height: 24px;
+  line-height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .timeRange {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   font-weight: 500;
   color: var(--text-primary);
+  white-space: nowrap;
+  line-height: 1;
+  height: 24px;
 }
 
 .timeIcon {

@@ -37,9 +37,34 @@ const DayColumn = ({
   // Xử lý khi click vào slot đã chọn
   // Thay vì xóa cả khối, chúng ta sẽ toggle từng ô riêng lẻ bằng cách xác định ô chính xác
   const handleSlotClick = (e, slot) => {
+    // Xác định loại sự kiện (touch hay mouse)
+    const isTouch = e.type.startsWith('touch');
+    console.log('DEBUG - handleSlotClick:', { eventType: e.type, isTouch });
+    
+    // Lấy vị trí clientY từ cả touch và mouse events
+    let clientY;
+    if (isTouch) {
+      // Ưu tiên changedTouches cho touchend, sau đó mới đến touches
+      clientY = e.changedTouches?.[0]?.clientY || e.touches?.[0]?.clientY;
+      console.log('DEBUG - Touch clientY:', clientY);
+      
+      // Ngăn chặn sự kiện lan truyền cho touch events
+      e.stopPropagation();
+    } else {
+      // Mouse event
+      clientY = e.clientY;
+      console.log('DEBUG - Mouse clientY:', clientY);
+    }
+    
+    // Kiểm tra clientY
+    if (!clientY) {
+      console.error('DEBUG - Không thể xác định clientY');
+      return;
+    }
+    
     // Lấy vị trí click tương đối với slot container
     const rect = e.currentTarget.getBoundingClientRect();
-    const clientY = e.clientY;
+    console.log('DEBUG - Slot rect:', rect);
     
     // Xác định ô chính xác được click
     const relativeY = clientY - rect.top;
@@ -48,10 +73,12 @@ const DayColumn = ({
     
     // Tính toán ô tuyệt đối trong phạm vi slot
     const clickedSlot = slot.start + relativeSlotIndex;
+    console.log('DEBUG - Vị trí slot:', { relativeY, slotHeight, relativeSlotIndex, clickedSlot });
     
     // Đảm bảo ô nằm trong phạm vi của slot
     if (clickedSlot >= slot.start && clickedSlot <= slot.end) {
       // Toggle chỉ ô được click
+      console.log('DEBUG - Toggle cell:', { dayIndex, clickedSlot });
       onToggleCell(dayIndex, clickedSlot);
     }
   };
@@ -120,6 +147,7 @@ const DayColumn = ({
                 data-start={slot.start}
                 data-end={slot.end}
                 onClick={(e) => handleSlotClick(e, slot)}
+                onTouchEnd={(e) => handleSlotClick(e, slot)}
               >
                 <div className="slot-time">
                   {displayText}

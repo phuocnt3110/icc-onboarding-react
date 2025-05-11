@@ -11,18 +11,12 @@ import ProgressSteps from './components/common/ProgressSteps.jsx';
 // Import phương án QR code thông minh (Card trên desktop, Float trên mobile)
 import QRCodeSupport from './components/common/QRCodeSupport.jsx';
 import { ROUTES } from './config';
+// Import theme từ file riêng
+import theme from './theme/theme';
+// Import stylesheet chính
 import './index.css';
 
 const { Header, Content, Footer } = Layout;
-
-// Ant Design theme configuration
-const theme = {
-  token: {
-    colorPrimary: '#00509f', // Primary color matching ICANCONNECT blue
-    borderRadius: 4,
-    fontFamily: "'Montserrat', sans-serif",
-  },
-};
 
 // Background component with physical path to background.png
 const BackgroundImage = () => {
@@ -117,8 +111,10 @@ const App = () => {
                     width: '100%',
                     maxWidth: '100%',
                   }}>
-                    {/* Horizontal Progress Steps */}
-                    <ProgressSteps steps={steps} />
+                    {/* Horizontal Progress Steps with standardized container */}
+                    <div className="container">
+                      <ProgressSteps steps={steps} />
+                    </div>
                     
                     <Routes>
                       <Route path="/step-one" element={<StudentInfo />} />

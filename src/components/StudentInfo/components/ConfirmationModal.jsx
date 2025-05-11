@@ -1,6 +1,6 @@
 import React from 'react';
-import { Modal, Button, Typography, Divider, List } from 'antd';
-import { CheckCircleFilled, PhoneOutlined, MailOutlined } from '@ant-design/icons';
+import { Modal, Button, Typography, Divider, Space } from 'antd';
+import { PhoneOutlined, MailOutlined } from '@ant-design/icons';
 import { useStudentInfo } from '../context/StudentInfoContext';
 
 const { Title, Text } = Typography;
@@ -74,18 +74,14 @@ const ConfirmationModal = ({
   return (
     <Modal
       title="Xác nhận thông tin đăng ký"
-      visible={true} // FORCE SHOW cho mục đích test
-      open={true} // FORCE SHOW cho mục đích test
+      open={visible}
       closable={true}
-      maskClosable={true}
-      onCancel={onCancel || (() => console.log('onCancel được gọi, nhưng không được định nghĩa'))}
+      maskClosable={false}
+      onCancel={onCancel}
       footer={[
         <Button 
           key="back" 
-          onClick={() => {
-            console.log('[DEBUG-MODAL] Nút Quay lại được nhấn');
-            if (onCancel) onCancel();
-          }} 
+          onClick={onCancel} 
           disabled={loading}
         >
           Quay lại
@@ -94,90 +90,60 @@ const ConfirmationModal = ({
           key="submit" 
           type="primary" 
           loading={loading} 
-          onClick={() => {
-            console.log('[DEBUG-MODAL] Nút Xác nhận được nhấn');
-            if (onConfirm) onConfirm();
-          }}
+          onClick={onConfirm}
         >
           Xác nhận
         </Button>
       ]}
-      width={600}
+      width="auto"
+      style={{ maxWidth: '500px' }}
+      centered
     >
-      {changedFields.length > 0 ? (
-        <>
-          <Title level={5}>Thông tin đã được thay đổi:</Title>
-          <List
-            itemLayout="horizontal"
-            dataSource={changedFields}
-            renderItem={field => (
-              <List.Item>
-                <List.Item.Meta
-                  avatar={<CheckCircleFilled style={{ color: '#52c41a', fontSize: '18px' }} />}
-                  title={getFieldLabel(field)}
-                  description={
-                    <div>
-                      <Text type="secondary" style={{ textDecoration: 'line-through' }}>
-                        {formatFieldValue(field, originalData[field])}
-                      </Text>
-                      <br />
-                      <Text strong>
-                        {formatFieldValue(field, formValues[field])}
-                      </Text>
-                    </div>
-                  }
-                />
-              </List.Item>
-            )}
-          />
+      <div className="confirmation-content">
+        <Title level={5} style={{ marginBottom: 16, color: 'var(--primary-color)' }}>Vui lòng xác nhận thông tin liên lạc</Title>
           
-          <Divider />
-          
-          {/* Display contact information summary */}
-          <div style={{ marginBottom: '20px' }}>
-            <Title level={5}>Xác nhận thông tin liên hệ:</Title>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <PhoneOutlined /> 
-                <Text>Số điện thoại ClassIn: </Text>
-                <Text strong>
-                  {formValues.confirmStudentInfo === '1' 
-                    ? formValues.sdtHocVien 
-                    : formValues.sdtHocVienMoi}
-                </Text>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <PhoneOutlined /> 
-                <Text>Số điện thoại Zalo: </Text>
-                <Text strong>
-                  {formValues.confirmGuardianInfo === '1' 
-                    ? formValues.sdtDaiDien 
-                    : formValues.newGuardianPhone}
-                </Text>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <MailOutlined /> 
-                <Text>Email học viên: </Text>
-                <Text strong>{formValues.emailHocVien || '-'}</Text>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <MailOutlined /> 
-                <Text>Email người đại diện: </Text>
-                <Text strong>{formValues.emailDaiDien || '-'}</Text>
-              </div>
-            </div>
+        <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+          <div className="confirm-info-item">
+            <span className="confirm-info-label">
+              <PhoneOutlined style={{ color: 'var(--primary-color)' }} /> 
+              <Text>SĐT ClassIn</Text>
+            </span>
+            <Text strong className="confirm-info-value">
+              {formValues.confirmStudentInfo === '1' 
+                ? formValues.sdtHocVien 
+                : formValues.sdtHocVienMoi || '-'}
+            </Text>
           </div>
+
+          <div className="confirm-info-item">
+            <span className="confirm-info-label">
+              <PhoneOutlined style={{ color: 'var(--primary-color)' }} /> 
+              <Text>SĐT Zalo</Text>
+            </span>
+            <Text strong className="confirm-info-value">
+              {formValues.confirmGuardianInfo === '1' 
+                ? formValues.sdtDaiDien 
+                : formValues.newGuardianPhone || '-'}
+            </Text>
+          </div>
+
+          <div className="confirm-info-item">
+            <span className="confirm-info-label">
+              <MailOutlined style={{ color: 'var(--primary-color)' }} /> 
+              <Text>Email người đại diện</Text>
+            </span>
+            <Text strong className="confirm-info-value">
+              {formValues.emailDaiDien || '-'}
+            </Text>
+          </div>
+        </Space>
+
+        <Divider style={{ margin: '16px 0' }} />
           
-          <Text type="secondary">
-            Nhấn "Xác nhận" để lưu thông tin và chuyển sang bước tiếp theo.
-          </Text>
-        </>
-      ) : (
-        <div style={{ textAlign: 'center', padding: '20px 0' }}>
-          <Title level={4}>Không có thông tin nào thay đổi</Title>
-          <Text>Nhấn "Xác nhận" để chuyển sang bước tiếp theo.</Text>
-        </div>
-      )}
+        <Text type="secondary" style={{ display: 'block', textAlign: 'center' }}>
+          Nhấn "Xác nhận" để lưu thông tin và chuyển sang bước tiếp theo
+        </Text>
+      </div>
     </Modal>
   );
 };

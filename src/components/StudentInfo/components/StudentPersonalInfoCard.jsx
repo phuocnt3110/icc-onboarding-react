@@ -1,11 +1,13 @@
 import React from 'react';
-import { Card, Form, Input, Select, Radio, Row, Col } from 'antd';
-import { EditOutlined, CheckOutlined, CloseOutlined } from '@ant-design/icons';
+import { Card, Form, Input, Select, Radio, Row, Col, DatePicker } from 'antd';
+import { EditOutlined, CheckOutlined, CloseOutlined, InfoCircleOutlined } from '@ant-design/icons';
 import { VIETNAM_PROVINCES, SECTION_TITLES } from '../../../config';
 import { PhoneInput } from '../utils/components';
 import { mapGender, getValidYears } from '../utils/formatters';
 import { useStudentInfo } from '../context/StudentInfoContext';
 import styles from '../StudentInfo.module.css';
+import moment from 'moment';
+import 'moment/locale/vi';
 
 // SectionTitle component
 const SectionTitle = ({ letter, title }) => {
@@ -93,13 +95,15 @@ const StudentPersonalInfoCard = ({ form, readOnly = false }) => {
   };
 
   return (
-    <Card className={`info-card ${styles.card}`}>
-      <SectionTitle 
-        letter="B" 
-        title={SECTION_TITLES.STUDENT_INFO}
-      />
-      
-      <Row gutter={[16, 16]} className="form-row">
+    <Card className="card card-md card-primary">
+      <div className="card-header">
+        <SectionTitle 
+          letter="B" 
+          title={SECTION_TITLES.STUDENT_INFO} 
+        />
+      </div>
+      <div className="card-body">
+        <Row gutter={[16, 16]} className="form-row">
         <Col xs={24} sm={12}>
           <Form.Item preserve={true}
             name="hoTenHocVien"
@@ -462,7 +466,7 @@ const StudentPersonalInfoCard = ({ form, readOnly = false }) => {
         </Col>
 
         {form.getFieldValue('confirmStudentInfo') === '0' && (
-          <Col xs={24} sm={12}>
+          <Col xs={24} md={24}>
             <Form.Item preserve={true}
               name="sdtHocVienMoi"
               label={<RequiredLabel text="SĐT đăng ký ClassIn" />}
@@ -512,6 +516,7 @@ const StudentPersonalInfoCard = ({ form, readOnly = false }) => {
           </Col>
         )}
       </Row>
+      </div>
     </Card>
   );
 };

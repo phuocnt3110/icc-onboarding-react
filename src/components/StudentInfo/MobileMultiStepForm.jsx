@@ -49,7 +49,7 @@ export default function MobileMultiStepForm({ form, ...props }) {
   };
 
   return (
-    <div style={{ paddingBottom: 80 }}>
+    <div style={{ paddingBottom: 24 }}>
       {/* Render all steps, only show the active one */}
       {steps.map((step, idx) => {
         const StepComponent = step.component;
@@ -62,19 +62,23 @@ export default function MobileMultiStepForm({ form, ...props }) {
           </div>
         );
       })}
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 24 }}>
-        {currentStep > 0 && (
-          <Button onClick={() => setCurrentStep(currentStep - 1)}>Back</Button>
-        )}
-        {currentStep < steps.length - 1 ? (
-          <Button type="primary" onClick={handleNext} loading={isValidating} disabled={isValidating}>
-            Next
-          </Button>
-        ) : (
-          <Button type="primary" htmlType="submit">
-            Xác nhận thông tin
-          </Button>
-        )}
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 24, paddingTop: 8, borderTop: '1px solid #f0f0f0' }}>
+        <div>
+          {currentStep > 0 && (
+            <Button onClick={() => setCurrentStep(currentStep - 1)}>Quay lại</Button>
+          )}
+        </div>
+        <div>
+          {currentStep < steps.length - 1 ? (
+            <Button type="primary" onClick={handleNext} loading={isValidating} disabled={isValidating}>
+              Tiếp tục
+            </Button>
+          ) : (
+            <Button type="primary" htmlType="submit">
+              Xác nhận thông tin
+            </Button>
+          )}
+        </div>
       </div>
     </div>
   );

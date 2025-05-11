@@ -117,7 +117,10 @@
   border-radius: 4px;
   position: relative;
   min-height: 36px;
-  box-shadow: 0 1.5px 0 rgba(0, 0, 0, 0.08);
+  border: none !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08) !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03) !important;
+  transition: all 0.2s ease-in-out;
 }
 
 .display-value {
@@ -129,17 +132,22 @@
   justify-content: space-between;
   align-items: center;
   min-height: 36px;
-  transition: all 0.2s;
+  border: none !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08) !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03) !important;
+  transition: all 0.2s ease-in-out;
 }
 
 .display-value:hover {
   background-color: #f0f0f0;
+  border-bottom-color: rgba(0, 80, 159, 0.2) !important;
+  box-shadow: 0 2px 3px rgba(0, 0, 0, 0.05) !important;
 }
 
 /* Form styles - đồng bộ các input fields, bỏ hiệu ứng */
 .student-info-form {
-  background: rgba(255, 255, 255, 0.9);
-  padding: 1.5rem;
+  background: transparent;
+  padding: 0.5rem;
   border-radius: 8px;
 }
 
@@ -166,6 +174,29 @@
   font-size: 14px;
   color: #333;
   border-radius: 4px;
+  border: none !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08) !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03) !important;
+  transition: all 0.2s ease-in-out;
+  background-color: #fafafa;
+}
+
+/* Placeholder styling */
+.form-item .ant-input::placeholder,
+.ant-select-selection-placeholder,
+.ant-picker-input input::placeholder {
+  font-size: var(--font-size-md);
+  color: var(--text-light);
+  opacity: 0.8;
+}
+
+/* Input focus effects */
+.form-item .ant-input:focus,
+.form-item .ant-select-focused .ant-select-selector,
+.form-item .ant-picker-focused {
+  border-bottom-color: #1890ff !important;
+  box-shadow: 0 2px 3px rgba(24, 144, 255, 0.15) !important;
+  outline: none;
 }
 
 /* Form actions */
@@ -301,12 +332,13 @@
 
 .editable-field .display-value:hover {
   background-color: #f0f0f0;
-  box-shadow: 0 2px 0 rgba(0, 80, 159, 0.2);
+  border-bottom-color: rgba(0, 80, 159, 0.2) !important;
+  box-shadow: 0 2px 3px rgba(0, 0, 0, 0.05) !important;
 }
 
 /* Làm rõ biểu tượng chỉnh sửa */
 .editable-field .edit-icon {
-  opacity: 0;
+  opacity: 0.5;
   color: #00509f;
   font-size: 14px;
   transition: opacity 0.2s;
@@ -570,9 +602,16 @@
 /* Đảm bảo container của PhoneInput bắt được sự kiện blur */
 .phone-input-container {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   width: 100%;
   position: relative;
+}
+
+/* Đảm bảo font size đúng tiêu chuẩn cho placeholder */
+.phone-input-container input::placeholder {
+  font-size: var(--font-size-md);
+  color: var(--text-light);
+  opacity: 0.8;
 }
 
 .phone-input-container .input-with-actions {
@@ -711,6 +750,78 @@
   margin-right: 0;
 }
 
+/* Confirmation Modal Styling */
+.confirmation-content {
+  padding: 8px;
+}
+
+.confirm-info-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.confirm-info-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background-color: var(--background-light, #f5f5f5);
+  border-radius: var(--border-radius-md, 6px);
+  transition: background-color 0.2s ease;
+}
+
+.confirm-info-item:hover {
+  background-color: var(--background-hover, #f0f0f0);
+}
+
+.confirm-info-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-primary, #333);
+  font-weight: 500;
+}
+
+.confirm-info-value {
+  color: var(--primary-color, #1890ff);
+  font-weight: 600;
+  text-align: right;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 200px;
+}
+
+/* Responsive modal styling */
+@media (max-width: 576px) {
+  .ant-modal {
+    max-width: 95% !important;
+    margin: 0 auto;
+  }
+  
+  .ant-modal-body {
+    padding: 16px 12px;
+  }
+  
+  .ant-modal-footer {
+    padding: 10px 12px;
+  }
+  
+  .confirm-info-item {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 10px 12px;
+    gap: 4px;
+  }
+  
+  .confirm-info-value {
+    align-self: flex-start;
+    width: 100%;
+    text-align: left;
+    margin-left: 24px;
+  }
+}
+
 .input-with-actions .phone-input-container .input-with-actions {
   display: flex;
   flex-direction: row;
@@ -751,12 +862,13 @@
 /* Responsive styling for smaller screens */
 @media (max-width: 576px) {
   .phone-input-container .input-with-actions {
-    flex-direction: column;
+    flex-direction: row;
     gap: 8px;
   }
   
   .country-code-select {
-    width: 100% !important;
+    width: 85px !important;
+    min-width: 85px !important;
   }
   
   .input-with-actions .phone-input-container {

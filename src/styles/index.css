@@ -1,11 +1,14 @@
 /* Import all CSS files */
 /* 1. Biến và thiết lập cơ bản */
 @import './variables.css';
+@import './typography.css'; /* Typography styles mới */
 @import './utility-classes.css'; /* Utility classes cho lập trình nhanh */
 @import './animations.css'; /* Animations và transitions */
 
 /* 2. Layout và style components */
 @import './layout.css';
+@import './cards.css'; /* Card styles mới */
+@import './forms.css'; /* Form styles mới */
 @import './student-info.css';
 @import './class-selection.css';
 @import './success-screen.css';

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext, useRef, useReducer } from 'react';
-import { Card, Form, Input, Button, Typography, Row, Col, Divider, message, Spin, Alert, Result, Radio, Select, Checkbox, DatePicker, Modal } from 'antd';
+import { Card, Form, Input, Button, Typography, Row, Col, Divider, message, Spin, Alert, Result, Radio, Select, Checkbox, DatePicker, Modal, Space } from 'antd';
 import StudentInfoSkeleton from './StudentInfoSkeleton';
 import moment from 'moment';
 import { useNavigate } from 'react-router-dom';
@@ -14,6 +14,7 @@ import styles from './StudentInfo.module.css';
 import '../../styles/index.css';
 
 const { Option } = Select;
+const { Text } = Typography;
 
 // PhoneInput component for phone numbers
 // Sửa lại component PhoneInput
@@ -2380,50 +2381,66 @@ const StudentInfo = () => {
     
     {/* Modal xác nhận hiển thị số điện thoại Zalo và ClassIn */}
     <Modal
-      title={<div><CheckOutlined style={{ color: '#52c41a', marginRight: 6 }} />Xác nhận thông tin đăng ký</div>}
+      title={<div style={{ color: 'var(--primary-color)' }}><CheckOutlined style={{ color: 'var(--success-color)', marginRight: 8 }} />Xác nhận thông tin đăng ký</div>}
       open={confirmModalVisible}
-      onOk={proceedToStepTwo}
-      onCancel={() => setConfirmModalVisible(false)}
-      okText="Xác nhận"
-      cancelText="Hủy"
-      width={450}
+      footer={[
+        <Button key="back" onClick={() => setConfirmModalVisible(false)}>
+          Quay lại
+        </Button>,
+        <Button key="submit" type="primary" onClick={proceedToStepTwo}>
+          Xác nhận
+        </Button>
+      ]}
+      width="auto"
+      style={{ maxWidth: '500px' }}
       centered
-      styles={{ body: { padding: '16px' } }}
       maskClosable={false}
     >
-      <div className="confirm-modal-content">
-        <div className="info-section">
-          {/* ClassIn Phone */}
-          <div style={{ marginBottom: '4px', display: 'flex', alignItems: 'center' }}>
-            <span style={{ color: '#1890ff', marginRight: '8px' }}>☎</span>
-            <span>Số điện thoại ClassIn:</span>
-          </div>
-          <div style={{ padding: '8px 12px', backgroundColor: '#f5f5f5', borderRadius: '4px', fontWeight: 'bold', marginBottom: '16px' }}>
-            {formValues.confirmStudentInfo === '1' 
-              ? formValues.sdtHocVien 
-              : formValues.sdtHocVienMoi || 'Chưa cung cấp'}
+      <div className="confirmation-content">
+        <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+          {/* SĐT ClassIn */}
+          <div className="confirm-info-item">
+            <span className="confirm-info-label">
+              <PhoneOutlined style={{ color: 'var(--primary-color)' }} /> 
+              <Text>SĐT ClassIn</Text>
+            </span>
+            <Text strong className="confirm-info-value">
+              {formValues.confirmStudentInfo === '1' 
+                ? formValues.sdtHocVien 
+                : formValues.sdtHocVienMoi || '-'}
+            </Text>
           </div>
 
-          {/* Zalo Phone */}
-          <div style={{ marginBottom: '4px', display: 'flex', alignItems: 'center' }}>
-            <span style={{ color: '#722ed1', marginRight: '8px' }}>☎</span>
-            <span>Số điện thoại Zalo:</span>
+          {/* SĐT Zalo */}
+          <div className="confirm-info-item">
+            <span className="confirm-info-label">
+              <PhoneOutlined style={{ color: 'var(--primary-color)' }} /> 
+              <Text>SĐT Zalo</Text>
+            </span>
+            <Text strong className="confirm-info-value">
+              {formValues.confirmGuardianInfo === '1' 
+                ? formValues.sdtDaiDien 
+                : formValues.newGuardianPhone || '-'}
+            </Text>
           </div>
-          <div style={{ padding: '8px 12px', backgroundColor: '#f5f5f5', borderRadius: '4px', fontWeight: 'bold', marginBottom: '16px' }}>
-            {formValues.confirmGuardianInfo === '1' 
-              ? formValues.sdtDaiDien 
-              : formValues.newGuardianPhone || 'Chưa cung cấp'}
+
+          {/* Email người đại diện */}
+          <div className="confirm-info-item">
+            <span className="confirm-info-label">
+              <MailOutlined style={{ color: 'var(--primary-color)' }} /> 
+              <Text>Email người đại diện</Text>
+            </span>
+            <Text strong className="confirm-info-value">
+              {formValues.emailDaiDien || '-'}
+            </Text>
           </div>
+        </Space>
+        
+        <Divider style={{ margin: '16px 0' }} />
           
-          {/* Lưu ý quan trọng */}
-          <div style={{ padding: '10px 12px', backgroundColor: '#fff2f0', borderRadius: '4px', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-            <span style={{ color: '#ff4d4f', marginRight: '4px', marginTop: '2px' }}>⚠</span>
-            <div>
-              <div style={{ fontWeight: 'bold', color: '#cf1322', marginBottom: '2px' }}>Lưu ý quan trọng</div>
-              <div style={{ fontSize: '13px', color: '#555' }}>Vui lòng kiểm tra lại các thông tin liên hệ trước khi xác nhận. Sau khi xác nhận, các thông tin trên sẽ được sử dụng để đăng ký tài khoản học trực tuyến.</div>
-            </div>
-          </div>
-        </div>
+        <Text type="secondary" style={{ display: 'block', textAlign: 'center' }}>
+          Nhấn "Xác nhận" để lưu thông tin và chuyển sang bước tiếp theo
+        </Text>
       </div>
     </Modal>
   </div>

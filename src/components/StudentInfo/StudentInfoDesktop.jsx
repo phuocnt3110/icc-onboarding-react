@@ -106,23 +106,17 @@ const StudentInfoDesktop = () => {
   // If loading, show spinner
   if (isDataLoading) {
     return (
-      <div style={{ minHeight: '800px', opacity: 1 }}>
-        <div style={{ 
-          display: 'flex', 
-          justifyContent: 'center', 
-          alignItems: 'center',
-          flexDirection: 'column',
-          minHeight: '50vh'
-        }}>
+      <div className="container container-md">
+        <div className="text-center" style={{ minHeight: '50vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
           <Spin size="large" />
-          <div style={{ marginTop: '16px' }}>Đang tải thông tin...</div>
+          <div className="text-secondary" style={{ marginTop: '16px' }}>Đang tải thông tin...</div>
         </div>
       </div>
     );
   }
   
   return (
-    <div style={{ minHeight: '800px', opacity: 1 }}>
+    <>
       {/* Alerts and notifications */}
       {submitError && (
         <Alert
@@ -130,7 +124,7 @@ const StudentInfoDesktop = () => {
           description={submitError}
           type="error"
           showIcon
-          style={{ marginBottom: '20px' }}
+          className="margin-bottom-md"
           action={
             <Button size="small" danger onClick={() => message.success('Đã đóng thông báo lỗi')}>
               Đóng
@@ -145,19 +139,16 @@ const StudentInfoDesktop = () => {
           description={error}
           type="error"
           showIcon
-          style={{ marginBottom: '20px' }}
+          className="margin-bottom-md"
         />
       )}
       
       {/* Main content with fade-in effect */}
-      <div style={{ 
-        opacity: contentVisible ? 1 : 0,
-        transition: 'opacity 0.5s ease-in-out'
-      }}>
+      <div className={`fade-content ${contentVisible ? 'visible' : ''}`}>
         {!formInitialized ? (
-          <div style={{ textAlign: 'center', padding: '20px' }}>
+          <div className="text-center padding-md">
             <Spin size="large" />
-            <p>Đang khởi tạo form...</p>
+            <p className="text-secondary margin-top-sm">Đang khởi tạo form...</p>
           </div>
         ) : (
           <Form
@@ -185,12 +176,13 @@ const StudentInfoDesktop = () => {
             </Suspense>
             
             {/* Form Buttons */}
-            <div style={{ textAlign: 'center', marginTop: '20px' }}>
+            <div className="text-center margin-top-lg">
               <Button 
                 type="primary" 
                 size="large"
-                onClick={handleShowConfirmationModal} // Sử dụng hàm mới
+                onClick={handleShowConfirmationModal}
                 loading={localLoading}
+                className="btn-primary btn-lg"
               >
                 Xác nhận thông tin
               </Button>
@@ -201,10 +193,9 @@ const StudentInfoDesktop = () => {
       
       {/* Custom Confirmation Modal - directly in this component */}
       <Modal
-        title="Xác nhận thông tin đăng ký"
-        visible={simpleModalVisible}
-        open={simpleModalVisible} // Hỗ trợ cả Ant Design v4 & v5
-        maskClosable={true}
+        title={<div style={{ color: 'var(--primary-color)' }}><CheckCircleFilled style={{ color: 'var(--success-color)', marginRight: 8 }} /> Xác nhận thông tin</div>}
+        open={simpleModalVisible}
+        maskClosable={false}
         closable={true}
         onCancel={handleCancel}
         footer={[
@@ -220,57 +211,60 @@ const StudentInfoDesktop = () => {
             Xác nhận
           </Button>
         ]}
-        width={600}
+        width="auto"
+        style={{ maxWidth: '500px' }}
+        centered
       >
-        <Typography.Title level={5}>Xác nhận thông tin học viên:</Typography.Title>
-        <List
-          itemLayout="horizontal"
-          dataSource={[
-            { field: 'hoTenHocVien', label: 'Họ tên học viên' },
-            { field: 'sdtHocVien', label: 'Số điện thoại học viên' },
-            { field: 'emailHocVien', label: 'Email học viên' }
-          ]}
-          renderItem={item => (
-            <List.Item>
-              <List.Item.Meta
-                avatar={<CheckCircleFilled style={{ color: '#52c41a', fontSize: '18px' }} />}
-                title={item.label}
-                description={
-                  <Typography.Text strong>
-                    {form.getFieldValue(item.field) || '-'}
-                  </Typography.Text>
-                }
-              />
-            </List.Item>
-          )}
-        />
-        
-        <Divider />
-        
-        <Typography.Title level={5}>Xác nhận thông tin người đại diện:</Typography.Title>
-        <List
-          itemLayout="horizontal"
-          dataSource={[
-            { field: 'hoTenDaiDien', label: 'Họ tên người đại diện' },
-            { field: 'sdtDaiDien', label: 'Số điện thoại người đại diện' },
-            { field: 'emailDaiDien', label: 'Email người đại diện' }
-          ]}
-          renderItem={item => (
-            <List.Item>
-              <List.Item.Meta
-                avatar={<CheckCircleFilled style={{ color: '#52c41a', fontSize: '18px' }} />}
-                title={item.label}
-                description={
-                  <Typography.Text strong>
-                    {form.getFieldValue(item.field) || '-'}
-                  </Typography.Text>
-                }
-              />
-            </List.Item>
-          )}
-        />
+        <div className="confirmation-content">
+          <Typography.Title level={5} style={{ marginBottom: 16, color: 'var(--primary-color)' }}>Vui lòng xác nhận thông tin liên lạc</Typography.Title>
+          
+          <div className="confirm-info-section">
+            {/* SĐT ClassIn */}
+            <div className="confirm-info-item">
+              <span className="confirm-info-label">
+                <PhoneOutlined style={{ color: 'var(--primary-color)' }} /> 
+                <Typography.Text>SĐT ClassIn</Typography.Text>
+              </span>
+              <Typography.Text strong className="confirm-info-value">
+                {form.getFieldValue('confirmStudentInfo') === '1' 
+                  ? form.getFieldValue('sdtHocVien') 
+                  : form.getFieldValue('sdtHocVienMoi') || '-'}
+              </Typography.Text>
+            </div>
+
+            {/* SĐT Zalo */}
+            <div className="confirm-info-item">
+              <span className="confirm-info-label">
+                <PhoneOutlined style={{ color: 'var(--primary-color)' }} /> 
+                <Typography.Text>SĐT Zalo</Typography.Text>
+              </span>
+              <Typography.Text strong className="confirm-info-value">
+                {form.getFieldValue('confirmGuardianInfo') === '1' 
+                  ? form.getFieldValue('sdtDaiDien') 
+                  : form.getFieldValue('newGuardianPhone') || '-'}
+              </Typography.Text>
+            </div>
+
+            {/* Email người đại diện */}
+            <div className="confirm-info-item">
+              <span className="confirm-info-label">
+                <MailOutlined style={{ color: 'var(--primary-color)' }} /> 
+                <Typography.Text>Email người đại diện</Typography.Text>
+              </span>
+              <Typography.Text strong className="confirm-info-value">
+                {form.getFieldValue('emailDaiDien') || '-'}
+              </Typography.Text>
+            </div>
+          </div>
+          
+          <Divider style={{ margin: '16px 0' }} />
+            
+          <Typography.Text type="secondary" style={{ display: 'block', textAlign: 'center' }}>
+            Nhấn "Xác nhận" để lưu thông tin và chuyển sang bước tiếp theo
+          </Typography.Text>
+        </div>
       </Modal>
-    </div>
+    </>
   );
 };
 

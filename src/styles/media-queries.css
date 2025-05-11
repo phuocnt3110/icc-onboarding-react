@@ -1,110 +1,226 @@
-/* Thống nhất media query breakpoints cho toàn bộ ứng dụng */
+/* 
+ * Standardized Media Queries - Thống nhất breakpoints cho toàn bộ ứng dụng 
+ * Áp dụng cho cả desktop và mobile
+ */
 
-/* Mobile extra small - Điện thoại cỡ nhỏ */
+/* Mobile extra small - Điện thoại cỡ nhỏ (dưới 376px) */
 @media (max-width: 375px) {
-  .ant-layout .ant-layout-content .form-container,
-  .ant-layout .ant-layout-content .student-info-container,
-  .ant-layout .ant-layout-content .class-selection-container,
-  .ant-layout .ant-layout-content .confirmation-container {
-    width: 100%;
-    padding: 0.25rem;
+  /* Container system */
+  .container {
+    width: 100% !important;
+    padding-left: var(--spacing-xs);
+    padding-right: var(--spacing-xs);
+  }
+  
+  /* Card system */
+  .card {
+    margin-bottom: var(--spacing-md);
+    border-radius: var(--border-radius-md);
+  }
+  
+  .card-header {
+    padding: var(--spacing-xs) var(--spacing-md);
+  }
+  
+  .card-body {
+    padding: var(--spacing-xs) var(--spacing-md);
   }
   
   /* Giảm font size cho mobile nhỏ */
-  .ant-layout .ant-layout-content .card-title,
-  .ant-layout .ant-layout-content .section-title {
+  .card-title, .section-title {
     font-size: 15px;
+  }
+  
+  /* Support for legacy containers */
+  .form-container,
+  .student-info-container,
+  .class-selection-container,
+  .confirmation-container {
+    width: 100%;
+    padding: 0.25rem;
   }
 }
 
-/* Mobile - Điện thoại thông thường */
+/* Mobile - Điện thoại thông thường (376px-576px) */
 @media (min-width: 376px) and (max-width: 576px) {
-  .ant-layout .ant-layout-content .form-container,
-  .ant-layout .ant-layout-content .student-info-container,
-  .ant-layout .ant-layout-content .class-selection-container,
-  .ant-layout .ant-layout-content .confirmation-container {
-    width: 95%;
-    padding: 0.5rem;
+  /* Container system */
+  .container {
+    width: 95% !important;
+    padding-left: var(--spacing-sm);
+    padding-right: var(--spacing-sm);
   }
   
-  /* Tối ưu form controls */
-  .ant-layout .ant-layout-content .ant-form-item .ant-input,
-  .ant-layout .ant-layout-content .ant-form-item .ant-select-selector,
-  .ant-layout .ant-layout-content .ant-form-item .ant-picker {
+  /* Card system */
+  .card {
+    margin-bottom: var(--spacing-md);
+    border-radius: var(--border-radius-md);
+  }
+  
+  .card-header {
+    padding: var(--spacing-sm) var(--spacing-md);
+  }
+  
+  .card-body {
+    padding: var(--spacing-sm) var(--spacing-md);
+  }
+  
+  /* Form controls */
+  .ant-form-item .ant-input,
+  .ant-form-item .ant-select-selector,
+  .ant-form-item .ant-picker {
     height: 44px !important;
     font-size: 16px;
   }
   
-  /* Tối ưu bảng */
-  .ant-layout .ant-layout-content .ant-table-cell {
+  /* Table styles */
+  .ant-table-cell {
     padding: 12px 8px;
+  }
+  
+  /* Support legacy containers */
+  .form-container,
+  .student-info-container,
+  .class-selection-container,
+  .confirmation-container {
+    width: 95%;
+    padding: 0.5rem;
   }
 }
 
-/* Tablet - Máy tính bảng */
+/* Tablet - Máy tính bảng (577px-768px) */
 @media (min-width: 577px) and (max-width: 768px) {
-  .ant-layout .ant-layout-content .form-container {
+  /* Container system */
+  .container {
+    width: 85% !important;
+    max-width: 700px;
+    padding-left: var(--spacing-md);
+    padding-right: var(--spacing-md);
+  }
+  
+  /* Card system */
+  .card {
+    margin-bottom: var(--spacing-lg);
+  }
+  
+  .card-sm {
+    max-width: 600px;
+  }
+  
+  .card-md {
+    max-width: 650px;
+  }
+  
+  .card-lg {
+    max-width: 700px;
+  }
+  
+  /* Support legacy containers */
+  .form-container {
     width: 85%;
     max-width: 600px;
   }
   
-  .ant-layout .ant-layout-content .student-info-container {
+  .student-info-container {
     width: 85%;
     max-width: 650px;
   }
   
-  .ant-layout .ant-layout-content .class-selection-container {
+  .class-selection-container {
     width: 90%;
     max-width: 700px;
   }
   
-  .ant-layout .ant-layout-content .confirmation-container {
+  .confirmation-container {
     width: 80%;
     max-width: 600px;
   }
 }
 
-/* Desktop - Máy tính để bàn cỡ vừa */
+/* Desktop - Máy tính để bàn cỡ vừa (769px-992px) */
 @media (min-width: 769px) and (max-width: 992px) {
-  .ant-layout .ant-layout-content .form-container {
+  /* Container system */
+  .container {
+    width: 75% !important;
+    max-width: 900px;
+    padding-left: var(--spacing-lg);
+    padding-right: var(--spacing-lg);
+  }
+  
+  /* Card system */
+  .card-sm {
+    max-width: 650px;
+  }
+  
+  .card-md {
+    max-width: 750px;
+  }
+  
+  .card-lg {
+    max-width: 900px;
+  }
+  
+  /* Support legacy containers */
+  .form-container {
     width: 60%;
     max-width: 500px;
   }
   
-  .ant-layout .ant-layout-content .student-info-container {
+  .student-info-container {
     width: 75%;
     max-width: 750px;
   }
   
-  .ant-layout .ant-layout-content .class-selection-container {
+  .class-selection-container {
     width: 85%;
     max-width: 900px;
   }
   
-  .ant-layout .ant-layout-content .confirmation-container {
+  .confirmation-container {
     width: 70%;
     max-width: 600px;
   }
 }
 
-/* Large Desktop - Màn hình lớn */
+/* Large Desktop - Màn hình lớn (993px+) */
 @media (min-width: 993px) {
-  .ant-layout .ant-layout-content .form-container {
+  /* Container system */
+  .container {
+    width: 70% !important;
+    max-width: 1100px;
+    padding-left: var(--spacing-lg);
+    padding-right: var(--spacing-lg);
+  }
+  
+  /* Card system */
+  .card-sm {
+    max-width: 700px;
+  }
+  
+  .card-md {
+    max-width: 850px;
+  }
+  
+  .card-lg {
+    max-width: 1000px;
+  }
+  
+  /* Support legacy containers */
+  .form-container {
     width: 35%;
     max-width: 400px;
   }
   
-  .ant-layout .ant-layout-content .student-info-container {
+  .student-info-container {
     width: 55%;
     max-width: 800px;
   }
   
-  .ant-layout .ant-layout-content .class-selection-container {
+  .class-selection-container {
     width: 70%;
     max-width: 1000px;
   }
   
-  .ant-layout .ant-layout-content .confirmation-container {
+  .confirmation-container {
     width: 50%;
     max-width: 500px;
   }
@@ -113,15 +229,15 @@
 /* Mobile Form Controls - Tối ưu cho touch interaction */
 @media (max-width: 768px) {
   /* Tăng kích thước nút để dễ nhấn */
-  .ant-layout .ant-layout-content .ant-btn {
+  .ant-btn {
     height: 40px;
     min-width: 88px;
     font-size: 14px;
   }
   
   /* Tăng kích thước vùng checkbox, radio */
-  .ant-layout .ant-layout-content .ant-checkbox-wrapper,
-  .ant-layout .ant-layout-content .ant-radio-wrapper {
+  .ant-checkbox-wrapper,
+  .ant-radio-wrapper {
     padding: 4px 0;
     margin-bottom: 4px;
   }

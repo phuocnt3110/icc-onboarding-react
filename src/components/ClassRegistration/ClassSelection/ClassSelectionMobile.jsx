@@ -169,10 +169,15 @@ const ClassSelectionMobile = ({
       <Text type="secondary" style={{display: 'block', marginBottom: 8, fontSize: 13}}>
         {typeof window !== 'undefined' && window.classSelectionNote
           ? window.classSelectionNote
-          : 'Vui lòng chọn lớp học phù hợp nhất với nhu cầu của bạn. Nếu không tìm thấy lớp học phù hợp, hãy sử dụng chức năng hỗ trợ.'}
+          : ''}
       </Text>
       {showWarning && (
-        <Alert type="warning" showIcon message="Không tìm thấy giữ chỗ hợp lệ. Vui lòng chọn lớp bên dưới." style={{ marginBottom: 12 }} />
+        <Alert 
+          type="warning" 
+          showIcon 
+          message={`Mã giữ chỗ "${student?.maLopBanGiao || student?.maGiuCho || 'xxxxxx'}" không còn hiệu lực. Vui lòng chọn lịch học theo danh sách dưới đây, hoặc liên hệ với bộ phận Chăm sóc khách hàng.`} 
+          style={{ marginBottom: 12 }} 
+        />
       )}
       
   
